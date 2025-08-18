@@ -500,36 +500,53 @@ def filter_active_reports(api_data):
 
 def format_reports_by_region(current_data):
     """
-    서버별 떠돌이 상인 요약 텍스트 생성 (grade 4 이상만)
-    grade 4 이상 아이템이 없으면 '없음' 한 번만 표시
+    서버별 떠돌이 상인 요약 텍스트 생성
+    - grade 4 이상 아이템만
+    - type 2(호감도)는 '이름 개수'로 표시
+    - 없으면 '없음'
     """
-    from collections import defaultdict
+    from collections import defaultdict, Counter
 
     # regionId -> regionName
     region_map = {r["regionId"]: r["name"] for r in LIST_MAP}
 
-    # itemId -> (itemName, grade)
+    # itemId -> itemName, grade, type
     item_map = {item["id"]: item["name"] for r in LIST_MAP for item in r["items"]}
     item_grade = {item["id"]: item["grade"] for r in LIST_MAP for item in r["items"]}
+    item_type = {item["id"]: item["type"] for r in LIST_MAP for item in r["items"]}
 
-    # 서버별 grade 4 이상 아이템 모으기
+    # 서버별 아이템 모으기
     server_dict = defaultdict(list)
     for r in current_data:
         server = r["serverName"]
-        items = [f"{item_map[i]}({region_map[r['regionId']]})"
-                 for i in r["itemIds"] if item_grade.get(i, 0) >= 4]
-        for item in items:
+        # grade 4 이상 필터링
+        items = [i for i in r["itemIds"] if item_grade.get(i, 0) >= 4]
+        if not items:
+            continue
+
+        # type 2 처리: 같은 아이템 개수 카운트
+        type2_counts = Counter(i for i in items if item_type.get(i) == 2)
+        # 나머지 type != 2
+        other_items = [item_map[i] for i in items if item_type.get(i) != 2]
+
+        # type2 이름 + 개수 표시
+        type2_items = [f"{item_map[i]} {count}개" for i, count in type2_counts.items()]
+
+        # 합치기
+        all_items = other_items + type2_items
+        for item in all_items:
             if item not in server_dict[server]:
                 server_dict[server].append(item)
 
-    # 서버별로 grade 4 이상 아이템이 없으면 '없음' 추가
-    for server in server_dict:
-        if not server_dict[server]:
-            server_dict[server].append("없음")
+    # SERVER_MAP 기준으로 모든 서버 출력
+    lines = []
+    for server in SERVER_MAP.values():
+        items = server_dict.get(server, [])
+        if not items:
+            items = ["없음"]
+        lines.append(f"{server}: {', '.join(items)}")
 
-    # 최종 출력
-    lines = [f"{server}: {', '.join(items)}" for server, items in server_dict.items()]
-    return "\n".join(lines) if lines else "현재 출현 중인 떠돌이 상인 정보가 없습니다."
+    return "\n".join(lines)
 
 # ------------------ Flask endpoints ------------------
 @app.route("/")
@@ -579,6 +596,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
