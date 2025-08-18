@@ -151,6 +151,8 @@ def korlark_proxy():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+import json
+
 @app.route("/korlark", methods=["POST"])
 def korlark_webhook():
     try:
@@ -162,7 +164,7 @@ def korlark_webhook():
             "version": "2.0",
             "template": {
                 "outputs": [
-                    {"simpleText": {"text": api_data}}
+                    {"simpleText": {"text": json.dumps(api_data, ensure_ascii=False)}}
                 ]
             }
         })
@@ -177,9 +179,11 @@ def korlark_webhook():
         }), 500
 
 
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
