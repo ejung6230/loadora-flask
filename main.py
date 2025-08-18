@@ -475,17 +475,20 @@ def get_time_until_next_period():
         
         if now < end_time:
             remaining = end_time - now
-            hours = remaining.seconds // 3600
-            minutes = (remaining.seconds % 3600) // 60
+            total_seconds = int(remaining.total_seconds())  # 전체 초 계산
+            hours = total_seconds // 3600
+            minutes = (total_seconds % 3600) // 60
             return f"{hours}시간 {minutes}분"
-    
+
     # 모든 구간이 지났으면 다음날 첫 구간까지
     start_hour, end_hour, end_minute = periods[0]
     end_time = now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0) + timedelta(days=1)
     remaining = end_time - now
-    hours = remaining.seconds // 3600
-    minutes = (remaining.seconds % 3600) // 60
+    total_seconds = int(remaining.total_seconds())
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
     return f"{hours}시간 {minutes}분"
+
 
 def filter_active_reports(api_data):
     """
@@ -624,6 +627,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
