@@ -136,25 +136,37 @@ ITEM_MAP = {str(i): f"아이템{i}" for i in range(1, 300)}
 
 
 # ------------------ 유틸 ------------------
-def filter_recent_reports(api_data):
-    """
-    현재 시간(KST)이 상인 출현 구간(startTime~endTime)에 포함되는 리포트만 필터링
-    """
+def filter_active_reports(api_data):
+    """현재 시각(KST)에 떠돌이 상인 출현 구간에 포함되는 리포트만 필터링"""
     kst = timezone(timedelta(hours=9))
     now = datetime.now(kst)
     current_reports = []
 
-    for entry in api_data:
-        # entry에는 startTime, endTime이 포함되어 있다고 가정
-        start = datetime.fromisoformat(entry['startTime'].replace("Z", "+00:00")).astimezone(kst)
-        end   = datetime.fromisoformat(entry['endTime'].replace("Z", "+00:00")).astimezone(kst)
+    # 하루 4구간
+    periods = [
+        (22, 3, 30),  # 22:00 ~ 03:30
+        (4, 9, 30),   # 04:00 ~ 09:30
+        (10, 15, 30), # 10:00 ~ 15:30
+        (16, 21, 30)  # 16:00 ~ 21:30
+    ]
+
+    for start_hour, end_hour, end_minute in periods:
+        start = now.replace(hour=start_hour, minute=0, second=0, microsecond=0)
+        # 다음 날로 넘어가는 구간 처리
+        if end_hour < start_hour:
+            end = (now + timedelta(days=1)).replace(hour=end_hour, minute=end_minute, second=0, microsecond=0)
+        else:
+            end = now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0)
 
         if start <= now <= end:
-            # 현재 시간 내인 경우 reports 배열 전체 추가
-            for report in entry.get("reports", []):
-                current_reports.append(report)
+            # 현재 구간에 포함되면 reports 배열 전체 추가
+            for entry in api_data:
+                current_reports.extend(entry.get("reports", []))
+            break  # 이미 포함되는 구간 찾았으면 더 이상 확인하지 않음
 
     return current_reports
+
+
 
 def format_reports_by_region(data):
     """ 지역별 대표 아이템 요약 문자열 생성 """
@@ -186,7 +198,7 @@ def korlark_summary():
             resp = requests.get(KORLARK_API_URL, params={"server": server_id})
             resp.raise_for_status()
             all_data.extend(resp.json())
-        current_data = filter_recent_reports(all_data)
+        current_data = filter_active_reports(all_data)
         summary_text = format_reports_by_region(current_data)
 
         if request.method=="POST":
@@ -212,6 +224,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
