@@ -515,40 +515,31 @@ def format_reports_by_region(current_data):
     item_type = {item["id"]: item["type"] for r in LIST_MAP for item in r["items"]}
     item_name = {item["id"]: item["name"] for r in LIST_MAP for item in r["items"]}
 
-    EXCEPTION_ITEMS = {"192"}  # 항상 포함할 예외 itemId
-    
-    server_dict = defaultdict(list)
+    server_dict_type1 = defaultdict(set)
+    server_dict_type2 = defaultdict(list)
 
     for r in current_data:
         server = r["serverName"]
-        # type 1,2 또는 예외 item만 포함, grade 4 이상
         items = [i for i in r["itemIds"]
-                 if (item_type.get(i) in [1, 2] and item_grade.get(i, 0) >= 4) or i in EXCEPTION_ITEMS]
-        if not items:
-            continue
+                 if (item_type.get(i) in [1,2] and item_grade.get(i,0) >= 4) or i in EXCEPTION_ITEMS]
 
-        # type 2 아이템만 집계
-        type2_ids = [i for i in items if item_type.get(i) == 2]
-        type2_count = sum(Counter(type2_ids).values())
-        type2_items = [f"전설호감도 {type2_count}개"] if type2_count else []
+        for i in items:
+            if i in EXCEPTION_ITEMS or item_type.get(i) == 1:
+                server_dict_type1[server].add(item_name[i])
+            elif item_type.get(i) == 2:
+                server_dict_type2[server].append(i)
 
-        # type 1 아이템
-        type1_items = [item_name[i] for i in items if item_type.get(i) == 1 or i in EXCEPTION_ITEMS]
-
-        all_items = type1_items + type2_items
-
-        # 중복 제거
-        for item in all_items:
-            if item not in server_dict[server]:
-                server_dict[server].append(item)
-
-    # SERVER_MAP 기준으로 모든 서버 출력
     lines = []
     for server in SERVER_MAP.values():
-        items = server_dict.get(server, [])
-        if not items:
-            items = ["없음"]
-        lines.append(f"{server}: {', '.join(items)}")
+        type1_items = list(server_dict_type1.get(server, []))
+        type2_count = len(server_dict_type2.get(server, []))
+        type2_items = [f"전설호감도 {type2_count}개"] if type2_count else []
+
+        all_items = type1_items + type2_items
+        if not all_items:
+            all_items = ["없음"]
+
+        lines.append(f"{server}: {', '.join(all_items)}")
 
     return "\n".join(lines)
 
@@ -602,6 +593,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
