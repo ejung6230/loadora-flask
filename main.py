@@ -61,8 +61,9 @@ def filter_current_reports(data):
 def format_current_reports(data):
     """서버별 대표 엔트리 요약 및 판매 마감 시간 표시"""
     now_utc = datetime.now(timezone.utc)
+
     if not data:
-        return ""  # 여기서 '현재는 떠상 판매시간이 아닙니다.' 제거
+        return "판매까지 시간이 표시되지 않습니다."
 
     server_items = {name: [] for name in SERVER_ORDER}
     end_times = []
@@ -87,11 +88,17 @@ def format_current_reports(data):
     if end_times:
         nearest_end = min(end_times)
         remaining = nearest_end - now_utc
-        hours = remaining.seconds // 3600
-        minutes = (remaining.seconds % 3600) // 60
-        lines.append(f"\n판매 마감까지 {hours}시간 {minutes}분 남았습니다.")
+        total_seconds = int(remaining.total_seconds())
+        if total_seconds > 0:
+            hours = total_seconds // 3600
+            minutes = (total_seconds % 3600) // 60
+            seconds = total_seconds % 60
+            lines.append(f"\n판매까지 {hours:02d}:{minutes:02d}:{seconds:02d}")
+        else:
+            lines.append("\n판매가 종료되었습니다.")
 
     return "\n".join(lines)
+
 
 
 @app.route("/korlark_summary", methods=["GET", "POST"])
@@ -173,3 +180,4 @@ def korlark_webhook():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
