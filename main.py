@@ -177,12 +177,14 @@ def format_reports_by_region(data):
         if region_name not in region_entries:
             region_entries[region_name] = item_names
 
-    # SERVER_ORDER 기준으로 출력 (없으면 '없음')
     lines = []
-    for server in SERVER_ORDER:
-        items = region_entries.get(server)
-        lines.append(f"[{server}] {', '.join(items)}" if items else f"[{server}] 없음")
+    for region_id in sorted(REGION_MAP.keys(), key=int):
+        region_name = REGION_MAP[region_id]
+        items = region_entries.get(region_name)
+        lines.append(f"[{region_name}] {', '.join(items)}" if items else f"[{region_name}] 없음")
+
     return "\n".join(lines)
+
 
 # ------------------ Flask endpoints ------------------
 @app.route("/")
@@ -224,6 +226,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
