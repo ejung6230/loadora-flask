@@ -2,8 +2,9 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import requests
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import os
+import json
 
 app = Flask(__name__)
 CORS(app)  # 모든 도메인 허용
@@ -16,175 +17,132 @@ SERVER_ORDER = ["루페온", "실리안", "아만", "아브렐슈드", "카단",
 
 # 서버 ID → 서버 이름 매핑
 SERVER_MAP = {
-    "1": "루페온",
-    "2": "실리안",
-    "3": "아만",
-    "4": "아브렐슈드",
-    "5": "카단",
-    "6": "카마인",
-    "7": "카제로스",
-    "8": "니나브",
+    "1": "루페온", "2": "실리안", "4": "아브렐슈드",
+    "7": "카제로스", "9": "카단", "10": "카마인",
+    "12": "니나브", "13": "아만", "15": "루페온",
+    "16": "실리안", "17": "아만", "18": "아브렐슈드",
+    "20": "카단", "21": "카마인", "22": "카제로스"
 }
 
-# 아이템 ID → 아이템 이름 매핑 (예시)
+# 아이템 ID → 아이템 이름 매핑
 ITEM_MAP = {
-    "17": "전설호감도",
-    "18": "에스더 루테란",
-    "19": "에스더 갈라투르",
-    "22": "바훈투르",
-    "33": "전설호감도",
-    "36": "전설호감도",
-    "37": "전설호감도",
-    "39": "전설호감도",
-    "41": "전설호감도",
-    "44": "전설호감도",
-    "46": "전설호감도",
-    "53": "전설호감도",
-    "55": "전설호감도",
-    "57": "전설호감도",
-    "58": "전설호감도",
-    # 실제 필요한 모든 아이템 ID 매핑 필요
+    "1": "전설호감도", "2": "에스더 루테란", "6": "에스더 갈라투르",
+    "7": "바훈투르", "12": "아이템12", "13": "아이템13", "9": "아이템9",
+    "24": "아이템24", "25": "아이템25", "29": "아이템29", "30": "아이템30",
+    "31": "아이템31", "49": "아이템49", "50": "아이템50", "51": "아이템51",
+    "59": "아이템59", "65": "아이템65", "66": "아이템66", "68": "아이템68",
+    "69": "아이템69", "72": "아이템72", "74": "아이템74",
+    "85": "아이템85", "86": "아이템86", "88": "아이템88", "90": "아이템90",
+    "91": "아이템91", "96": "아이템96", "97": "아이템97", "99": "아이템99",
+    "113": "아이템113", "115": "아이템115", "119": "아이템119",
+    "121": "아이템121", "122": "아이템122", "123": "아이템123",
+    "125": "아이템125", "127": "아이템127", "128": "아이템128",
+    "130": "아이템130", "134": "아이템134", "135": "아이템135",
+    "140": "아이템140", "142": "아이템142", "143": "아이템143",
+    "144": "아이템144", "145": "아이템145", "149": "아이템149",
+    "150": "아이템150", "152": "아이템152", "155": "아이템155",
+    "157": "아이템157", "158": "아이템158", "161": "아이템161",
+    "162": "아이템162", "163": "아이템163", "167": "아이템167",
+    "168": "아이템168", "169": "아이템169", "170": "아이템170",
+    "196": "아이템196", "197": "아이템197", "201": "아이템201",
+    "203": "아이템203", "205": "아이템205", "212": "아이템212",
+    "213": "아이템213", "216": "아이템216", "217": "아이템217",
+    "221": "아이템221", "223": "아이템223", "225": "아이템225",
+    "227": "아이템227", "228": "아이템228"
 }
 
-def filter_current_reports(data):
-    """현재 시간 기준 활성화된 서버 데이터만 반환"""
-    now_utc = datetime.now(timezone.utc)
-    result = []
-    for period in data:
-        start = datetime.fromisoformat(period['startTime'].replace("Z", "+00:00"))
-        end = datetime.fromisoformat(period['endTime'].replace("Z", "+00:00"))
-        if start <= now_utc <= end:
-            result.append(period)
-    return result
+def filter_current_reports(api_data):
+    """
+    현재 시간(KST)과 일치하는 데이터만 필터링
+    """
+    kst = timezone(timedelta(hours=9))
+    now = datetime.now(kst)
+    current_reports = []
 
+    for entry in api_data:
+        created_at = datetime.fromisoformat(entry['createdAt'].replace("Z", "+00:00")).astimezone(kst)
+        if (created_at.year == now.year and created_at.month == now.month and
+            created_at.day == now.day and created_at.hour == now.hour and
+            created_at.minute == now.minute):
+            current_reports.append(entry)
+
+    return current_reports
 
 def format_current_reports(data):
-    """서버별 대표 엔트리 요약 및 판매 마감 시간 표시"""
-    now_utc = datetime.now(timezone.utc)
-    if not data:
-        # 현재 판매시간이 아닐 경우 남은 시간 표시
-        return "현재는 떠상 판매시간이 아닙니다."
+    """
+    서버별 대표 아이템 요약 문자열 반환
+    """
+    server_entries = {}
+    for entry in data:
+        server_name = SERVER_MAP.get(entry['regionId'], f"서버{entry['regionId']}")
+        item_names = [ITEM_MAP.get(item_id, f"아이템{item_id}") for item_id in entry['itemIds']]
+        if server_name not in server_entries:
+            server_entries[server_name] = item_names  # 첫 엔트리 대표로 사용
 
-    server_items = {name: [] for name in SERVER_ORDER}
-    end_times = []
+    result_lines = []
+    for server in SERVER_ORDER:
+        items = server_entries.get(server)
+        if items:
+            result_lines.append(f"[{server}] {', '.join(items)}")
+        else:
+            result_lines.append(f"[{server}] 없음")
 
-    for period in data:
-        start = datetime.fromisoformat(period['startTime'].replace("Z", "+00:00"))
-        end = datetime.fromisoformat(period['endTime'].replace("Z", "+00:00"))
-        end_times.append(end)
+    return "\n".join(result_lines)
 
-        for report in period.get('reports', []):
-            server_name = SERVER_MAP.get(report.get('regionId'), f"서버{report.get('regionId')}")
-            for item_id in report.get('itemIds', []):
-                item_name = ITEM_MAP.get(item_id, f"아이템{item_id}")
-                server_items[server_name].append(item_name)
+# ------------------ Flask endpoints ------------------
 
-    lines = []
-    for server_name in SERVER_ORDER:
-        items = list(dict.fromkeys(server_items[server_name]))  # 중복 제거
-        text = ", ".join(items) if items else "없음"
-        lines.append(f"{server_name}: {text}")
+@app.route("/")
+def home():
+    return "KorLark API Flask 서버 실행 중"
 
-    if not end_times:
-        # end_times가 비어 있으면 판매시간 정보 표시하지 않음
-        return "\n".join(lines)
-
-    nearest_end = min(end_times)
-    remaining = nearest_end - now_utc
-    total_seconds = int(remaining.total_seconds())
-    hours = total_seconds // 3600
-    minutes = (total_seconds % 3600) // 60
-    seconds = total_seconds % 60
-
-    lines.append(f"\n판매까지 {hours:02d}:{minutes:02d}:{seconds:02d}")
-    return "\n".join(lines)
-
-
-
-
-@app.route("/korlark_summary", methods=["GET", "POST"])
+@app.route("/korlark_summary", methods=["GET"])
 def korlark_summary():
     try:
         response = requests.get(KORLARK_API_URL, params={"server": "1"})
         response.raise_for_status()
         api_data = response.json()
 
-
         current_data = filter_current_reports(api_data)
-
-        if not current_data:
-            text_response = "현재는 떠상 판매시간이 아닙니다."
-        else:
-            text_response = format_current_reports(current_data)
+        text_response = format_current_reports(current_data) if current_data else "없음"
 
         return jsonify({
             "version": "2.0",
-            "template": {
-                "outputs": [
-                    {"simpleText": {"text": text_response}}
-                ]
-            }
+            "template": {"outputs": [{"simpleText": {"text": text_response}}]}
         })
 
     except Exception as e:
         return jsonify({
             "version": "2.0",
-            "template": {
-                "outputs": [
-                    {"simpleText": {"text": f"API 호출 실패: {e}"}}
-                ]
-            }
+            "template": {"outputs": [{"simpleText": {"text": f"API 호출 실패: {e}"}}]}
         }), 500
-
-@app.route("/")
-def home():
-    return "KorLark API Flask 서버 실행 중"
 
 @app.route("/korlark", methods=["GET"])
 def korlark_proxy():
     try:
-        server = request.args.get("server", "1")  # 기본값 1
+        server = request.args.get("server", "1")
         response = requests.get(KORLARK_API_URL, params={"server": server})
         response.raise_for_status()
-        api_data = response.json()
-        return jsonify(api_data)
+        return jsonify(response.json())
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-import json
-
-@app.route("/korlark", methods=["POST"])
+@app.route("/korlark_webhook", methods=["POST"])
 def korlark_webhook():
     try:
         server = request.json.get("server", "1")
         response = requests.get(KORLARK_API_URL, params={"server": server})
         response.raise_for_status()
-        api_data = response.json()
         return jsonify({
             "version": "2.0",
-            "template": {
-                "outputs": [
-                    {"simpleText": {"text": json.dumps(api_data, ensure_ascii=False)}}
-                ]
-            }
+            "template": [{"simpleText": {"text": json.dumps(response.json(), ensure_ascii=False)}}]
         })
     except Exception as e:
         return jsonify({
             "version": "2.0",
-            "template": {
-                "outputs": [
-                    {"simpleText": {"text": f"API 호출 실패: {e}"}}
-                ]
-            }
+            "template": [{"simpleText": {"text": f"API 호출 실패: {e}"}}]
         }), 500
 
-
-
+# ------------------ 실행 ------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
-
-
-
