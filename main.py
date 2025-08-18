@@ -7,6 +7,10 @@ app = Flask(__name__)
 # KorLark API URL
 KORLARK_API_URL = "https://api.korlark.com/lostark/merchant/reports"
 
+@app.route("/")
+def home():
+    return "KorLark API Flask 서버 실행 중"
+
 @app.route("/korlark", methods=["GET"])
 def korlark_proxy():
     try:
@@ -21,4 +25,5 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))  # Railway 할당 포트 사용
     app.run(host="0.0.0.0", port=port)
+
 
