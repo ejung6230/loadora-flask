@@ -7,6 +7,7 @@ import os
 import json
 
 
+
 app = Flask(__name__)
 CORS(app)  # 모든 도메인 허용
 
@@ -454,58 +455,35 @@ LIST_MAP = [
 ]
 
 # ------------------ 유틸 ------------------
+
 def filter_active_reports(api_data):
     """현재 시각(KST)에 떠돌이 상인 출현 구간에 포함되는 리포트만 필터링"""
     kst = timezone(timedelta(hours=9))
     now = datetime.now(kst)
     current_reports = []
-    
-    # 하루 4구간
+
+    # 하루 4구간 (start_hour, end_hour, end_minute)
     periods = [
-        (22, 3, 30),  # 오후 10:00 ~ 오전 3:30 (22:00 ~ 03:30)
-        (4, 9, 30),   # 오전 4:00 ~ 오전 9:30 (04:00 ~ 09:30)
-        (10, 15, 30), # 오전 10:00 ~ 오후 3:30 (10:00 ~ 15:30)
-        (16, 21, 30)  # 오후 4:00 ~ 오후 9:30 (16:00 ~ 21:30)
+        (22, 3, 30),  # 22:00 ~ 03:30 (다음날)
+        (4, 9, 30),   # 04:00 ~ 09:30
+        (10, 15, 30), # 10:00 ~ 15:30
+        (16, 21, 30)  # 16:00 ~ 21:30
     ]
 
     for start_hour, end_hour, end_minute in periods:
         start = now.replace(hour=start_hour, minute=0, second=0, microsecond=0)
-        # 다음 날로 넘어가는 구간 처리
-        if end_hour < start_hour:
-            end = (now + timedelta(days=1)).replace(hour=end_hour, minute=end_minute, second=0, microsecond=0)
-        else:
-            end = now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0)
+        end = now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0)
+
+        # 구간이 다음날까지 넘어가는 경우
+        if end <= start:
+            end += timedelta(days=1)
 
         if start <= now <= end:
-            # 현재 구간에 포함되면 reports 배열 전체 추가
             for entry in api_data:
                 current_reports.extend(entry.get("reports", []))
-            break  # 이미 포함되는 구간 찾았으면 더 이상 확인하지 않음
+            break  # 현재 구간이 확인되면 종료
 
     return current_reports
-
-      # {
-      #   "createdAt": "2025-08-18T07:00:42.59668Z",
-      #   "id": "746346725773811703",
-      #   "itemIds": [
-      #     "24",
-      #     "25",
-      #     "29",
-      #     "30",
-      #     "31"
-      #   ],
-      #   "regionId": "4",
-      #   "serverId": "1",
-      #   "serverName": "루페온",
-      #   "status": 3,
-      #   "upVoteCount": 0,
-      #   "user": {
-      #     "characterName": "생크림당근케이크",
-      #     "id": "357693218846277670",
-      #     "karmaRank": 6
-      #   },
-      #   "vote": null
-      # },
 
 
 def format_reports_by_region(current_data):
@@ -589,6 +567,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
