@@ -572,9 +572,9 @@ def korlark_summary():
                 all_data.append(entry)
         
         current_data = filter_active_reports(all_data)
-        summary_text = "❙ 전체 서버 떠상 정보"
+        summary_text = "❙ 전체 서버 떠상 정보\n"
         summary_text += format_reports_by_region(current_data)
-        summary_text += "판매 마감까지 0시간 00분 남았습니다."
+        summary_text += "\n판매 마감까지 0시간 00분 남았습니다."
 
         if request.method=="POST":
             return jsonify({"version":"2.0","template":{"outputs":[{"simpleText":{"text":summary_text}}]}})
@@ -599,6 +599,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
