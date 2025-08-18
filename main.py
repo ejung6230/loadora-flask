@@ -456,6 +456,37 @@ LIST_MAP = [
 
 # ------------------ 유틸 ------------------
 
+# 하루 4구간 (start_hour, end_hour, end_minute)
+periods = [
+    (22, 3, 30),  # 22:00 ~ 03:30 (다음날)
+    (4, 9, 30),   # 04:00 ~ 09:30
+    (10, 15, 30), # 10:00 ~ 15:30
+    (16, 21, 30)  # 16:00 ~ 21:30
+]
+
+def get_time_until_next_period():
+    now = datetime.now()
+    for start_hour, end_hour, end_minute in periods:
+        # 종료시간 계산
+        if start_hour > end_hour:  # 다음날로 넘어가는 경우
+            end_time = now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0) + timedelta(days=1)
+        else:
+            end_time = now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0)
+        
+        if now < end_time:
+            remaining = end_time - now
+            hours = remaining.seconds // 3600
+            minutes = (remaining.seconds % 3600) // 60
+            return f"{hours}시간 {minutes}분"
+    
+    # 모든 구간이 지났으면 다음날 첫 구간까지
+    start_hour, end_hour, end_minute = periods[0]
+    end_time = now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0) + timedelta(days=1)
+    remaining = end_time - now
+    hours = remaining.seconds // 3600
+    minutes = (remaining.seconds % 3600) // 60
+    return f"{hours}시간 {minutes}분"
+
 def filter_active_reports(api_data):
     """
     현재 시각(KST)에 하루 4구간 중 하나에 포함되는 떠돌이 상인 보고서만 반환
@@ -464,13 +495,6 @@ def filter_active_reports(api_data):
     now = datetime.now(kst)
     current_reports = []
 
-    # 하루 4구간 (start_hour, end_hour, end_minute)
-    periods = [
-        (22, 3, 30),  # 22:00 ~ 03:30 (다음날)
-        (4, 9, 30),   # 04:00 ~ 09:30
-        (10, 15, 30), # 10:00 ~ 15:30
-        (16, 21, 30)  # 16:00 ~ 21:30
-    ]
 
     def in_period(dt):
         """datetime dt가 하루 4구간 중 하나에 속하는지 확인"""
@@ -568,12 +592,14 @@ def korlark_summary():
                 for report in entry.get("reports", []):
                     report["serverId"] = server_id
                     report["serverName"] = SERVER_MAP.get(server_id, server_id)
+                    report["startTime"] = start_time
+                    report["endTime"] = end_time
                 all_data.append(entry)
         
         current_data = filter_active_reports(all_data)
-        summary_text = "❙ 전체 서버 떠상 정보\n"
+        summary_text = "❙ 전체 서버 떠상 정보\n\n"
         summary_text += format_reports_by_region(current_data)
-        summary_text += "\n판매 마감까지 0시간 00분 남았습니다."
+        summary_text += f"\n\n판매 마감까지 {remaining_time} 남았습니다."
 
         if request.method=="POST":
             return jsonify({"version":"2.0","template":{"outputs":[{"simpleText":{"text":summary_text}}]}})
@@ -598,6 +624,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
