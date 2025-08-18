@@ -203,7 +203,7 @@ def korlark_summary():
 
         if request.method=="POST":
             return jsonify({"version":"2.0","template":{"outputs":[{"simpleText":{"text":summary_text}}]}})
-        return current_data
+        return summary_text
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -224,6 +224,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
