@@ -501,10 +501,12 @@ def filter_active_reports(api_data):
 def format_reports_by_region(current_data):
     """
     서버별 떠돌이 상인 요약 텍스트 생성
-    - grade 4 이상 아이템만
-    - type 2 아이템은 이름을 '전설호감도'로 통일하고 개수 표시
-    - type != 2 아이템은 이름 그대로
-    - 아이템 없으면 '없음'
+    - type 1, type 2 아이템만 포함
+    - grade 4 이상만 기본 포함
+    - 예외 itemId "192"는 grade/type 상관없이 항상 포함
+    - type 2 아이템은 "전설호감도 N개" 형식으로 개수 집계
+    - type 1 아이템은 이름 그대로
+    - 서버별 아이템 없으면 "없음"
     """
     from collections import defaultdict, Counter
 
@@ -513,26 +515,27 @@ def format_reports_by_region(current_data):
     item_type = {item["id"]: item["type"] for r in LIST_MAP for item in r["items"]}
     item_name = {item["id"]: item["name"] for r in LIST_MAP for item in r["items"]}
 
-    server_dict = defaultdict(list)
+    EXCEPTION_ITEMS = {"192"}  # 항상 포함할 예외 itemId
     
-    EXCEPTION_ITEMS = {"192"}  # 항상 포함할 itemId
+    server_dict = defaultdict(list)
 
     for r in current_data:
         server = r["serverName"]
-        # grade 4 이상 또는 예외 아이템만 포함
-        items = [i for i in r["itemIds"] if item_grade.get(i, 0) >= 4 or i in EXCEPTION_ITEMS]
+        # type 1,2 또는 예외 item만 포함, grade 4 이상
+        items = [i for i in r["itemIds"]
+                 if (item_type.get(i) in [1, 2] and item_grade.get(i, 0) >= 4) or i in EXCEPTION_ITEMS]
         if not items:
             continue
 
-        # type 2 아이템만 모아서 개수 집계
+        # type 2 아이템만 집계
         type2_ids = [i for i in items if item_type.get(i) == 2]
         type2_count = sum(Counter(type2_ids).values())
         type2_items = [f"전설호감도 {type2_count}개"] if type2_count else []
 
-        # type != 2 아이템
-        other_items = [item_name[i] for i in items if item_type.get(i) != 2]
+        # type 1 아이템
+        type1_items = [item_name[i] for i in items if item_type.get(i) == 1 or i in EXCEPTION_ITEMS]
 
-        all_items = other_items + type2_items
+        all_items = type1_items + type2_items
 
         # 중복 제거
         for item in all_items:
@@ -599,6 +602,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
