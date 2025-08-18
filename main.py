@@ -134,46 +134,36 @@ ITEM_MAP = {str(i): f"아이템{i}" for i in range(1, 300)}
 #     "228": "아이템228"
 # }
 
-def filter_current_reports(api_data):
-    """
-    현재 시간(KST)과 일치하는 데이터만 필터링
-    """
+
+# ------------------ 유틸 ------------------
+def filter_recent_reports(api_data, minutes=10):
+    """ 최근 N분 내 생성된 리포트만 필터링 """
     kst = timezone(timedelta(hours=9))
     now = datetime.now(kst)
     current_reports = []
-
     for entry in api_data:
         created_at = datetime.fromisoformat(entry['createdAt'].replace("Z", "+00:00")).astimezone(kst)
-        if (created_at.year == now.year and created_at.month == now.month and
-            created_at.day == now.day and created_at.hour == now.hour and
-            created_at.minute == now.minute):
+        if 0 <= (now - created_at).total_seconds() < minutes*60:
             current_reports.append(entry)
-
     return current_reports
 
-def format_current_reports(data):
-    """
-    서버별 대표 아이템 요약 문자열 반환
-    """
-    server_entries = {}
+def format_reports_by_region(data):
+    """ 지역별 대표 아이템 요약 문자열 생성 """
+    region_entries = {}
     for entry in data:
-        server_name = REGION_MAP.get(entry['regionId'], f"서버{entry['regionId']}")
-        item_names = [ITEM_MAP.get(item_id, f"아이템{item_id}") for item_id in entry['itemIds']]
-        if server_name not in server_entries:
-            server_entries[server_name] = item_names  # 첫 엔트리 대표로 사용
+        region_name = REGION_MAP.get(entry['regionId'], f"지역{entry['regionId']}")
+        item_names = [ITEM_MAP.get(i, f"아이템{i}") for i in entry['itemIds']]
+        if region_name not in region_entries:
+            region_entries[region_name] = item_names
 
-    result_lines = []
+    # SERVER_ORDER 기준으로 출력 (없으면 '없음')
+    lines = []
     for server in SERVER_ORDER:
-        items = server_entries.get(server)
-        if items:
-            result_lines.append(f"[{server}] {', '.join(items)}")
-        else:
-            result_lines.append(f"[{server}] 없음")
-
-    return "\n".join(result_lines)
+        items = region_entries.get(server)
+        lines.append(f"[{server}] {', '.join(items)}" if items else f"[{server}] 없음")
+    return "\n".join(lines)
 
 # ------------------ Flask endpoints ------------------
-
 @app.route("/")
 def home():
     return "KorLark API Flask 서버 실행 중"
@@ -181,95 +171,35 @@ def home():
 @app.route("/korlark_summary", methods=["GET", "POST"])
 def korlark_summary():
     try:
-        # POST이면 JSON에서 서버 ID 리스트, GET은 전체 서버 조회
-        if request.method == "POST":
-            server_ids = request.json.get("servers", list(SERVER_MAP.keys()))
-        else:  # GET
-            server_ids = list(SERVER_MAP.keys())
-
+        server_ids = request.json.get("servers", list(SERVER_MAP.keys())) if request.method=="POST" else list(SERVER_MAP.keys())
         all_data = []
-        # 모든 서버 데이터 가져오기
         for server_id in server_ids:
-            response = requests.get(KORLARK_API_URL, params={"server": server_id})
-            response.raise_for_status()
-            all_data.extend(response.json())
+            resp = requests.get(KORLARK_API_URL, params={"server": server_id})
+            resp.raise_for_status()
+            all_data.extend(resp.json())
+        current_data = filter_recent_reports(all_data, minutes=10)
+        summary_text = format_reports_by_region(current_data)
 
-        # 현재 시간 기준 필터링
-        current_data = filter_current_reports(all_data)
-
-        # 서버별 대표 아이템 문자열 생성
-        summary_text = format_current_reports(current_data)
-
-        # 반환 형식 결정
-        if request.method == "POST":
-            # Kakao/웹훅 형식
-            return jsonify({
-                "version": "2.0",
-                "template": {
-                    "outputs": [
-                        {"simpleText": {"text": summary_text}}
-                    ]
-                }
-            })
-        else:
-            # 일반 JSON
-            return jsonify({"summary": summary_text})
-
-    except Exception as e:
-        if request.method == "POST":
-            return jsonify({
-                "version": "2.0",
-                "template": {
-                    "outputs": [
-                        {"simpleText": {"text": f"API 호출 실패: {e}"}}
-                    ]
-                }
-            }), 500
-        else:
-            return jsonify({"error": str(e)}), 500
-
-
-
-@app.route("/korlark", methods=["GET"])
-def korlark_proxy():
-    try:
-        server = request.args.get("server", "1")
-        response = requests.get(KORLARK_API_URL, params={"server": server})
-        response.raise_for_status()
-        return jsonify(response.json())
+        if request.method=="POST":
+            return jsonify({"version":"2.0","template":{"outputs":[{"simpleText":{"text":summary_text}}]}})
+        return jsonify({"summary": summary_text})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route("/korlark", methods=["POST"])
-def korlark_webhook():
+@app.route("/korlark", methods=["GET","POST"])
+def korlark_proxy():
     try:
-        server = request.json.get("server", "1")
-        response = requests.get(KORLARK_API_URL, params={"server": server})
-        response.raise_for_status()
-        return jsonify({
-            "version": "2.0",
-            "template": {   # 리스트 → 객체
-                "outputs": [
-                    {"simpleText": {"text": json.dumps(response.json(), ensure_ascii=False)}}
-                ]
-            }
-        })
+        server = request.args.get("server") if request.method=="GET" else request.json.get("server", "1")
+        resp = requests.get(KORLARK_API_URL, params={"server": server})
+        resp.raise_for_status()
+        data = resp.json()
+        if request.method=="POST":
+            return jsonify({"version":"2.0","template":{"outputs":[{"simpleText":{"text":json.dumps(data, ensure_ascii=False)}}]}})
+        return jsonify(data)
     except Exception as e:
-        return jsonify({
-            "version": "2.0",
-            "template": {   # 리스트 → 객체
-                "outputs": [
-                    {"simpleText": {"text": f"API 호출 실패: {e}"}}  
-                ]
-            }
-        }), 500
-
+        return jsonify({"error": str(e)}), 500
 
 # ------------------ 실행 ------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
-
-
