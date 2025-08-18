@@ -198,7 +198,7 @@ def korlark_summary():
 @app.route("/korlark", methods=["GET","POST"])
 def korlark_proxy():
     try:
-        server = request.args.get("server") if request.method=="GET" else request.json.get("server", "1")
+        server = request.args.get("server", "1") if request.method=="GET" else request.json.get("server", "1")
         resp = requests.get(KORLARK_API_URL, params={"server": server})
         resp.raise_for_status()
         data = resp.json()
@@ -212,5 +212,6 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
