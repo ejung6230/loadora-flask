@@ -136,15 +136,24 @@ ITEM_MAP = {str(i): f"아이템{i}" for i in range(1, 300)}
 
 
 # ------------------ 유틸 ------------------
-def filter_recent_reports(api_data, minutes=10):
-    """ 최근 N분 내 생성된 리포트만 필터링 """
+def filter_recent_reports(api_data):
+    """
+    현재 시간(KST)이 상인 출현 구간(startTime~endTime)에 포함되는 리포트만 필터링
+    """
     kst = timezone(timedelta(hours=9))
     now = datetime.now(kst)
     current_reports = []
+
     for entry in api_data:
-        created_at = datetime.fromisoformat(entry['createdAt'].replace("Z", "+00:00")).astimezone(kst)
-        if 0 <= (now - created_at).total_seconds() < minutes*60:
-            current_reports.append(entry)
+        # entry에는 startTime, endTime이 포함되어 있다고 가정
+        start = datetime.fromisoformat(entry['startTime'].replace("Z", "+00:00")).astimezone(kst)
+        end   = datetime.fromisoformat(entry['endTime'].replace("Z", "+00:00")).astimezone(kst)
+
+        if start <= now <= end:
+            # 현재 시간 내인 경우 reports 배열 전체 추가
+            for report in entry.get("reports", []):
+                current_reports.append(report)
+
     return current_reports
 
 def format_reports_by_region(data):
@@ -203,3 +212,4 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
