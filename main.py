@@ -186,7 +186,7 @@ def korlark_summary():
             resp = requests.get(KORLARK_API_URL, params={"server": server_id})
             resp.raise_for_status()
             all_data.extend(resp.json())
-        current_data = filter_recent_reports(all_data, minutes=10)
+        current_data = filter_recent_reports(all_data)
         summary_text = format_reports_by_region(current_data)
 
         if request.method=="POST":
@@ -212,6 +212,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
