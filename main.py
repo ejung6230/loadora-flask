@@ -497,6 +497,41 @@ def get_time_until_next_period():
     minutes = (total_seconds % 3600) // 60
     return f"{hours}시간 {minutes}분"
 
+def filter_active_reports(api_data):
+    """
+    현재 시각(KST)에 하루 4구간 중 하나에 포함되는 떠돌이 상인 보고서만 반환
+    """
+    kst = timezone(timedelta(hours=9))
+    now = datetime.now(kst)
+    current_reports = []
+
+
+    def in_period(dt):
+        """datetime dt가 하루 4구간 중 하나에 속하는지 확인"""
+        for start_hour, end_hour, end_minute in periods:
+            start = dt.replace(hour=start_hour, minute=0, second=0, microsecond=0)
+            end = dt.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0)
+            if end <= start:  # 하루를 넘어가는 구간
+                end += timedelta(days=1)
+            if start <= dt <= end:
+                return True
+        return False
+
+    for period in api_data:
+        if not period:
+            continue
+
+        # UTC 문자열 -> datetime -> KST
+        start = datetime.fromisoformat(period["startTime"].replace("Z", "+00:00")).astimezone(kst)
+        end = datetime.fromisoformat(period["endTime"].replace("Z", "+00:00")).astimezone(kst)
+
+        # 하루 4구간 포함 여부 + 현재 시각 체크
+        if (in_period(start) or in_period(end)) and start <= now <= end:
+            current_reports.extend(period.get("reports", []))
+
+    return current_reports
+
+
 
 # 예외 아이템 ID: 항상 포함
 EXCEPTION_ITEMS = {"192"}  # 문자열로 itemId 넣기
@@ -600,6 +635,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
