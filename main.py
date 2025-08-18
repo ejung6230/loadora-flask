@@ -61,9 +61,9 @@ def filter_current_reports(data):
 def format_current_reports(data):
     """서버별 대표 엔트리 요약 및 판매 마감 시간 표시"""
     now_utc = datetime.now(timezone.utc)
-
     if not data:
-        return "판매까지 시간이 표시되지 않습니다."
+        # 현재 판매시간이 아닐 경우 남은 시간 표시
+        return "현재는 떠상 판매시간이 아닙니다."
 
     server_items = {name: [] for name in SERVER_ORDER}
     end_times = []
@@ -73,9 +73,9 @@ def format_current_reports(data):
         end = datetime.fromisoformat(period['endTime'].replace("Z", "+00:00"))
         end_times.append(end)
 
-        for report in period['reports']:
-            server_name = SERVER_MAP.get(report['regionId'], f"서버{report['regionId']}")
-            for item_id in report['itemIds']:
+        for report in period.get('reports', []):
+            server_name = SERVER_MAP.get(report.get('regionId'), f"서버{report.get('regionId')}")
+            for item_id in report.get('itemIds', []):
                 item_name = ITEM_MAP.get(item_id, f"아이템{item_id}")
                 server_items[server_name].append(item_name)
 
@@ -85,19 +85,20 @@ def format_current_reports(data):
         text = ", ".join(items) if items else "없음"
         lines.append(f"{server_name}: {text}")
 
-    if end_times:
-        nearest_end = min(end_times)
-        remaining = nearest_end - now_utc
-        total_seconds = int(remaining.total_seconds())
-        if total_seconds > 0:
-            hours = total_seconds // 3600
-            minutes = (total_seconds % 3600) // 60
-            seconds = total_seconds % 60
-            lines.append(f"\n판매까지 {hours:02d}:{minutes:02d}:{seconds:02d}")
-        else:
-            lines.append("\n판매가 종료되었습니다.")
+    if not end_times:
+        # end_times가 비어 있으면 판매시간 정보 표시하지 않음
+        return "\n".join(lines)
 
+    nearest_end = min(end_times)
+    remaining = nearest_end - now_utc
+    total_seconds = int(remaining.total_seconds())
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    seconds = total_seconds % 60
+
+    lines.append(f"\n판매까지 {hours:02d}:{minutes:02d}:{seconds:02d}")
     return "\n".join(lines)
+
 
 
 
@@ -180,4 +181,5 @@ def korlark_webhook():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
