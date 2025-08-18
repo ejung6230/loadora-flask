@@ -158,12 +158,11 @@ def korlark_webhook():
         response = requests.get(KORLARK_API_URL, params={"server": server})
         response.raise_for_status()
         api_data = response.json()
-        text_response = format_current_reports(filter_current_reports(api_data))
         return jsonify({
             "version": "2.0",
             "template": {
                 "outputs": [
-                    {"simpleText": {"text": text_response}}
+                    {"simpleText": {"text": api_data}}
                 ]
             }
         })
@@ -181,6 +180,7 @@ def korlark_webhook():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
