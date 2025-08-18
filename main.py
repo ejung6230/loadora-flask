@@ -28,20 +28,33 @@ def korlark_proxy():
 @app.route("/korlark", methods=["POST"])
 def korlark_webhook():
     try:
-        # 카카오톡이 보내는 JSON 받기
-        req_json = request.get_json()
-
-        # 외부 API 호출
         response = requests.get(KORLARK_API_URL, params={"server": "1"})
         response.raise_for_status()
         api_data = response.json()
 
-        # 원본 데이터를 그대로 반환 (가공 없음)
-        return jsonify(api_data)
+        import json
+        text_response = json.dumps(api_data, ensure_ascii=False)
+
+        return jsonify({
+            "version": "2.0",
+            "template": {
+                "outputs": [
+                    {"simpleText": {"text": text_response}}
+                ]
+            }
+        })
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({
+            "version": "2.0",
+            "template": {
+                "outputs": [
+                    {"simpleText": {"text": f"API 호출 실패: {e}"}}
+                ]
+            }
+        }), 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))  # Railway 할당 포트 사용
     app.run(host="0.0.0.0", port=port)
+
 
