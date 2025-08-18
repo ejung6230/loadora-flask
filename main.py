@@ -23,6 +23,7 @@ def filter_current_reports(data):
             result.append(period)
     return result
 
+
 @app.route("/korlark_summary", methods=["GET", "POST"])
 def korlark_summary():
     try:
@@ -34,11 +35,16 @@ def korlark_summary():
         # 현재 시간 기준 데이터만 필터
         current_data = filter_current_reports(api_data)
 
+        if not current_data:
+            text_response = "현재는 떠상 판매시간이 아닙니다."
+        else:
+            text_response = f"{current_data}"
+
         return jsonify({
             "version": "2.0",
             "template": {
                 "outputs": [
-                    {"simpleText": {"text": f"{current_data}"}}
+                    {"simpleText": {"text": text_response}}
                 ]
             }
         })
@@ -52,6 +58,7 @@ def korlark_summary():
                 ]
             }
         }), 500
+
 
 @app.route("/")
 def home():
@@ -103,6 +110,7 @@ def korlark_webhook():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))  # Railway 할당 포트 사용
     app.run(host="0.0.0.0", port=port)
+
 
 
 
