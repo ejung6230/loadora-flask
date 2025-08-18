@@ -457,7 +457,9 @@ LIST_MAP = [
 # ------------------ 유틸 ------------------
 
 def filter_active_reports(api_data):
-    """현재 시각(KST)에 떠돌이 상인 출현 구간에 포함되는 리포트만 필터링"""
+    """
+    현재 시각(KST)에 하루 4구간 중 하나에 포함되는 떠돌이 상인 보고서만 반환
+    """
     kst = timezone(timedelta(hours=9))
     now = datetime.now(kst)
     current_reports = []
@@ -470,18 +472,28 @@ def filter_active_reports(api_data):
         (16, 21, 30)  # 16:00 ~ 21:30
     ]
 
-    for start_hour, end_hour, end_minute in periods:
-        start = now.replace(hour=start_hour, minute=0, second=0, microsecond=0)
-        end = now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0)
+    def in_period(dt):
+        """datetime dt가 하루 4구간 중 하나에 속하는지 확인"""
+        for start_hour, end_hour, end_minute in periods:
+            start = dt.replace(hour=start_hour, minute=0, second=0, microsecond=0)
+            end = dt.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0)
+            if end <= start:  # 하루를 넘어가는 구간
+                end += timedelta(days=1)
+            if start <= dt <= end:
+                return True
+        return False
 
-        # 구간이 다음날까지 넘어가는 경우
-        if end <= start:
-            end += timedelta(days=1)
+    for period in api_data:
+        if not period:
+            continue
 
-        if start <= now <= end:
-            for entry in api_data:
-                current_reports.extend(entry.get("reports", []))
-            break  # 현재 구간이 확인되면 종료
+        # UTC 문자열 -> datetime -> KST
+        start = datetime.fromisoformat(period["startTime"].replace("Z", "+00:00")).astimezone(kst)
+        end = datetime.fromisoformat(period["endTime"].replace("Z", "+00:00")).astimezone(kst)
+
+        # 하루 4구간 포함 여부 + 현재 시각 체크
+        if (in_period(start) or in_period(end)) and start <= now <= end:
+            current_reports.extend(period.get("reports", []))
 
     return current_reports
 
@@ -567,6 +579,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
