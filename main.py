@@ -485,45 +485,47 @@ def filter_active_reports(api_data):
 
     return current_reports
 
-
-
-def format_reports_by_region(data):
+def format_reports_by_region(reports):
     """
-    서버별 떠돌이 상인 아이템 요약
+    서버별 떠돌이 상인 요약 텍스트 생성
     """
     server_entries = {}
 
-    for entry in data:
-        region_name = REGION_MAP.get(entry['regionId'], f"지역{entry['regionId']}")
-        item_names = []
-        for i in entry['itemIds']:
-            item_data = ITEM_MAP.get(str(i))
-            if item_data:
-                item_names.append(item_data["name"])
-            else:
-                item_names.append(f"아이템{i}")
+    # regionId → 아이템 정보 매핑
+    region_map = {region["regionId"]: region for region in LIST_MAP}
 
-        # 각 서버(서버 이름)에 추가
-        # 여기서는 regionId → 서버 매핑이 필요하다고 가정
-        # 예시: 1~8 서버별 regionId는 따로 정의
-        # 편의상 서버 이름 = SERVER_ORDER 순서 기준
-        for server in SERVER_ORDER:
-            if server not in server_entries:
-                server_entries[server] = []
+    for report in reports:
+        region_id = report.get("regionId")
+        server_name = report.get("serverName", SERVER_MAP.get(str(report.get("serverId")), "알 수 없음"))
+        npc_name = region_map.get(region_id, {}).get("npcName", "??")
+        items_info = []
 
-        # 단순히 모든 아이템을 루프 돌며 서버별로 넣는 경우
-        # 실제로는 API에서 서버 기준 데이터를 받아야 정확함
-        server_entries[SERVER_MAP.get(entry['regionId'], SERVER_ORDER[0])].extend(
-            [f"{name}({region_name})" for name in item_names]
+        for item_id in report.get("itemIds", []):
+            # LIST_MAP에서 item 찾기
+            found_item = None
+            for r in LIST_MAP:
+                if r["regionId"] == region_id:
+                    for item in r["items"]:
+                        if item["id"] == item_id:
+                            found_item = item["name"]
+                            break
+            items_info.append(found_item if found_item else f"(아이템ID:{item_id})")
+
+        if server_name not in server_entries:
+            server_entries[server_name] = []
+        server_entries[server_name].append(
+            f"[{npc_name}] " + ", ".join(items_info)
         )
 
-    # 중복 제거 후 문자열 생성
+    # 최종 출력 정리
     lines = []
     for server in SERVER_ORDER:
-        items = list(dict.fromkeys(server_entries.get(server, [])))  # 중복 제거
-        lines.append(f"{server}: {', '.join(items)}" if items else f"{server}: 없음")
+        if server in server_entries:
+            lines.append(f"◆ {server}")
+            lines.extend(server_entries[server])
 
-    return "\n".join(lines)
+    return "\n".join(lines) if lines else "현재 출현 중인 떠돌이 상인 정보가 없습니다."
+
 
 
 # ------------------ Flask endpoints ------------------
@@ -566,6 +568,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
