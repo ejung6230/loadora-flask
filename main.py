@@ -467,22 +467,25 @@ periods = [
 def get_time_until_next_period():
     now = datetime.now()
     for start_hour, end_hour, end_minute in periods:
-        # 종료시간 계산
+        # 시작시간
+        start_time = now.replace(hour=start_hour, minute=0, second=0, microsecond=0)
+        # 종료시간
         if start_hour > end_hour:  # 다음날로 넘어가는 경우
             end_time = now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0) + timedelta(days=1)
         else:
             end_time = now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0)
-        
-        if now < end_time:
+
+        if start_time <= now < end_time:
+            # 현재 구간 안에 있으면 종료까지 남은 시간
             remaining = end_time - now
-            total_seconds = int(remaining.total_seconds())  # 전체 초 계산
+            total_seconds = int(remaining.total_seconds())
             hours = total_seconds // 3600
             minutes = (total_seconds % 3600) // 60
             return f"{hours}시간 {minutes}분"
 
-    # 모든 구간이 지났으면 다음날 첫 구간까지
-    start_hour, end_hour, end_minute = periods[0]
-    end_time = now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0) + timedelta(days=1)
+    # 현재 시간이 모든 구간 밖이면 다음 구간까지 남은 시간
+    next_start_hour, next_end_hour, next_end_minute = periods[0]
+    end_time = now.replace(hour=next_end_hour, minute=next_end_minute, second=0, microsecond=0) + timedelta(days=1)
     remaining = end_time - now
     total_seconds = int(remaining.total_seconds())
     hours = total_seconds // 3600
@@ -627,6 +630,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
