@@ -464,39 +464,6 @@ periods = [
     (16, 21, 30)  # 16:00 ~ 21:30
 ]
 
-def get_time_until_next_period():
-    now = datetime.now()
-    
-    for start_hour, end_hour, end_minute in periods:
-        # 구간 종료 시간 계산
-        end_time = now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0)
-        if start_hour > end_hour:  # 다음날로 넘어가는 경우
-            if now.hour < start_hour:  # 구간 시작 전이면 어제 종료
-                end_time -= timedelta(days=1)
-            else:  # 구간 시작 후면 다음날 종료
-                end_time += timedelta(days=1)
-
-        # 구간 시작 시간 계산
-        start_time = now.replace(hour=start_hour, minute=0, second=0, microsecond=0)
-        if start_hour > end_hour and now.hour < start_hour:
-            start_time -= timedelta(days=1)
-
-        if start_time <= now < end_time:
-            remaining = end_time - now
-            total_seconds = int(remaining.total_seconds())
-            hours = total_seconds // 3600
-            minutes = (total_seconds % 3600) // 60
-            return f"{hours}시간 {minutes}분"
-
-    # 현재 시간이 모든 구간 밖이면 다음 구간 종료까지
-    next_start_hour, next_end_hour, next_end_minute = periods[0]
-    end_time = now.replace(hour=next_end_hour, minute=next_end_minute, second=0, microsecond=0) + timedelta(days=1)
-    remaining = end_time - now
-    total_seconds = int(remaining.total_seconds())
-    hours = total_seconds // 3600
-    minutes = (total_seconds % 3600) // 60
-    return f"{hours}시간 {minutes}분"
-
 def filter_active_reports(api_data):
     """
     현재 시각(KST)에 하루 4구간 중 하나에 포함되는 떠돌이 상인 보고서만 반환
@@ -583,6 +550,47 @@ def format_reports_by_region(current_data):
 
     return "\n".join(lines)
 
+def get_remaining_time_text(remaining_text=""):
+    """
+    현재 시각(KST)에 하루 4구간 중 하나에 포함되는지 확인하고,
+    포함된다면 종료시각까지 얼마나 남았는지 0시 00분 형식으로 계산
+    """
+    # KST 기준 현재 시각
+    kst = timezone(timedelta(hours=9))
+    now = datetime.now(kst)
+
+    # 하루 4구간 (start_hour, end_hour, end_minute)
+    periods = [
+        (22, 3, 30),  # 22:00 ~ 03:30 (다음날)
+        (4, 9, 30),   # 04:00 ~ 09:30
+        (10, 15, 30), # 10:00 ~ 15:30
+        (16, 21, 30)  # 16:00 ~ 21:30
+    ]
+
+    for start_hour, end_hour, end_minute in periods:
+        # 종료 시각 계산
+        if start_hour > end_hour:  # 다음날로 넘어가는 경우
+            end_time = now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0) + timedelta(days=1)
+            if now.hour >= start_hour or now.hour < end_hour:
+                remaining = end_time - now
+                hours = remaining.seconds // 3600
+                minutes = (remaining.seconds % 3600) // 60
+                remaining_text += f"판매 마감까지 {hours}시간 {minutes:02d}분 남았습니다."
+                return remaining_text
+        else:
+            start_time = now.replace(hour=start_hour, minute=0, second=0, microsecond=0)
+            end_time = now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0)
+            if start_time <= now <= end_time:
+                remaining = end_time - now
+                hours = remaining.seconds // 3600
+                minutes = (remaining.seconds % 3600) // 60
+                remaining_text += f"{hours}시간 {minutes:02d}분"
+                return remaining_text
+
+    # 어느 구간에도 속하지 않으면
+    remaining_text += "현재 시각은 판매 구간이 아닙니다."
+    return remaining_text
+
 # ------------------ Flask endpoints ------------------
 @app.route("/")
 def home():
@@ -610,8 +618,8 @@ def korlark_summary():
         current_data = filter_active_reports(all_data)
         summary_text = "❙ 전체 서버 떠상 정보\n\n"
         summary_text += format_reports_by_region(current_data)
-        summary_text += f"\n\n판매 마감까지 {get_time_until_next_period()} 남았습니다."
-
+        summary_text += f"\n\n판매 마감까지 {get_remaining_time_text()} 남았습니다."
+        
         if request.method=="POST":
             return jsonify({"version":"2.0","template":{"outputs":[{"simpleText":{"text":summary_text}}]}})
         return summary_text
@@ -635,6 +643,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
