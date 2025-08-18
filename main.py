@@ -592,8 +592,8 @@ def korlark_summary():
                 for report in entry.get("reports", []):
                     report["serverId"] = server_id
                     report["serverName"] = SERVER_MAP.get(server_id, server_id)
-                    report["startTime"] = start_time
-                    report["endTime"] = end_time
+                    report["startTime"] = entry.get("startTime", "")
+                    report["endTime"] = entry.get("endTime", "")
                 all_data.append(entry)
         
         current_data = filter_active_reports(all_data)
@@ -624,6 +624,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
