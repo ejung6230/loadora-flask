@@ -522,13 +522,15 @@ def format_reports_by_region(current_data):
         if not items:
             continue
 
-        # type 2 아이템 개수 집계
-        type2_counts = Counter(i for i in items if item_type.get(i) == 2)
+        # type 2 아이템만 모아서 개수 집계
+        type2_ids = [i for i in items if item_type.get(i) == 2]
+        type2_counts = Counter(type2_ids)  # 같은 아이템 여러 개 카운트
+
         # type != 2 아이템
         other_items = [item_name[i] for i in items if item_type.get(i) != 2]
 
         # type 2 아이템 이름 + 개수 표시
-        type2_items = [f"전설호감도 {count}개" for i, count in type2_counts.items()]
+        type2_items = [f"전설호감도 {sum(type2_counts.values())}개"] if type2_counts else []
 
         all_items = other_items + type2_items
 
@@ -597,6 +599,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
