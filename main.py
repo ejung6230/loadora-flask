@@ -575,7 +575,7 @@ def get_remaining_time_text(remaining_text=""):
                 remaining = end_time - now
                 hours = remaining.seconds // 3600
                 minutes = (remaining.seconds % 3600) // 60
-                remaining_text += f"판매 마감까지 {hours}시간 {minutes:02d}분 남았습니다."
+                remaining_text += f"{hours}시간 {minutes:02d}분"
                 return remaining_text
         else:
             start_time = now.replace(hour=start_hour, minute=0, second=0, microsecond=0)
