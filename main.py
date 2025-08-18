@@ -439,8 +439,8 @@ LIST_MAP = [
          {"id":"229","type":2,"name":"환영 잉크","grade":3,"icon":"efui_iconatlas/use/use_12_236.png","default":False,"hidden":False},
          {"id":"228","type":2,"name":"날씨 상자","grade":3,"icon":"efui_iconatlas/use/use_12_235.png","default":False,"hidden":False},
          {"id":"227","type":2,"name":"기묘한 주전자","grade":3,"icon":"efui_iconatlas/use/use_12_234.png","default":False,"hidden":False},
-         {"id":"223","type":1,"name":"린","grade":2,"icon":"efui_iconatlas/use/use_2_13.png","default":False,"hidden":False}
-         ,{"id":"222","type":1,"name":"긴","grade":2,"icon":"efui_iconatlas/use/use_2_13.png","default":False,"hidden":False},
+         {"id":"223","type":1,"name":"린","grade":2,"icon":"efui_iconatlas/use/use_2_13.png","default":False,"hidden":False},
+         {"id":"222","type":1,"name":"긴","grade":2,"icon":"efui_iconatlas/use/use_2_13.png","default":False,"hidden":False},
          {"id":"280","type":2,"name":"영웅 호감도","grade":3,"icon":"efui_iconatlas/shop_icon/shop_icon_17.png","default":False,"hidden":True},
          {"id":"281","type":2,"name":"전설 호감도","grade":4,"icon":"efui_iconatlas/shop_icon/shop_icon_17.png","default":False,"hidden":True},
          {"id":"226","type":1,"name":"헤아누","grade":3,"icon":"efui_iconatlas/use/use_2_13.png","default":False,"hidden":False},
@@ -485,16 +485,63 @@ def filter_active_reports(api_data):
 
     return current_reports
 
-def format_reports_by_region(reports):
+# [
+#   {
+#     "createdAt": "2025-08-18T07:00:28.177084Z",
+#     "id": "746346665298894835",
+#     "itemIds": [
+#       "1",
+#       "2",
+#       "6",
+#       "7"
+#     ],
+#     "regionId": "1",
+#     "status": 2,
+#     "upVoteCount": 0,
+#     "user": {
+#       "characterName": "생크림당근케이크",
+#       "id": "357693218846277670",
+#       "karmaRank": 6
+#     },
+#     "vote": null
+#   },
+
+
+
+def format_reports_by_region(current_data):
     """
     서버별 떠돌이 상인 요약 텍스트 생성
     """
     server_entries = {}
 
-    # regionId → 아이템 정보 매핑
-    region_map = {region["regionId"]: region for region in LIST_MAP}
 
-    for report in reports:
+    # 모든 데이터의 itemIds 순환
+    for i in range(len(current_data)):
+        print(f"data[{i}] 아이템들:")
+    
+        region_id = current_data[i]["regionId"]
+    
+        # LIST_MAP에서 해당 region 찾기
+        region = next((r for r in LIST_MAP if r["regionId"] == region_id), None)
+        if not region:
+            continue
+    
+        for item_id in current_data[i]["itemIds"]:
+            # region 안에서 itemId 찾기
+            item = next((it for it in region["items"] if it["id"] == item_id), None)
+            if item:
+                result = {
+                    "regionId": region["regionId"],
+                    "regionName": region["name"],
+                    "npcName": region["npcName"],
+                    "group": region["group"],
+                    "itemId": item["id"],
+                    "itemName": item["name"],
+                    "grade": item["grade"]
+                }
+                print("  -", result)
+    
+    for report in current_data:
         region_id = report.get("regionId")
         server_name = report.get("serverName", SERVER_MAP.get(str(report.get("serverId")), "알 수 없음"))
         npc_name = region_map.get(region_id, {}).get("npcName", "??")
@@ -541,7 +588,14 @@ def korlark_summary():
         for server_id in server_ids:
             resp = requests.get(KORLARK_API_URL, params={"server": server_id})
             resp.raise_for_status()
-            all_data.extend(resp.json())
+            server_data = resp.json()
+        
+            # 각 엔트리에 서버 정보 추가
+            for entry in server_data:
+                entry["serverId"] = server_id
+                entry["serverName"] = SERVER_MAP.get(server_id, server_id)
+                all_data.append(entry)
+        
         current_data = filter_active_reports(all_data)
         summary_text = format_reports_by_region(current_data)
 
@@ -568,6 +622,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
