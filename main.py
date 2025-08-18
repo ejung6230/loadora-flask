@@ -498,6 +498,9 @@ def filter_active_reports(api_data):
     return current_reports
 
 
+# 예외 아이템 ID: 항상 포함
+EXCEPTION_ITEMS = {"192"}  # 문자열로 itemId 넣기
+
 def format_reports_by_region(current_data):
     """
     서버별 떠돌이 상인 요약 텍스트 생성
@@ -593,6 +596,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
