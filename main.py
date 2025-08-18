@@ -169,19 +169,34 @@ def filter_active_reports(api_data):
 
 
 def format_reports_by_region(data):
-    """ 지역별 대표 아이템 요약 문자열 생성 """
-    region_entries = {}
+    """
+    서버별 떠돌이 상인 아이템 요약
+    """
+    server_entries = {}
+
     for entry in data:
         region_name = REGION_MAP.get(entry['regionId'], f"지역{entry['regionId']}")
         item_names = [ITEM_MAP.get(i, f"아이템{i}") for i in entry['itemIds']]
-        if region_name not in region_entries:
-            region_entries[region_name] = item_names
 
+        # 각 서버(서버 이름)에 추가
+        # 여기서는 regionId → 서버 매핑이 필요하다고 가정
+        # 예시: 1~8 서버별 regionId는 따로 정의
+        # 편의상 서버 이름 = SERVER_ORDER 순서 기준
+        for server in SERVER_ORDER:
+            if server not in server_entries:
+                server_entries[server] = []
+
+        # 단순히 모든 아이템을 루프 돌며 서버별로 넣는 경우
+        # 실제로는 API에서 서버 기준 데이터를 받아야 정확함
+        server_entries[SERVER_MAP.get(entry['regionId'], SERVER_ORDER[0])].extend(
+            [f"{name}({region_name})" for name in item_names]
+        )
+
+    # 중복 제거 후 문자열 생성
     lines = []
-    for region_id in sorted(REGION_MAP.keys(), key=int):
-        region_name = REGION_MAP[region_id]
-        items = region_entries.get(region_name)
-        lines.append(f"[{region_name}] {', '.join(items)}" if items else f"[{region_name}] 없음")
+    for server in SERVER_ORDER:
+        items = list(dict.fromkeys(server_entries.get(server, [])))  # 중복 제거
+        lines.append(f"{server}: {', '.join(items)}" if items else f"{server}: 없음")
 
     return "\n".join(lines)
 
@@ -226,6 +241,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
