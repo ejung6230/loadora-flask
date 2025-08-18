@@ -95,26 +95,57 @@ def format_current_reports(data):
 def home():
     return "KorLark API Flask 서버 실행 중"
 
-@app.route("/korlark_summary", methods=["GET"])
+@app.route("/korlark_summary", methods=["GET", "POST"])
 def korlark_summary():
     try:
-        response = requests.get(KORLARK_API_URL, params={"server": "1"})
-        response.raise_for_status()
-        api_data = response.json()
+        # POST이면 JSON에서 서버 ID 리스트, GET은 전체 서버 조회
+        if request.method == "POST":
+            server_ids = request.json.get("servers", list(SERVER_MAP.keys()))
+        else:  # GET
+            server_ids = list(SERVER_MAP.keys())
 
-        current_data = filter_current_reports(api_data)
-        text_response = format_current_reports(current_data) if current_data else "없음"
+        all_data = []
+        # 모든 서버 데이터 가져오기
+        for server_id in server_ids:
+            response = requests.get(KORLARK_API_URL, params={"server": server_id})
+            response.raise_for_status()
+            all_data.extend(response.json())
 
-        return jsonify({
-            "version": "2.0",
-            "template": {"outputs": [{"simpleText": {"text": text_response}}]}
-        })
+        # 현재 시간 기준 필터링
+        current_data = filter_current_reports(all_data)
+
+        # 서버별 대표 아이템 문자열 생성
+        summary_text = format_current_reports(current_data)
+
+        # 반환 형식 결정
+        if request.method == "POST":
+            # Kakao/웹훅 형식
+            return jsonify({
+                "version": "2.0",
+                "template": {
+                    "outputs": [
+                        {"simpleText": {"text": summary_text}}
+                    ]
+                }
+            })
+        else:
+            # 일반 JSON
+            return jsonify({"summary": summary_text})
 
     except Exception as e:
-        return jsonify({
-            "version": "2.0",
-            "template": {"outputs": [{"simpleText": {"text": f"API 호출 실패: {e}"}}]}
-        }), 500
+        if request.method == "POST":
+            return jsonify({
+                "version": "2.0",
+                "template": {
+                    "outputs": [
+                        {"simpleText": {"text": f"API 호출 실패: {e}"}}
+                    ]
+                }
+            }), 500
+        else:
+            return jsonify({"error": str(e)}), 500
+
+
 
 @app.route("/korlark", methods=["GET"])
 def korlark_proxy():
@@ -155,5 +186,6 @@ def korlark_webhook():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
