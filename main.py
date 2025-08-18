@@ -485,31 +485,28 @@ def filter_active_reports(api_data):
 
     return current_reports
 
-# [
-#   {
-#     "createdAt": "2025-08-18T07:00:28.177084Z",
-#     "id": "746346665298894835",
-#     "itemIds": [
-#       "1",
-#       "2",
-#       "6",
-#       "7"
-#     ],
-#     "regionId": "1",
-#     "status": 2,
-#     "upVoteCount": 0,
-#     "user": {
-#       "characterName": "생크림당근케이크",
-#       "id": "357693218846277670",
-#       "karmaRank": 6
-#     },
-#     "vote": null
-#   },
-
-  #   "serverId": "1",
-  #   "serverName": "루페온",
-  #   "startTime": "2025-08-18T07:00:00Z"
-  # },
+      # {
+      #   "createdAt": "2025-08-18T07:00:42.59668Z",
+      #   "id": "746346725773811703",
+      #   "itemIds": [
+      #     "24",
+      #     "25",
+      #     "29",
+      #     "30",
+      #     "31"
+      #   ],
+      #   "regionId": "4",
+      #   "serverId": "1",
+      #   "serverName": "루페온",
+      #   "status": 3,
+      #   "upVoteCount": 0,
+      #   "user": {
+      #     "characterName": "생크림당근케이크",
+      #     "id": "357693218846277670",
+      #     "karmaRank": 6
+      #   },
+      #   "vote": null
+      # },
 
 
 def format_reports_by_region(current_data):
@@ -517,7 +514,6 @@ def format_reports_by_region(current_data):
     서버별 떠돌이 상인 요약 텍스트 생성
     """
     server_entries = {}
-
 
     # 모든 데이터의 itemIds 순환
     for i in range(len(current_data)):
@@ -541,7 +537,9 @@ def format_reports_by_region(current_data):
                     "group": region["group"],
                     "itemId": item["id"],
                     "itemName": item["name"],
-                    "grade": item["grade"]
+                    "grade": item["grade"],
+                    "serverId": item["serverId"],
+                    "serverName": item["serverName"]
                 }
                 print("  -", result)
     
@@ -606,7 +604,7 @@ def korlark_summary():
 
         if request.method=="POST":
             return jsonify({"version":"2.0","template":{"outputs":[{"simpleText":{"text":summary_text}}]}})
-        return all_data
+        return current_data
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -627,6 +625,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
