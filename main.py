@@ -101,7 +101,13 @@ def format_reports_by_region(data):
 
     for entry in data:
         region_name = REGION_MAP.get(entry['regionId'], f"지역{entry['regionId']}")
-        item_names = [ITEM_MAP.get(i, f"아이템{i}") for i in entry['itemIds']]
+        item_names = []
+        for i in entry['itemIds']:
+            item_data = ITEM_MAP.get(str(i))
+            if item_data:
+                item_names.append(item_data["name"])
+            else:
+                item_names.append(f"아이템{i}")
 
         # 각 서버(서버 이름)에 추가
         # 여기서는 regionId → 서버 매핑이 필요하다고 가정
@@ -166,6 +172,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
