@@ -514,23 +514,23 @@ def format_reports_by_region(current_data):
     item_name = {item["id"]: item["name"] for r in LIST_MAP for item in r["items"]}
 
     server_dict = defaultdict(list)
+    
+    EXCEPTION_ITEMS = {"192"}  # 항상 포함할 itemId
 
     for r in current_data:
         server = r["serverName"]
-        # grade 4 이상만
-        items = [i for i in r["itemIds"] if item_grade.get(i, 0) >= 4]
+        # grade 4 이상 또는 예외 아이템만 포함
+        items = [i for i in r["itemIds"] if item_grade.get(i, 0) >= 4 or i in EXCEPTION_ITEMS]
         if not items:
             continue
 
         # type 2 아이템만 모아서 개수 집계
         type2_ids = [i for i in items if item_type.get(i) == 2]
-        type2_counts = Counter(type2_ids)  # 같은 아이템 여러 개 카운트
+        type2_count = sum(Counter(type2_ids).values())
+        type2_items = [f"전설호감도 {type2_count}개"] if type2_count else []
 
         # type != 2 아이템
         other_items = [item_name[i] for i in items if item_type.get(i) != 2]
-
-        # type 2 아이템 이름 + 개수 표시
-        type2_items = [f"전설호감도 {sum(type2_counts.values())}개"] if type2_counts else []
 
         all_items = other_items + type2_items
 
@@ -599,6 +599,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
