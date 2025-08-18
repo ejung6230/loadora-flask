@@ -506,6 +506,10 @@ def filter_active_reports(api_data):
 #     "vote": null
 #   },
 
+  #   "serverId": "1",
+  #   "serverName": "루페온",
+  #   "startTime": "2025-08-18T07:00:00Z"
+  # },
 
 
 def format_reports_by_region(current_data):
@@ -589,11 +593,12 @@ def korlark_summary():
             resp = requests.get(KORLARK_API_URL, params={"server": server_id})
             resp.raise_for_status()
             server_data = resp.json()
-        
-            # 각 엔트리에 서버 정보 추가
+            
+            # 각 entry의 reports 안쪽에 server 정보 추가
             for entry in server_data:
-                entry["serverId"] = server_id
-                entry["serverName"] = SERVER_MAP.get(server_id, server_id)
+                for report in entry.get("reports", []):
+                    report["serverId"] = server_id
+                    report["serverName"] = SERVER_MAP.get(server_id, server_id)
                 all_data.append(entry)
         
         current_data = filter_active_reports(all_data)
@@ -622,6 +627,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
