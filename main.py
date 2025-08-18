@@ -134,16 +134,26 @@ def korlark_webhook():
         response.raise_for_status()
         return jsonify({
             "version": "2.0",
-            "template": [{"simpleText": {"text": json.dumps(response.json(), ensure_ascii=False)}}]
+            "template": {   # 리스트 → 객체
+                "outputs": [
+                    {"simpleText": {"text": json.dumps(response.json(), ensure_ascii=False)}}
+                ]
+            }
         })
     except Exception as e:
         return jsonify({
             "version": "2.0",
-            "template": [{"simpleText": {"text": f"API 호출 실패: {e}"}}]
+            "template": {   # 리스트 → 객체
+                "outputs": [
+                    {"simpleText": {"text": f"API 호출 실패: {e}"}}  
+                ]
+            }
         }), 500
+
 
 # ------------------ 실행 ------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
