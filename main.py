@@ -10,7 +10,7 @@ CORS(app)  # 모든 도메인 허용
 # KorLark API URL
 KORLARK_API_URL = "https://api.korlark.com/lostark/merchant/reports"
 
-@app.route("/korlark_summary", methods=["POST"])
+@app.route("/korlark_summary", methods=["GET", "POST"])
 def korlark_summary():
     try:
         now = datetime.now(timezone.utc)
@@ -105,6 +105,7 @@ def korlark_webhook():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))  # Railway 할당 포트 사용
     app.run(host="0.0.0.0", port=port)
+
 
 
 
