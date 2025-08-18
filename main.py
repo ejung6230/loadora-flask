@@ -453,7 +453,6 @@ LIST_MAP = [
      ]}
 ]
 
-
 # ------------------ 유틸 ------------------
 def filter_active_reports(api_data):
     """현재 시각(KST)에 떠돌이 상인 출현 구간에 포함되는 리포트만 필터링"""
@@ -513,69 +512,36 @@ def format_reports_by_region(current_data):
     """
     서버별 떠돌이 상인 요약 텍스트 생성
     """
-    server_entries = {}
+    # regionId -> regionName 매핑
+    region_map = {r["regionId"]: r["name"] for r in LIST_MAP}
+    
+    # itemId -> itemName 매핑
+    item_map = {}
+    for r in LIST_MAP:
+        for item in r["items"]:
+            item_map[item["id"]] = item["name"]
+    
+    # 서버별로 묶기
+    from collections import defaultdict
+    server_dict = defaultdict(list)
 
-    # 모든 데이터의 itemIds 순환
-    for i in range(len(current_data)):
-        print(f"data[{i}] 아이템들:")
-    
-        region_id = current_data[i]["regionId"]
-    
-        # LIST_MAP에서 해당 region 찾기
-        region = next((r for r in LIST_MAP if r["regionId"] == region_id), None)
-        if not region:
-            continue
-    
-        for item_id in current_data[i]["itemIds"]:
-            # region 안에서 itemId 찾기
-            item = next((it for it in region["items"] if it["id"] == item_id), None)
-            if item:
-                result = {
-                    "regionId": region["regionId"],
-                    "regionName": region["name"],
-                    "npcName": region["npcName"],
-                    "group": region["group"],
-                    "itemId": item["id"],
-                    "itemName": item["name"],
-                    "grade": item["grade"],
-                    "serverId": item["serverId"],
-                    "serverName": item["serverName"]
-                }
-                print("  -", result)
-    
-    for report in current_data:
-        region_id = report.get("regionId")
-        server_name = report.get("serverName", SERVER_MAP.get(str(report.get("serverId")), "알 수 없음"))
-        npc_name = region_map.get(region_id, {}).get("npcName", "??")
-        items_info = []
-
-        for item_id in report.get("itemIds", []):
-            # LIST_MAP에서 item 찾기
-            found_item = None
-            for r in LIST_MAP:
-                if r["regionId"] == region_id:
-                    for item in r["items"]:
-                        if item["id"] == item_id:
-                            found_item = item["name"]
-                            break
-            items_info.append(found_item if found_item else f"(아이템ID:{item_id})")
-
-        if server_name not in server_entries:
-            server_entries[server_name] = []
-        server_entries[server_name].append(
-            f"[{npc_name}] " + ", ".join(items_info)
-        )
+    for r in current_data:
+        server = r["serverName"]
+        if r["itemIds"]:
+            items = [f"{item_map[i]}({region_map[r['regionId']]})" for i in r["itemIds"]]
+            # 중복 제거
+            for item in items:
+                if item not in server_dict[server]:
+                    server_dict[server].append(item)
+        else:
+            server_dict[server].append("없음")
 
     # 최종 출력 정리
     lines = []
-    for server in SERVER_ORDER:
-        if server in server_entries:
-            lines.append(f"◆ {server}")
-            lines.extend(server_entries[server])
+    for server, items_list in server_dict.items():
+        lines.append(f"{server}: {', '.join(items_list)}")
 
     return "\n".join(lines) if lines else "현재 출현 중인 떠돌이 상인 정보가 없습니다."
-
-
 
 # ------------------ Flask endpoints ------------------
 @app.route("/")
@@ -625,6 +591,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
