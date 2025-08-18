@@ -511,7 +511,7 @@ def format_reports_by_region(current_data):
     - type 1 아이템은 이름 그대로
     - 서버별 아이템 없으면 "없음"
     """
-    from collections import defaultdict, Counter
+    from collections import defaultdict
 
     # itemId -> grade, type, name
     item_grade = {item["id"]: item["grade"] for r in LIST_MAP for item in r["items"]}
@@ -523,6 +523,7 @@ def format_reports_by_region(current_data):
 
     for r in current_data:
         server = r["serverName"]
+        # type 1,2 또는 예외 item만 포함, grade 4 이상
         items = [i for i in r["itemIds"]
                  if (item_type.get(i) in [1,2] and item_grade.get(i,0) >= 4) or i in EXCEPTION_ITEMS]
 
@@ -534,11 +535,12 @@ def format_reports_by_region(current_data):
 
     lines = []
     for server in SERVER_MAP.values():
-        type1_items = list(server_dict_type1.get(server, []))
         type2_count = len(server_dict_type2.get(server, []))
         type2_items = [f"전설호감도 {type2_count}개"] if type2_count else []
 
-        all_items = type1_items + type2_items
+        type1_items = list(server_dict_type1.get(server, []))
+        all_items = type2_items + type1_items  # type2가 맨 앞
+
         if not all_items:
             all_items = ["없음"]
 
@@ -596,6 +598,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
