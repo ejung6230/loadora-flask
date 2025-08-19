@@ -11,7 +11,7 @@ import re
 
 
 GEMINI_API_KEY = "AIzaSyBsxfr_8Mw-7fwr_PqZAcv3LyGuI0ybv08"
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta2/models/gemini-1.5-flash:generateText"
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
 app = Flask(__name__)
 CORS(app)  # 모든 도메인 허용
@@ -58,16 +58,29 @@ def summarize_webpage_with_gemini(url):
 
         payload = {
             "contents": [
-                {"parts": [{"text": f"한국어로 핵심만 요약하고 한 줄로 만들어주세요:\n{text}"}]}
+                {
+                    "parts": [
+                        {
+                            "text": f"한국어로 핵심만 요약하고 한 줄로 만들어주세요:\n{text}"
+                        }
+                    ]
+                }
             ]
         }
-
+        
         response = requests.post(GEMINI_API_URL, headers=headers, data=json.dumps(payload))
         response.raise_for_status()
         result = response.json()
 
         # 결과 구조 확인 후 요약 추출
-        summary = result.get("candidates", [{}])[0].get("content", [{}])[0].get("text", "")
+        summary = ""
+        if "candidates" in result:
+            candidates = result.get("candidates", [])
+            if candidates and "content" in candidates[0]:
+                parts = candidates[0].get("content", [])
+                if parts:
+                    summary = parts[0].get("text", "")
+
         return summary if summary else "요약을 생성할 수 없습니다."
 
     except Exception as e:
@@ -1005,6 +1018,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
