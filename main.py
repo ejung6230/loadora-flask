@@ -46,11 +46,11 @@ def organize_characters_by_server(char_list):
     return organized
 
 def summary_in_gemini(content: str) -> str:
-    """간단한 요약 함수"""
+    """Gemini 1.5 Flash API를 이용한 안전한 요약 함수"""
     data = {
         "contents": [{
             "parts": [{
-                "text": f"여기 링크의 본문을 300자 이내로 간단히 요약하세요:\n{content}"
+                "text": f"여기 링크의 본문을 300자 이내로 간단히 요약하세요:\n{content[:2000]}"  # 텍스트 길이 제한
             }]
         }],
         "generationConfig": {
@@ -60,18 +60,25 @@ def summary_in_gemini(content: str) -> str:
     }
     
     try:
-        resp = requests.post(GEMINI_API_URL, json=data, timeout=10)
+        resp = requests.post(GEMINI_API_URL, json=data, headers=HEADERS, timeout=15)
+        resp.raise_for_status()
         result = resp.json()
-        
+
         candidates = result.get("candidates", [])
-        if candidates and "content" in candidates[0]:
-            parts = candidates[0]["content"].get("parts", [])
-            if parts and "text" in parts[0]:
-                return parts[0]["text"].strip()
+        if not candidates:
+            logger.warning("[WARN] 요약 결과 없음")
+            return "요약 실패"
+
+        content_obj = candidates[0].get("content", {})
+        parts = content_obj.get("parts", [])
+        if not parts or "text" not in parts[0]:
+            logger.warning("[WARN] parts 또는 text 없음")
+            return "요약 실패"
+
+        return parts[0]["text"].strip()
         
-        return "요약 실패"
-        
-    except:
+    except Exception as e:
+        logger.error(f"[ERROR] Gemini 요약 실패: {e}")
         return "요약 중 오류 발생"
         
 
@@ -1035,6 +1042,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
