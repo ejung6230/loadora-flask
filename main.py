@@ -7,11 +7,7 @@ import os
 import json
 import time
 import re
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-import google.generativeai as genai
-import chromedriver_autoinstaller
-chromedriver_autoinstaller.install()
+from bs4 import BeautifulSoup
 
 
 
@@ -43,28 +39,13 @@ def organize_characters_by_server(char_list):
         organized.setdefault(server, []).append(c)
     return organized
 
-def summary_in_gemini(link: str) -> str:
-    try:
-        # 1. Chrome headless 옵션 설정
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
 
-        driver = webdriver.Chrome(options=chrome_options)
 
-        # 2. 페이지 열기
-        driver.get(link)
-        time.sleep(2)
-
-        # 3. 공지 본문 HTML 가져오기
-        element = driver.find_element("css selector", "section.article__data div.fr-view")
-        html_content = element.get_attribute("outerHTML")
-
-        driver.quit()
-
-        if not html_content:
-            return "본문 HTML을 가져올 수 없습니다."
+def summary_in_gemini(link):
+    resp = requests.get(link, timeout=5)
+    soup = BeautifulSoup(resp.text, "html.parser")
+    element = soup.select_one("section.article__data div.fr-view")
+    return str(element) if element else "본문 HTML을 가져올 수 없습니다."
 
 #         # 4. Gemini 요청
 #         model = genai.GenerativeModel("gemini-1.5-flash")
@@ -76,10 +57,6 @@ def summary_in_gemini(link: str) -> str:
 # """
 #         response = model.generate_content(prompt)
 #         return response.text.strip()
-        return html_content
-
-    except Exception as e:
-        return f"요약 실패: {str(e)}"
 
 
 @app.route("/fallback", methods=["POST"])
@@ -1041,6 +1018,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
