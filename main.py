@@ -32,16 +32,14 @@ def fallback():
     data = request.get_json()
     user_input = data.get("value", "").strip()
 
-    # '정보' 단어가 포함되어 있는지 확인
-    if re.search(r"\b정보\b", user_input):
-        # 공백 뒤에 오는 문자열을 닉네임으로 추출
-        parts = user_input.split()
-        nickname = parts[1] if len(parts) > 1 else "닉네임 없음"
+    # .정보 / 정보 / .ㅈㅂ / ㅈㅂ 로 시작하고, 뒤에 공백 + 텍스트
+    match = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ) (.+)$", user_input)
+    if match:
+        nickname = match.group(2)  # 공백 뒤 전체 텍스트
         description_text = f"입력한 닉네임: {nickname}"
     else:
         description_text = "죄송해요. 이해하지 못했습니다."
 
-    # 버튼 구조는 그대로 유지
     response = {
         "version": "2.0",
         "template": {
@@ -815,6 +813,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
