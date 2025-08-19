@@ -14,6 +14,11 @@ CORS(app)  # 모든 도메인 허용
 # 🔑 발급받은 JWT 토큰
 JWT_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyIsImtpZCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyJ9.eyJpc3MiOiJodHRwczovL2x1ZHkuZ2FtZS5vbnN0b3ZlLmNvbSIsImF1ZCI6Imh0dHBzOi8vbHVkeS5nYW1lLm9uc3RvdmUuY29tL3Jlc291cmNlcyIsImNsaWVudF9pZCI6IjEwMDAwMDAwMDA1ODU3OTMifQ.pGbLttyxM_QTAJxMGW2XeMYQ1TSfArJiyLv-TK4yxZJDes4nhnMfAlyJ6nSmVMHT6q2P_YqGkavwhCkfYAylI94FR74G47yeQuWLu3abw76wzBGN9pVRtCLu6OJ4RcIexr0rpQLARZhIiuNUrr3LLN_sbV7cNUQfQGVr0v9x77cbxVI5hPgSgAWAIcMX4Z7a6wj4QSnl7qi9HBZG1CH8PQ7ftGuBgFG7Htbh2ABj3xyza44vrwPN5VL-S3SUQtnJ1azOTfXvjCTJjPZv8rOmCllK9dMNoPFRjj7bsjeooYHfhK1rF9yiCJb9tdVcTa2puxs3YKQlZpN9UvaVhqquQg"
 
+GEMINI_API_KEY = "AIzaSyBsxfr_8Mw-7fwr_PqZAcv3LyGuI0ybv08"
+GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+
+
+
 HEADERS = {
     "accept": "application/json",
     "authorization": f"bearer {JWT_TOKEN}"
@@ -33,8 +38,28 @@ def organize_characters_by_server(char_list):
         organized.setdefault(server, []).append(c)
     return organized
 
-def summary_in_gemini(link):
-    return "요약내용"
+def summary_in_gemini(link: str) -> str:
+    """
+    Gemini 1.5 Flash API를 이용해 URL 본문을 300자 이내로 요약.
+    """
+    data = {
+        "prompt": {
+            "text": f"아래 URL의 본문을 300자 이내로 요약해 주세요. 중요한 내용만 포함:\n{link}"
+        },
+        "temperature": 0,
+        "maxOutputTokens": 300
+    }
+
+    try:
+        resp = requests.post(GEMINI_API_URL, json=data, timeout=10)
+        resp.raise_for_status()
+        result = resp.json()
+        summary_text = result.get("candidates", [{}])[0].get("content", "요약 정보를 불러오지 못했습니다.")
+        return summary_text
+    except Exception as e:
+        print(f"[ERROR] Gemini 요약 실패: {e}")
+        return "요약 정보를 불러오지 못했습니다."
+
 
 @app.route("/fallback", methods=["POST"])
 def fallback():
@@ -995,6 +1020,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
