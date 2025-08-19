@@ -33,6 +33,9 @@ def organize_characters_by_server(char_list):
         organized.setdefault(server, []).append(c)
     return organized
 
+def summary_in_gemini(link):
+    return "요약내용"
+
 @app.route("/fallback", methods=["POST"])
 def fallback():
     try:
@@ -79,13 +82,15 @@ def fallback():
         
             # 최신 10개만 선택
             latest_notices = all_notices[:10]
-        
+
+
             items = []
             for n in latest_notices:
                 title = n.get("Title", "")
                 date_time = n.get("Date", "")
                 link = n.get("Link", "")
                 notice_type = n.get("Type", "")
+                summary_article_text = summary_in_gemini(link)
         
                 # 보기 좋게 날짜 변환
                 try:
@@ -97,7 +102,7 @@ def fallback():
         
                 card = {
                     "title": f"[{notice_type}] {title}",
-                    "description": f"게시일: {formatted_time}",
+                    "description": f"게시일: {formatted_time}\n\n{summary_article_text}",
                     "buttons": [
                         {
                             "label": "공지 보기",
@@ -990,6 +995,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
