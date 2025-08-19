@@ -42,7 +42,7 @@ def organize_characters_by_server(char_list):
 def summarize_webpage_with_gemini(url):
     try:
         # 웹페이지 텍스트 가져오기
-        resp = requests.get(url, timeout=10)
+        resp = requests.get(url, timeout=30)
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, 'html.parser')
         paragraphs = soup.find_all('p')
@@ -1018,6 +1018,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
