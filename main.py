@@ -119,6 +119,7 @@ def get_all_characters():
         text_output = ""
 
         for server, chars in organized.items():
+            chars.sort(key=lambda x: x['CharacterLevel'], reverse=True)  # 레벨 내림차순 정렬
             text_output += f"[{server} 서버]\n"
             for c in chars:
                 text_output += f"- {c['CharacterName']} Lv{c['CharacterLevel']} {c['CharacterClassName']} ({c['ItemAvgLevel']})\n"
@@ -773,6 +774,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
