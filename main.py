@@ -45,9 +45,9 @@ def organize_characters_by_server(char_list):
         organized.setdefault(server, []).append(c)
     return organized
 
-def summary_in_gemini(content: str) -> str:
-    """Gemini 1.5 Flash API를 이용한 안전한 요약 함수"""
-    return "테스트"
+def summary_in_gemini(url: str) -> str:
+    """Gemini API를 이용한 안전한 요약 함수"""
+    return url
         
 
 
@@ -1010,6 +1010,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
