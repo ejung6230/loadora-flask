@@ -65,14 +65,23 @@ def fallback():
                 response_text = "공지 정보를 가져오는데 실패했습니다."
         
             if notices:
+                items = []
                 for n in notices[:10]:  # 최대 10개 카드
                     title = n.get("Title", "")
-                    date = n.get("Date", "")[:10]  # YYYY-MM-DD
+                    date_time = n.get("Date", "")  # 전체 날짜+시간 (예: 2025-08-20T11:22:33)
                     link = n.get("Link", "")
-        
+            
+                    # 보기 좋게 "YYYY-MM-DD HH:MM" 형식으로 변환
+                    try:
+                        from datetime import datetime
+                        dt_obj = datetime.fromisoformat(date_time.replace("Z", ""))  # Z 제거
+                        formatted_time = dt_obj.strftime("%Y-%m-%d %H:%M")
+                    except Exception:
+                        formatted_time = date_time  # 실패하면 원본 그대로
+            
                     card = {
                         "title": f"{title}",
-                        "description": f"{date}\n\n본문요약: 임시",
+                        "description": f"게시일: {formatted_time}\n\n요약: 임시",
                         "buttons": [
                             {
                                 "label": "공지 보기",
@@ -965,6 +974,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
