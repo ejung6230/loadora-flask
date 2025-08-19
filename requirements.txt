@@ -1,4 +1,6 @@
 flask
+flask-cors
 requests
 gunicorn
-flask_cors
+selenium
+google-generativeai
