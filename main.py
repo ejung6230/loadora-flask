@@ -39,7 +39,7 @@ def organize_characters_by_server(char_list):
 def fallback():
     try:
         json_data = request.get_json()
-        user_input = json_data.get("action", {}).get("params", {}).get("value", "").strip()
+        user_input = json_data.get("userRequest", {}).get("utterance", "").strip()
 
         response_text = "죄송해요. 이해하지 못했습니다.\n유효한 명령어를 입력해주세요."
 
@@ -831,6 +831,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
