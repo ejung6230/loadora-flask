@@ -7,6 +7,7 @@ import os
 import json
 import time
 import re
+import logging
 
 app = Flask(__name__)
 CORS(app)  # 모든 도메인 허용
@@ -1060,6 +1061,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
