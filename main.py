@@ -40,7 +40,7 @@ def organize_characters_by_server(char_list):
     return organized
 
 
-def summarize_webpage_with_gemini(url, max_chars=300):
+def summarize_webpage_with_gemini(url):
     try:
         # 1. 웹페이지 텍스트 가져오기
         resp = requests.get(url, timeout=5)
@@ -58,12 +58,12 @@ def summarize_webpage_with_gemini(url, max_chars=300):
             "Authorization": f"Bearer {GEMINI_API_KEY}"
         }
 
-        prompt = f"다음 글을 한국어로 핵심만 요약하고, 글자 수를 {max_chars}자 정도로 맞춰 주세요:\n\n{text}"
+        prompt = f"다음 글을 한국어로 핵심만 요약하고, 한 줄 요약해주세요:\n\n{text}"
 
         payload = {
             "prompt": prompt,
-            "temperature": 0.3,
-            "max_output_tokens": max_chars  # 토큰 수 기준, 글자 수와 비슷하게 조정 가능
+            "temperature": 0.3
+            # max_output_tokens 제거
         }
 
         response = requests.post(GEMINI_API_URL, headers=headers, data=json.dumps(payload))
@@ -110,14 +110,14 @@ def fallback():
                     link = n.get("Link", "")
         
                     # 텍스트에는 제목과 날짜만 표시
-                    summary_link = summarize_webpage_with_gemini(link, max_chars=30)
+                    summary_link = summarize_webpage_with_gemini(link)
                     
-                    response_text += f"- {title} ({date})\n한 줄 요약 : {summary_link}\n"
+                    response_text += f"- {title} ({date})\n한 줄 요약: {summary_link}\n"
                     
         
                     # 버튼으로 링크 제공
                     buttons.append({
-                        "label": title[:13] + "...",  # 버튼 글자 제한
+                        "label": title[:11] + "...",  # 버튼 글자 제한
                         "action": "webLink",
                         "webLinkUrl": link
                     })
@@ -1008,6 +1008,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
