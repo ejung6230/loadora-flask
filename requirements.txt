@@ -4,3 +4,4 @@ requests
 gunicorn
 selenium
 google-generativeai
+chromedriver-autoinstaller
