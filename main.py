@@ -79,12 +79,6 @@ def fallback():
         if match_weekly:
             weekly_text = match_weekly.group(2).strip()
             response_text = f"[주급 명령어]\n내용: {weekly_text}"
-        
-        # ---------- 떠상 관련 패턴 ----------
-        match_merchant = re.match(r"^(\.떠상|떠상|\.ㄸㅅ|ㄸㅅ|떠돌이상인) (.+)$", user_input)
-        if match_merchant:
-            merchant_text = match_merchant.group(2).strip()
-            response_text = f"[떠상 명령어]\n내용: {merchant_text}"
 
         # ---------- 떠상 관련 패턴 ----------
         match_merchant = re.match(r"^(\.떠상|떠상|\.ㄸㅅ|ㄸㅅ|떠돌이상인)( .+)?$", user_input)
@@ -126,12 +120,11 @@ def fallback():
                     "outputs": [
                         {
                             "textCard": {
-                                "description": "죄송해요. 이해하지 못했습니다.\n유효한 명령어를 입력해주세요.",
+                                "description": "유효한 명령어를 입력해주세요.",
                                 "buttons": [
                                     {
                                       "label": "사용 방법 GO",
                                       "highlight": True,
-                                      "highlight": False,
                                       "action": "webLink",
                                       "webLinkUrl": "http://pf.kakao.com/_tLVen/110482315"
                                     }
@@ -870,6 +863,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
