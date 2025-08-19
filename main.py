@@ -45,12 +45,12 @@ def fallback():
         response_text = ""
 
         # ---------- 정보 관련 패턴 ----------
-        match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ) (.+)$", user_input)
+        match_info = re.match(r"^(\.원정대|원정대|\.ㅇㅈㄷ|ㅇㅈㄷ) (.+)$", user_input)
         if match_info:
             char_name = match_info.group(2).strip()
 
             if not char_name:
-                response_text = "캐릭터 이름을 입력해주세요.\n ex) .정보 캐릭터명"
+                response_text = "캐릭터 이름을 입력해주세요.\n ex) .원정대 캐릭터명"
             else:
                 url = f"https://developer-lostark.game.onstove.com/characters/{char_name}/siblings"
                 headers = {
@@ -79,7 +79,11 @@ def fallback():
         match_weekly = re.match(r"^(\.주급|주급|\.ㅈㄱ|ㅈㄱ) (.+)$", user_input)
         if match_weekly:
             weekly_text = match_weekly.group(2).strip()
-            response_text = f"[주급 명령어]\n내용: {weekly_text}"
+
+            if not weekly_text:
+                response_text = "캐릭터 이름을 입력해주세요.\n ex) .주급 캐릭터명"
+            else:
+                response_text = f"[주급 명령어]\n내용: {weekly_text}"
 
         # ---------- 떠상 관련 패턴 ----------
         match_merchant = re.match(r"^(\.떠상|떠상|\.ㄸㅅ|ㄸㅅ|떠돌이상인)( .+)?$", user_input)
@@ -885,6 +889,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
