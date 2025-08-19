@@ -142,34 +142,6 @@ def get_all_characters():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/validate-character", methods=["POST"])
-def validate_character():
-    data = request.get_json()
-
-    # 파라미터 추출 (character라는 이름으로 설정했다고 가정)
-    char_param = data.get("action", {}).get("params", {}).get("character", {})
-    
-    if isinstance(char_param, dict):
-        raw_value = char_param.get("value", "").strip()
-    else:
-        raw_value = str(char_param).strip()
-
-    # .정보 / .ㅈㅂ / 정보 / ㅈㅂ 로 시작하는 패턴 검사
-    pattern = r"^(?:\.정보|\.ㅈㅂ|정보|ㅈㅂ)\s+(.+)$"
-    match = re.match(pattern, raw_value)
-
-    if match:
-        character_name = match.group(1).strip()
-        return jsonify({
-            "result": True,
-            "value": character_name  # 캐릭터명만 반환
-        })
-
-    return jsonify({
-        "result": False,
-        "message": "올바른 형식으로 입력해주세요. (.정보 캐릭터명)"
-    })
-
 # KorLark API URL
 KORLARK_API_URL = "https://api.korlark.com/lostark/merchant/reports"
 
@@ -802,6 +774,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
