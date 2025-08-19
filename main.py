@@ -43,16 +43,16 @@ def fallback():
         use_share_button = False  # True: 공유 버튼 있는 카드, False: simpleText
 
         response_text = ""
-
-        # ---------- 정보 관련 패턴 ----------
-        match_info = re.match(r"^(\.원정대|원정대|\.ㅇㅈㄷ|ㅇㅈㄷ) (.+)$", user_input)
-        if match_info:
-            char_name = match_info.group(2).strip()
-
-            if not char_name:
+        
+        # ---------- 원정대 관련 패턴 ----------
+        match_expedition = re.match(r"^(\.원정대|원정대|\.ㅇㅈㄷ|ㅇㅈㄷ) (.+)$", user_input)
+        if match_expedition:
+            expedition_char_name = match_expedition.group(2).strip()
+        
+            if not expedition_char_name:
                 response_text = "캐릭터 이름을 입력해주세요.\n ex) .원정대 캐릭터명"
             else:
-                url = f"https://developer-lostark.game.onstove.com/characters/{char_name}/siblings"
+                url = f"https://developer-lostark.game.onstove.com/characters/{expedition_char_name}/siblings"
                 headers = {
                     "accept": "application/json",
                     "authorization": f"bearer {JWT_TOKEN}"
@@ -60,22 +60,29 @@ def fallback():
                 resp = requests.get(url, headers=headers)
                 resp.raise_for_status()
                 data = resp.json()
-
-                organized = organize_characters_by_server(data)
-                if organized:
-                    text_output = "❙ 전체 서버 캐릭터 정보\n\n"
+        
+                organized_chars = organize_characters_by_server(data)
+                if organized_chars:
+                    expedition_text = "❙ 전체 서버 캐릭터 정보\n\n"
+                    for server, chars in organized_chars.items():
+                        chars.sort(key=lambda x: x['ItemAvgLevel'], reverse=True)
+                        expedition_text += f"[{server} 서버]\n"
+                        for c in chars:
+                            expedition_text += f"- {c['CharacterName']} Lv{c['CharacterLevel']} {c['CharacterClassName']} ({c['ItemAvgLevel']})\n"
+                        expedition_text += "\n"
+        
+                    response_text = expedition_text.strip()
+        
+        # ---------- 정보 관련 패턴 ----------
+        match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ) (.+)$", user_input)
+        if match_info:
+            info_char_name = match_info.group(2).strip()
+        
+            if not info_char_name:
+                response_text = "캐릭터 이름을 입력해주세요.\n ex) .정보 캐릭터명"
+            else:
+                response_text = f"[정보 명령어]\n내용: {info_char_name}"
                 
-                for server, chars in organized.items():
-                    chars.sort(key=lambda x: x['ItemAvgLevel'], reverse=True)
-                    text_output += f"[{server} 서버]\n"
-                    for c in chars:
-                        text_output += f"- {c['CharacterName']} Lv{c['CharacterLevel']} {c['CharacterClassName']} ({c['ItemAvgLevel']})\n"
-                    text_output += "\n"
-                
-
-
-                response_text = text_output.strip()
-
         # ---------- 주급 관련 패턴 ----------
         match_weekly = re.match(r"^(\.주급|주급|\.ㅈㄱ|ㅈㄱ) (.+)$", user_input)
         if match_weekly:
@@ -890,6 +897,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
