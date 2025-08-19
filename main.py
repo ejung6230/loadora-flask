@@ -110,12 +110,6 @@ def fallback():
                                         "label": "공유하기",
                                         "highlight": True,
                                         "action": "share"
-                                    },
-                                    {
-                                        "label": "사용 방법 GO",
-                                        "highlight": False,
-                                        "action": "webLink",
-                                        "webLinkUrl": "http://pf.kakao.com/_tLVen/110482315"
                                     }
                                 ],
                                 "lock": False,
@@ -805,12 +799,6 @@ def korlark_summary():
                                         "label": "공유하기",
                                         "highlight": True,
                                         "action": "share"
-                                    },
-                                    {
-                                        "label": "사용 방법 GO",
-                                        "highlight": False,
-                                        "action": "webLink",
-                                        "webLinkUrl": "http://pf.kakao.com/_tLVen/110482315"
                                     }
                                 ],
                                 "lock": False,
@@ -843,6 +831,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
