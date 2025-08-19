@@ -41,7 +41,7 @@ def fallback():
         json_data = request.get_json()
         user_input = json_data.get("userRequest", {}).get("utterance", "").strip()
 
-        response_text = "죄송해요. 이해하지 못했습니다.\n유효한 명령어를 입력해주세요."
+        response_text = ""
 
         # ---------- 정보 관련 패턴 ----------
         match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ) (.+)$", user_input)
@@ -81,23 +81,9 @@ def fallback():
             response_text = f"[주급 명령어]\n내용: {salary_text}"
         
         # ---------- 카카오 챗봇 응답 포맷 ----------
-        if len(response_text) > 400:
-            # 400자 이상이면 simpleText 사용
-            response = {
-                "version": "2.0",
-                "template": {
-                    "outputs": [
-                        {
-                            "simpleText": {
-                                "text": response_text
-                            }
-                        }
-                    ],
-                    "quickReplies": []
-                }
-            }
-        else:
-            # 400자 이하이면 textCard 사용
+
+        if not response_text:
+            # ❌ 응답이 없으면 textCard + 사용 방법 GO 버튼
             response = {
                 "version": "2.0",
                 "template": {
@@ -107,13 +93,30 @@ def fallback():
                                 "description": response_text,
                                 "buttons": [
                                     {
-                                        "label": "공유하기",
-                                        "highlight": True,
-                                        "action": "share"
+                                      "label": "사용 방법 GO",
+                                      "highlight": True,
+                                      "highlight": False,
+                                      "action": "webLink",
+                                      "webLinkUrl": "http://pf.kakao.com/_tLVen/110482315"
                                     }
                                 ],
                                 "lock": False,
                                 "forwardable": False
+                            }
+                        }
+                    ],
+                    "quickReplies": []
+                }
+            }
+        else:
+            # ✅ 응답이 있으면 simpleText
+            response = {
+                "version": "2.0",
+                "template": {
+                    "outputs": [
+                        {
+                            "simpleText": {
+                                "text": "죄송해요. 이해하지 못했습니다.\n유효한 명령어를 입력해주세요."
                             }
                         }
                     ],
@@ -831,6 +834,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
