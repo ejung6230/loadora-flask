@@ -1,8 +1,4 @@
 flask
-flask-cors
 requests
 gunicorn
-beautifulsoup4
-google-generativeai
-
-
+flask-cors

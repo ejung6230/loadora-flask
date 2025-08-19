@@ -7,19 +7,12 @@ import os
 import json
 import time
 import re
-from bs4 import BeautifulSoup
-import google.generativeai as genai
-
-
 
 app = Flask(__name__)
 CORS(app)  # 모든 도메인 허용
 
 # 🔑 발급받은 JWT 토큰
 JWT_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyIsImtpZCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyJ9.eyJpc3MiOiJodHRwczovL2x1ZHkuZ2FtZS5vbnN0b3ZlLmNvbSIsImF1ZCI6Imh0dHBzOi8vbHVkeS5nYW1lLm9uc3RvdmUuY29tL3Jlc291cmNlcyIsImNsaWVudF9pZCI6IjEwMDAwMDAwMDA1ODU3OTMifQ.pGbLttyxM_QTAJxMGW2XeMYQ1TSfArJiyLv-TK4yxZJDes4nhnMfAlyJ6nSmVMHT6q2P_YqGkavwhCkfYAylI94FR74G47yeQuWLu3abw76wzBGN9pVRtCLu6OJ4RcIexr0rpQLARZhIiuNUrr3LLN_sbV7cNUQfQGVr0v9x77cbxVI5hPgSgAWAIcMX4Z7a6wj4QSnl7qi9HBZG1CH8PQ7ftGuBgFG7Htbh2ABj3xyza44vrwPN5VL-S3SUQtnJ1azOTfXvjCTJjPZv8rOmCllK9dMNoPFRjj7bsjeooYHfhK1rF9yiCJb9tdVcTa2puxs3YKQlZpN9UvaVhqquQg"
-
-# Gemini API 키 설정
-genai.configure(api_key="AIzaSyBsxfr_8Mw-7fwr_PqZAcv3LyGuI0ybv08")
 
 HEADERS = {
     "accept": "application/json",
@@ -40,25 +33,8 @@ def organize_characters_by_server(char_list):
         organized.setdefault(server, []).append(c)
     return organized
 
-
-
 def summary_in_gemini(link):
-    resp = requests.get(link, timeout=5)
-    soup = BeautifulSoup(resp.text, "html.parser")
-    element = soup.select_one("section.article__data div.fr-view")
-    return str(element) if element else "본문 HTML을 가져올 수 없습니다."
-
-#         # 4. Gemini 요청
-#         model = genai.GenerativeModel("gemini-1.5-flash")
-#         prompt = f"""
-# 다음 HTML 공지 내용을 300자 이내로 간결하게 요약해줘. 
-# 불필요한 태그나 문구는 제외하고, 사람이 읽기 쉽게 정리해줘.
-
-# {html_content}
-# """
-#         response = model.generate_content(prompt)
-#         return response.text.strip()
-
+    return "요약내용"
 
 @app.route("/fallback", methods=["POST"])
 def fallback():
@@ -1019,11 +995,6 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
-
-
-
 
 
 
