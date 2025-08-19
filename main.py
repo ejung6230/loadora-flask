@@ -64,16 +64,17 @@ def summary_in_gemini(link: str) -> str:
         if not html_content:
             return "본문 HTML을 가져올 수 없습니다."
 
-        # 4. Gemini 요청
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        prompt = f"""
-다음 HTML 공지 내용을 300자 이내로 간결하게 요약해줘. 
-불필요한 태그나 문구는 제외하고, 사람이 읽기 쉽게 정리해줘.
+#         # 4. Gemini 요청
+#         model = genai.GenerativeModel("gemini-1.5-flash")
+#         prompt = f"""
+# 다음 HTML 공지 내용을 300자 이내로 간결하게 요약해줘. 
+# 불필요한 태그나 문구는 제외하고, 사람이 읽기 쉽게 정리해줘.
 
-{html_content}
-"""
-        response = model.generate_content(prompt)
-        return response.text.strip()
+# {html_content}
+# """
+#         response = model.generate_content(prompt)
+#         return response.text.strip()
+        return html_content
 
     except Exception as e:
         return f"요약 실패: {str(e)}"
@@ -1038,6 +1039,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
