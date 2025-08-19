@@ -65,7 +65,6 @@ def fallback():
                 response_text = "공지 정보를 가져오는데 실패했습니다."
         
             if notices:
-                items = []
                 for n in notices[:10]:  # 최대 10개 카드
                     title = n.get("Title", "")
                     date_time = n.get("Date", "")  # 전체 날짜+시간 (예: 2025-08-20T11:22:33)
@@ -974,6 +973,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
