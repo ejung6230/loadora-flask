@@ -2,6 +2,7 @@ flask
 flask-cors
 requests
 gunicorn
-selenium
+beautifulsoup4
 google-generativeai
-chromedriver-autoinstaller
+
+
