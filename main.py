@@ -101,7 +101,7 @@ def get_all_characters():
                 "version": "2.0",
                 "template": {
                     "outputs": [
-                        {"simpleText": {"text": json.dumps(data, ensure_ascii=False)}}
+                        {"simpleText": {"text": "123"}}
                     ]
                 }
             })
@@ -744,6 +744,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
