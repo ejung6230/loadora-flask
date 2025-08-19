@@ -78,13 +78,13 @@ def get_armory(character_name, endpoint):
 # 계정 내 캐릭터 조회
 @app.route("/account/characters", methods=["GET", "POST"])
 def get_all_characters():
-    # GET 요청이면 query parameter, POST 요청이면 JSON body에서 characterName 가져오기
-    if request.method == "GET":
-        char_name = request.args.get("characterName")
-    else:
-        data = request.get_json()
-        char_name = data.get("characterName") if data else None
-
+    # GET일 때 query parameter 사용
+    char_name = request.args.get("characterName")
+    
+    # POST일 때 form-data나 query string 사용
+    if request.method == "POST" and not char_name:
+        char_name = request.form.get("characterName") or request.args.get("characterName")
+    
     if not char_name:
         return jsonify({"error": "characterName parameter required"}), 400
 
@@ -733,6 +733,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
