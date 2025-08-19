@@ -80,13 +80,17 @@ def get_armory(character_name, endpoint):
 def get_all_characters():
     char_name = None
 
-    # GET 요청 시 query parameter 사용
+    # GET 요청에서 query parameter 확인
     if request.method == "GET":
         char_name = request.args.get("characterName")
 
-    # POST 요청 시 form-data 사용
+    # POST 요청에서 JSON 또는 form-data 확인
     if request.method == "POST":
-        char_name = request.form.get("characterName") or char_name
+        data = request.get_json(silent=True)  # JSON 확인
+        if data:
+            char_name = data.get("characterName") or char_name
+        else:
+            char_name = request.form.get("characterName") or char_name
 
     if not char_name:
         return jsonify({"error": "characterName parameter required"}), 400
@@ -736,6 +740,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
