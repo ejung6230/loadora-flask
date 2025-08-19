@@ -41,16 +41,26 @@ def organize_characters_by_server(char_list):
 
 def summarize_webpage_with_gemini(url):
     try:
-        # 웹페이지 텍스트 가져오기
+        # 1. 웹페이지 텍스트 가져오기
         resp = requests.get(url, timeout=30)
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, 'html.parser')
-        paragraphs = soup.find_all('p')
-        text = ' '.join(p.get_text() for p in paragraphs).strip()
 
+        # article__data 섹션 가져오기
+        section = soup.find("section", class_="article__data")
+        if not section:
+            return "공지 내용을 찾을 수 없습니다."
+
+        content_div = section.find("div", class_="fr-view")
+        if not content_div:
+            return "공지 내용을 찾을 수 없습니다."
+
+        paragraphs = content_div.find_all('p')
+        text = " ".join(p.get_text(strip=True) for p in paragraphs if p.get_text(strip=True))
         if not text:
-            return "웹페이지에서 텍스트를 찾을 수 없습니다."
+            return "공지 내용을 찾을 수 없습니다."
 
+        # 2. Gemini API 호출
         headers = {
             "Content-Type": "application/json",
             "X-goog-api-key": GEMINI_API_KEY
@@ -61,25 +71,24 @@ def summarize_webpage_with_gemini(url):
                 {
                     "parts": [
                         {
-                            "text": f"한국어로 핵심만 요약하고 한 줄로 만들어주세요:\n{text}"
+                            "text": f"다음 글을 한국어로 핵심만 요약하고 한 줄로 만들어주세요:\n{text}"
                         }
                     ]
                 }
             ]
         }
-        
+
         response = requests.post(GEMINI_API_URL, headers=headers, data=json.dumps(payload))
         response.raise_for_status()
         result = response.json()
 
-        # 결과 구조 확인 후 요약 추출
+        # 3. 요약 결과 추출
         summary = ""
-        if "candidates" in result:
-            candidates = result.get("candidates", [])
-            if candidates and "content" in candidates[0]:
-                parts = candidates[0].get("content", [])
-                if parts:
-                    summary = parts[0].get("text", "")
+        candidates = result.get("candidates", [])
+        if candidates and "content" in candidates[0]:
+            parts = candidates[0].get("content", [])
+            if parts:
+                summary = parts[0].get("text", "")
 
         return summary if summary else "요약을 생성할 수 없습니다."
 
@@ -1018,6 +1027,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
