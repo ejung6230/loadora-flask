@@ -32,21 +32,28 @@ def fallback():
     data = request.get_json()
     user_input = data.get("value", "").strip()
 
-    # .정보 / 정보 / .ㅈㅂ / ㅈㅂ 로 시작하고, 뒤에 공백 + 텍스트
-    match = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ) (.+)$", user_input)
-    if match:
-        nickname = match.group(2)  # 공백 뒤 전체 텍스트
-        description_text = f"입력한 닉네임: {nickname}"
-    else:
-        description_text = "죄송해요. 이해하지 못했습니다."
+    response_text = "죄송해요. 이해하지 못했습니다."
 
+    # 1️⃣ 정보 관련 패턴
+    match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ) (.+)$", user_input)
+    if match_info:
+        nickname = match_info.group(2).strip()
+        response_text = f"[정보 명령어]\n닉네임: {nickname}"
+
+    # 2️⃣ 주급 관련 패턴
+    match_salary = re.match(r"^(\.주급|주급|\.ㅈㄱ|ㅈㄱ) (.+)$", user_input)
+    if match_salary:
+        salary_text = match_salary.group(2).strip()
+        response_text = f"[주급 명령어]\n내용: {salary_text}"
+
+    # 버튼 구조 그대로 유지
     response = {
         "version": "2.0",
         "template": {
             "outputs": [
                 {
                     "textCard": {
-                        "description": description_text,
+                        "description": response_text,
                         "buttons": [
                             {
                                 "label": "공유하기",
@@ -813,6 +820,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
