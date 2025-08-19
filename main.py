@@ -79,9 +79,12 @@ def get_armory(character_name, endpoint):
 @app.route("/account/characters", methods=["GET", "POST"])
 def get_all_characters():
     try:
-        # GET이면 query param, POST이면 JSON body에서 가져오기
-        char_name = request.args.get("characterName") if request.method=="GET" else request.json.get("characterName")
-        
+        if request.method == "GET":
+            char_name = request.args.get("characterName")
+        else:  # POST
+            json_data = request.get_json()
+            char_name = json_data.get("action", {}).get("params", {}).get("characterName")
+
         if not char_name:
             return jsonify({"error": "characterName parameter required"}), 400
 
@@ -96,18 +99,18 @@ def get_all_characters():
         data = resp.json()
 
         # POST 요청이면 카카오 챗봇 포맷으로 감싸기
-        if request.method=="POST":
+        if request.method == "POST":
             return jsonify({
                 "version": "2.0",
                 "template": {
                     "outputs": [
-                        {"simpleText": {"text": "123"}}
+                        {"simpleText": {"text": json.dumps(data, ensure_ascii=False)}}
                     ]
                 }
             })
         # GET 요청이면 그냥 원본 반환
         return jsonify(data)
-        
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -744,6 +747,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
