@@ -69,7 +69,7 @@ def fallback():
                 response_text = response_text.strip()
             
         # ---------- 2. 모험섬 관련 패턴 ----------
-        match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ) (.+)$", user_input)
+        match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)$", user_input)
         if match_adventure_island:
             island_content = match_adventure_island.group(2).strip()
             response_text = "❙ 모험섬 정보\n\n"
@@ -105,14 +105,14 @@ def fallback():
                     response_text = expedition_text.strip()
 
         # ---------- 4. 이벤트 정보 관련 패턴 ----------
-        match_event = re.match(r"^(\.이벤트|이벤트|\.ㅇㅂㅌ|ㅇㅂㅌ) (.+)$", user_input)
+        match_event = re.match(r"^(\.이벤트|이벤트|\.ㅇㅂㅌ|ㅇㅂㅌ)$", user_input)
         if match_event:
             event_content = match_event.group(2).strip()
             response_text = "❙ 이벤트 정보\n\n"
             response_text += f"[이벤트 명령어]\n내용: {event_content}"
 
         # ---------- 5. 전체 서버 떠상 관련 패턴 ----------
-        match_merchant = re.match(r"^(\.떠상|떠상|\.ㄸㅅ|ㄸㅅ|떠돌이상인)( .+)?$", user_input)
+        match_merchant = re.match(r"^(\.떠상|떠상|\.ㄸㅅ|ㄸㅅ|떠돌이상인)$", user_input)
         if match_merchant:
             # 전체 서버 처리
             server_ids = list(SERVER_MAP.keys())
@@ -935,6 +935,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
