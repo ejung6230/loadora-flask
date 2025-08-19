@@ -46,28 +46,26 @@ def organize_characters_by_server(char_list):
     return organized
 
 def summary_in_gemini(url: str) -> str:
-    """Gemini API를 이용한 안전한 요약 함수"""
-    # prompt = f"다음 URL의 내용을 요약해줘: {url}"
+    """
+    Gemini API 테스트용 요약 함수
+    URL 내용을 가져오지 않고, URL 자체를 텍스트로 입력으로 사용
+    """
+    # prompt = f"다음 URL을 요약해줘: {url}"
     prompt = f"한마디"
     
     payload = {
-        "prompt": {
-            "text": prompt
-        },
+        "input": prompt,
         "temperature": 0.3,
         "maxOutputTokens": 200
     }
 
-    headers = {
-        "Content-Type": "application/json"
-    }
-
+    headers = {"Content-Type": "application/json"}
     response = requests.post(GEMINI_API_URL, headers=headers, data=json.dumps(payload))
 
     if response.status_code == 200:
         try:
             result = response.json()
-            # Gemini API의 출력 구조에 맞춰 텍스트 추출
+            # Gemini API 응답 구조에서 첫 번째 candidate의 content 추출
             text_output = result["candidates"][0]["content"]
             return text_output
         except Exception as e:
@@ -1034,6 +1032,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
