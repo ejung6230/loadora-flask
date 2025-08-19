@@ -139,8 +139,8 @@ def fallback():
         
             all_notices.sort(key=lambda x: parse_date(x.get("Date", "")), reverse=True)
         
-            # 최신 10개만 선택
-            latest_notices = all_notices[:10]
+            # 최신 5개만 선택
+            latest_notices = all_notices[:5]
 
 
             items = []
@@ -1054,6 +1054,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
