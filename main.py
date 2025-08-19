@@ -145,9 +145,16 @@ def get_all_characters():
 @app.route("/validate-character", methods=["POST"])
 def validate_character():
     data = request.get_json()
-    raw_value = data.get("value", "").strip()  # 챗봇이 파라미터 값으로 넘긴 것
 
-    # .정보 / .ㅈㅂ / 정보 / ㅈㅂ 로 시작하면서 뒤에 캐릭터명 있는지 검사
+    # 파라미터 추출 (character라는 이름으로 설정했다고 가정)
+    char_param = data.get("action", {}).get("params", {}).get("character", {})
+    
+    if isinstance(char_param, dict):
+        raw_value = char_param.get("value", "").strip()
+    else:
+        raw_value = str(char_param).strip()
+
+    # .정보 / .ㅈㅂ / 정보 / ㅈㅂ 로 시작하는 패턴 검사
     pattern = r"^(?:\.정보|\.ㅈㅂ|정보|ㅈㅂ)\s+(.+)$"
     match = re.match(pattern, raw_value)
 
@@ -155,7 +162,7 @@ def validate_character():
         character_name = match.group(1).strip()
         return jsonify({
             "result": True,
-            "value": character_name  # 파라미터 값으로 채워짐
+            "value": character_name  # 캐릭터명만 반환
         })
 
     return jsonify({
@@ -795,6 +802,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
