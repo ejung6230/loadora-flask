@@ -64,22 +64,14 @@ def fallback():
                 text_output = ""
                 
                 for server, chars in organized.items():
-                    chars.sort(
-                        key=lambda x: (
-                            -x['ItemAvgLevel'],    # 내림차순
-                            -x['CharacterLevel'],  # 내림차순
-                            x['CharacterName']     # 오름차순
-                        )
-                    )
+                    chars.sort(key=lambda x: x['CharacterLevel'], reverse=True)
                     text_output += f"[{server} 서버]\n"
                     for c in chars:
                         text_output += f"- {c['CharacterName']} Lv{c['CharacterLevel']} {c['CharacterClassName']} ({c['ItemAvgLevel']})\n"
                     text_output += "\n"
                 
-                response_text = text_output.strip()
 
-                
-                
+
                 response_text = text_output.strip()
 
         # ---------- 주급 관련 패턴 ----------
@@ -834,6 +826,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
