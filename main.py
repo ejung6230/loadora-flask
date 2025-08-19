@@ -61,7 +61,7 @@ def fallback():
                 data = resp.json()
 
                 organized = organize_characters_by_server(data)
-                text_output = ""
+                text_output = "❙ 전체 서버 캐릭터 정보\n\n"
                 
                 for server, chars in organized.items():
                     chars.sort(key=lambda x: x['ItemAvgLevel'], reverse=True)
@@ -79,36 +79,53 @@ def fallback():
         if match_salary:
             salary_text = match_salary.group(2).strip()
             response_text = f"[주급 명령어]\n내용: {salary_text}"
-
+        
         # ---------- 카카오 챗봇 응답 포맷 ----------
-        response = {
-            "version": "2.0",
-            "template": {
-                "outputs": [
-                    {
-                        "textCard": {
-                            "description": response_text,
-                            "buttons": [
-                                {
-                                  "label": "공유하기",
-                                  "highlight": True,
-                                  "action": "share"
-                                },
-                                {
-                                  "label": "사용 방법 GO",
-                                  "highlight": False,
-                                  "action": "webLink",
-                                  "webLinkUrl": "http://pf.kakao.com/_tLVen/110482315"
-                                }
-                              ],
-                            "lock": False,
-                            "forwardable": False
+        if len(response_text) > 400:
+            # 400자 이상이면 simpleText 사용
+            response = {
+                "version": "2.0",
+                "template": {
+                    "outputs": [
+                        {
+                            "simpleText": {
+                                "text": response_text
+                            }
                         }
-                    }
-                ],
-                "quickReplies": []
+                    ],
+                    "quickReplies": []
+                }
             }
-        }
+        else:
+            # 400자 이하이면 textCard 사용
+            response = {
+                "version": "2.0",
+                "template": {
+                    "outputs": [
+                        {
+                            "textCard": {
+                                "description": response_text,
+                                "buttons": [
+                                    {
+                                        "label": "공유하기",
+                                        "highlight": True,
+                                        "action": "share"
+                                    },
+                                    {
+                                        "label": "사용 방법 GO",
+                                        "highlight": False,
+                                        "action": "webLink",
+                                        "webLinkUrl": "http://pf.kakao.com/_tLVen/110482315"
+                                    }
+                                ],
+                                "lock": False,
+                                "forwardable": False
+                            }
+                        }
+                    ],
+                    "quickReplies": []
+                }
+            }
 
         return jsonify(response)
 
@@ -826,6 +843,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
