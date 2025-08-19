@@ -75,6 +75,23 @@ def get_armory(character_name, endpoint):
     except requests.exceptions.RequestException as e:
         return jsonify({"error": str(e)}), 500
 
+def organize_characters_by_server(char_data):
+    """
+    계정 내 캐릭터 조회 - 서버별로 캐릭터 정보를 묶어서 반환
+    """
+    organized = {}
+    for char in char_data:
+        server = char.get("ServerName", "Unknown")
+        if server not in organized:
+            organized[server] = []
+        organized[server].append({
+            "CharacterName": char.get("CharacterName"),
+            "CharacterLevel": char.get("CharacterLevel"),
+            "CharacterClassName": char.get("CharacterClassName"),
+            "ItemAvgLevel": char.get("ItemAvgLevel")
+        })
+    return organized
+
 # 계정 내 캐릭터 조회
 @app.route("/account/characters", methods=["GET", "POST"])
 def get_all_characters():
@@ -98,18 +115,27 @@ def get_all_characters():
         resp.raise_for_status()
         data = resp.json()
 
+        organized = organize_characters_by_server(data)
+        text_output = ""
+
+        for server, chars in organized.items():
+            text_output += f"[{server} 서버]\n"
+            for c in chars:
+                text_output += f"- {c['CharacterName']} Lv{c['CharacterLevel']} {c['CharacterClassName']} ({c['ItemAvgLevel']})\n"
+            text_output += "\n"
+        
         # POST 요청이면 카카오 챗봇 포맷으로 감싸기
         if request.method == "POST":
             return jsonify({
                 "version": "2.0",
                 "template": {
                     "outputs": [
-                        {"simpleText": {"text": json.dumps(data, ensure_ascii=False)}}
+                        {"simpleText": {"text": text_output.strip()}}
                     ]
                 }
             })
-        # GET 요청이면 그냥 원본 반환
-        return jsonify(data)
+        # GET 요청 반환
+        return text_output.strip()
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -747,6 +773,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
