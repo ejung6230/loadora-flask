@@ -85,6 +85,36 @@ def fallback():
         if match_merchant:
             merchant_text = match_merchant.group(2).strip()
             response_text = f"[떠상 명령어]\n내용: {merchant_text}"
+
+        # ---------- 떠상 관련 패턴 ----------
+        match_merchant = re.match(r"^(\.떠상|떠상|\.ㄸㅅ|ㄸㅅ|떠돌이상인)( .+)?$", user_input)
+        if match_merchant:
+            # 전체 서버 처리
+            server_ids = list(SERVER_MAP.keys())
+            all_data = []
+    
+            for server_id in server_ids:
+                resp = requests.get(KORLARK_API_URL, params={"server": server_id})
+                resp.raise_for_status()
+                server_data = resp.json()
+    
+                # 각 entry의 reports 안쪽에 server 정보 추가
+                for entry in server_data:
+                    for report in entry.get("reports", []):
+                        report["serverId"] = server_id
+                        report["serverName"] = SERVER_MAP.get(server_id, server_id)
+                        report["startTime"] = entry.get("startTime", "")
+                        report["endTime"] = entry.get("endTime", "")
+                    all_data.append(entry)
+    
+            current_data = filter_active_reports(all_data)
+    
+            # 떠상 요약 텍스트 생성
+            response_text = "❙ 전체 서버 떠상 정보\n\n"
+            response_text += format_reports_by_region(current_data)
+            response_text += f"\n\n{get_remaining_time_text()}"
+
+        
         
         # ---------- 카카오 챗봇 응답 포맷 ----------
 
@@ -840,6 +870,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
