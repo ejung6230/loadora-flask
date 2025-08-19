@@ -49,7 +49,7 @@ def fallback():
             char_name = match_info.group(2).strip()
 
             if not char_name:
-                response_text = "캐릭터 이름을 입력해주세요."
+                response_text = "캐릭터 이름을 입력해주세요.\n ex) .정보 캐릭터명"
             else:
                 url = f"https://developer-lostark.game.onstove.com/characters/{char_name}/siblings"
                 headers = {
@@ -784,79 +784,3 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
