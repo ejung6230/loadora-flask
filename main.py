@@ -38,27 +38,38 @@ def organize_characters_by_server(char_list):
         organized.setdefault(server, []).append(c)
     return organized
 
-def summary_in_gemini(link: str) -> str:
+def summary_in_gemini(content: str) -> str:
     """
-    Gemini 1.5 Flash API를 이용해 URL 본문을 300자 이내로 요약.
+    Gemini 1.5 Flash API를 이용해 텍스트를 300자 이내로 요약
     """
     data = {
-        "prompt": {
-            "text": f"아래 URL의 본문을 300자 이내로 요약해 주세요. 중요한 내용만 포함:\n{link}"
-        },
-        "temperature": 0,
-        "maxOutputTokens": 300
+        "contents": [{
+            "parts": [{
+                "text": f"다음 내용을 300자 이내로 요약해 주세요. 중요한 내용만 포함하세요:\n\n{content}"
+            }]
+        }],
+        "generationConfig": {
+            "temperature": 0.1,
+            "maxOutputTokens": 300
+        }
     }
-
+    
     try:
-        resp = requests.post(GEMINI_API_URL, json=data, timeout=10)
+        resp = requests.post(GEMINI_API_URL, json=data, timeout=15)
         resp.raise_for_status()
         result = resp.json()
-        summary_text = result.get("candidates", [{}])[0].get("content", "요약 정보를 불러오지 못했습니다.")
-        return summary_text
-    except Exception as e:
-        print(f"[ERROR] Gemini 요약 실패: {e}")
+        
+        # 응답에서 텍스트 추출
+        candidates = result.get("candidates", [])
+        if candidates and "content" in candidates[0]:
+            parts = candidates[0]["content"].get("parts", [])
+            if parts and "text" in parts[0]:
+                return parts[0]["text"].strip()
+        
         return "요약 정보를 불러오지 못했습니다."
+    except Exception as e:
+        print(f"[ERROR] Gemini 요약 처리 실패: {e}")
+        return "요약 처리 중 오류가 발생했습니다."
 
 
 @app.route("/fallback", methods=["POST"])
@@ -1020,6 +1031,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
