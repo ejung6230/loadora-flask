@@ -29,8 +29,8 @@ RATE_LIMIT = {
 
 @app.route("/fallback", methods=["POST"])
 def fallback():
-    data = request.get_json()
-    user_input = data.get("value", "").strip()
+    json_data = request.get_json()
+    user_input = json_data.get("action", {}).get("params", {}).get("value", "").strip()
 
     response_text = "죄송해요. 이해하지 못했습니다."
 
@@ -820,6 +820,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
