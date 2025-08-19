@@ -46,48 +46,67 @@ def fallback():
         # ---------- 1. 공지 관련 패턴 ----------
         match_notice = re.match(r"^(\.공지|공지|\.ㄱㅈ|ㄱㅈ)$", user_input)
         if match_notice:
-            notice_type = "공지"  # 항상 기본 공지 타입 사용
             url = "https://developer-lostark.game.onstove.com/news/notices"
             headers = {
                 "accept": "application/json",
                 "authorization": f"bearer {JWT_TOKEN}"
             }
-            params = {"type": notice_type}
         
-            try:
-                resp = requests.get(url, headers=headers, params=params, timeout=5)
-                resp.raise_for_status()
-                notices = resp.json()
-            except Exception as e:
-                notices = []
-                response_text = "공지 정보를 가져오는데 실패했습니다."
+            notice_types = ["공지", "점검", "상점", "이벤트"]
+            all_notices = []
+            
+            for notice_type in notice_types:
+                try:
+                    resp = requests.get(url, headers=headers, params={"type": notice_type}, timeout=5)
+                    resp.raise_for_status()
+                    notices = resp.json()
+                    for n in notices:
+                        n["Type"] = notice_type  # 구분을 위해 타입 추가
+                        all_notices.append(n)
+                except Exception as e:
+                    continue  # 실패한 타입은 그냥 무시
         
-            if notices:
-                for n in notices[:10]:  # 최대 10개 카드
-                    title = n.get("Title", "")
-                    date_time = n.get("Date", "")  # 전체 날짜+시간 (예: 2025-08-20T11:22:33)
-                    link = n.get("Link", "")
-            
-                    # 보기 좋게 "YYYY-MM-DD HH:MM" 형식으로 변환
-                    try:
-                        from datetime import datetime
-                        dt_obj = datetime.fromisoformat(date_time.replace("Z", ""))  # Z 제거
-                        formatted_time = dt_obj.strftime("%Y-%m-%d %H:%M")
-                    except Exception:
-                        formatted_time = date_time  # 실패하면 원본 그대로
-            
-                    card = {
-                        "title": f"[{formatted_time}]",
-                        "description": f"{title}\n\n요약: 임시",
-                        "buttons": [
-                            {
-                                "label": "공지 보기",
-                                "action": "webLink",
-                                "webLinkUrl": link
-                            }
-                        ]
-                    }
-                    items.append(card)
+            # 날짜 기준 최신순 정렬
+            from datetime import datetime, timezone, timedelta
+            def parse_date(date_str):
+                try:
+                    dt_obj = datetime.fromisoformat(date_str.replace("Z", ""))
+                    return dt_obj.astimezone(timezone(timedelta(hours=9)))  # 한국시간 변환
+                except Exception:
+                    return datetime.min
+        
+            all_notices.sort(key=lambda x: parse_date(x.get("Date", "")), reverse=True)
+        
+            # 최신 10개만 선택
+            latest_notices = all_notices[:10]
+        
+            items = []
+            for n in latest_notices:
+                title = n.get("Title", "")
+                date_time = n.get("Date", "")
+                link = n.get("Link", "")
+                notice_type = n.get("Type", "")
+        
+                # 보기 좋게 날짜 변환
+                try:
+                    dt_obj = datetime.fromisoformat(date_time.replace("Z", ""))
+                    dt_obj = dt_obj.astimezone(timezone(timedelta(hours=9)))
+                    formatted_time = dt_obj.strftime("%Y-%m-%d %H:%M")
+                except Exception:
+                    formatted_time = date_time
+        
+                card = {
+                    "title": f"[{notice_type}] {title}",
+                    "description": f"게시일: {formatted_time}",
+                    "buttons": [
+                        {
+                            "label": "공지 보기",
+                            "action": "webLink",
+                            "webLinkUrl": link
+                        }
+                    ]
+                }
+                items.append(card)
             
         # ---------- 2. 모험섬 관련 패턴 ----------
         match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)$", user_input)
@@ -971,6 +990,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
