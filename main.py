@@ -46,63 +46,33 @@ def organize_characters_by_server(char_list):
     return organized
 
 def summary_in_gemini(content: str) -> str:
-    """빠른 요약 처리를 위한 최적화된 함수"""
-    # 너무 긴 텍스트는 잘라서 처리
-    if len(content) > 2000:
-        content = content[:2000] + "..."
-    
+    """간단한 요약 함수"""
     data = {
         "contents": [{
             "parts": [{
-                "text": f"다음을 간단히 200자 이내로 요약하세요:\n\n{content}"
+                "text": f"여기 링크의 본문을 300자 이내로 간단히 요약하세요:\n{content}"
             }]
         }],
         "generationConfig": {
             "temperature": 0,
-            "maxOutputTokens": 150,  # 토큰 수 줄여서 빠른 응답
-            "topK": 1,
-            "topP": 0.8
+            "maxOutputTokens": 300
         }
     }
     
     try:
-        logger.info("Gemini API 요청 시작")
-        start_time = time.time()
-        
-        resp = requests.post(
-            GEMINI_API_URL, 
-            json=data, 
-            timeout=TIMEOUT_SECONDS,  # 짧은 타임아웃
-            headers={'Content-Type': 'application/json'}
-        )
-        
-        elapsed = time.time() - start_time
-        logger.info(f"Gemini API 응답 시간: {elapsed:.2f}초")
-        
-        resp.raise_for_status()
+        resp = requests.post(GEMINI_API_URL, json=data, timeout=10)
         result = resp.json()
         
-        # 응답 파싱
         candidates = result.get("candidates", [])
         if candidates and "content" in candidates[0]:
             parts = candidates[0]["content"].get("parts", [])
             if parts and "text" in parts[0]:
-                summary_text = parts[0]["text"].strip()
-                logger.info("요약 성공")
-                return summary_text
+                return parts[0]["text"].strip()
         
-        logger.warning("응답 파싱 실패")
-        return "요약을 생성할 수 없습니다."
+        return "요약 실패"
         
-    except requests.Timeout:
-        logger.error(f"Gemini API 타임아웃 ({TIMEOUT_SECONDS}초)")
-        return "요청 시간이 초과되었습니다. 더 짧은 텍스트로 다시 시도해주세요."
-    except requests.RequestException as e:
-        logger.error(f"Gemini API 요청 실패: {e}")
-        return "API 요청에 실패했습니다."
-    except Exception as e:
-        logger.error(f"예상치 못한 오류: {e}")
-        return "처리 중 오류가 발생했습니다."
+    except:
+        return "요약 중 오류 발생"
         
 
 
@@ -1065,6 +1035,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
