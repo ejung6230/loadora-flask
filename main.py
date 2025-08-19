@@ -47,9 +47,33 @@ def organize_characters_by_server(char_list):
 
 def summary_in_gemini(url: str) -> str:
     """Gemini API를 이용한 안전한 요약 함수"""
-    return url
-        
+    # prompt = f"다음 URL의 내용을 요약해줘: {url}"
+    prompt = f"한마디"
+    
+    payload = {
+        "prompt": {
+            "text": prompt
+        },
+        "temperature": 0.3,
+        "maxOutputTokens": 200
+    }
 
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(GEMINI_API_URL, headers=headers, data=json.dumps(payload))
+
+    if response.status_code == 200:
+        try:
+            result = response.json()
+            # Gemini API의 출력 구조에 맞춰 텍스트 추출
+            text_output = result["candidates"][0]["content"]
+            return text_output
+        except Exception as e:
+            return f"응답 처리 중 오류 발생: {e}"
+    else:
+        return f"API 요청 실패: {response.status_code}, {response.text}"
 
 @app.route("/fallback", methods=["POST"])
 def fallback():
@@ -1010,6 +1034,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
