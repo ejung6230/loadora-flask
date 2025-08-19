@@ -43,7 +43,7 @@ def fallback():
         use_share_button = False  # True: 공유 버튼 있는 카드, False: simpleText
 
         response_text = ""
-        
+        items = []
 
         # ---------- 1. 공지 관련 패턴 ----------
         match_notice = re.match(r"^(\.공지|공지|\.ㄱㅈ|ㄱㅈ)$", user_input)
@@ -55,18 +55,33 @@ def fallback():
                 "authorization": f"bearer {JWT_TOKEN}"
             }
             params = {"type": notice_type}
-            resp = requests.get(url, headers=headers, params=params, timeout=5)
-            resp.raise_for_status()
-            notices = resp.json()
-            
+        
+            try:
+                resp = requests.get(url, headers=headers, params=params, timeout=5)
+                resp.raise_for_status()
+                notices = resp.json()
+            except Exception as e:
+                notices = []
+                response_text = "공지 정보를 가져오는데 실패했습니다."
+        
             if notices:
-                response_text = f"❙ 공지 정보 ({notice_type})\n\n"
-                for n in notices[:10]:  # 최대 10개까지만 표시
+                for n in notices[:10]:  # 최대 10개 카드
                     title = n.get("Title", "")
                     date = n.get("Date", "")[:10]  # YYYY-MM-DD
                     link = n.get("Link", "")
-                    response_text += f"- {title} ({date})\n링크: {link}\n\n"
-                response_text = response_text.strip()
+        
+                    card = {
+                        "title": f"{title} ({date})",
+                        "description": "",  # 필요하면 내용 추가 가능
+                        "buttons": [
+                            {
+                                "label": "공지 보기",
+                                "action": "webLink",
+                                "webLinkUrl": link
+                            }
+                        ]
+                    }
+                    items.append(card)
             
         # ---------- 2. 모험섬 관련 패턴 ----------
         match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)$", user_input)
@@ -186,6 +201,21 @@ def fallback():
                                 ],
                                 "lock": False,
                                 "forwardable": False
+                            }
+                        }
+                    ],
+                    "quickReplies": []
+                }
+            }
+        elif items:
+            response = {
+                "version": "2.0",
+                "template": {
+                    "outputs": [
+                        {
+                            "carousel": {
+                                "type": "textCard",
+                                "items": items
                             }
                         }
                     ],
@@ -935,6 +965,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
