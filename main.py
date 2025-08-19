@@ -78,7 +78,7 @@ def summarize_webpage_with_gemini(url):
             ]
         }
 
-        response = requests.post(GEMINI_API_URL, headers=headers, data=json.dumps(payload))
+        response = requests.post(GEMINI_API_URL, headers=headers, data=json.dumps(payload), timeout=60)
         response.raise_for_status()
         result = response.json()
 
@@ -1027,6 +1027,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
