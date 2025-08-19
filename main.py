@@ -76,30 +76,14 @@ def get_armory(character_name, endpoint):
         return jsonify({"error": str(e)}), 500
 
 # 계정 내 캐릭터 조회
-@app.route("/account/characters", methods=["GET"])
+@app.route("/account/characters", methods=["GET", "POST"])
 def get_all_characters():
-    # query parameter로 캐릭터 이름 받기
-    char_name = request.args.get("characterName")
-    if not char_name:
-        return jsonify({"error": "characterName parameter required"}), 400
-
-    url = f"https://developer-lostark.game.onstove.com/characters/{char_name}/siblings"
-    headers = {
-        "accept": "application/json",
-        "authorization": f"bearer {JWT_TOKEN}"
-    }
-
-    resp = requests.get(url, headers=headers)
-    if resp.status_code != 200:
-        return jsonify({"error": f"API returned {resp.status_code}", "details": resp.text}), resp.status_code
-
-    return jsonify(resp.json())
-
-# 카카오 챗봇용 POST 엔드포인트
-@app.route("/account/characters", methods=["POST"])
-def get_all_characters():
-    data = request.get_json()
-    char_name = data.get("characterName") if data else None
+    # GET 요청이면 query parameter, POST 요청이면 JSON body에서 characterName 가져오기
+    if request.method == "GET":
+        char_name = request.args.get("characterName")
+    else:
+        data = request.get_json()
+        char_name = data.get("characterName") if data else None
 
     if not char_name:
         return jsonify({"error": "characterName parameter required"}), 400
@@ -749,6 +733,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
