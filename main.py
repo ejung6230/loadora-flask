@@ -11,6 +11,69 @@ import json
 app = Flask(__name__)
 CORS(app)  # 모든 도메인 허용
 
+# 🔑 발급받은 JWT 토큰
+JWT_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyIsImtpZCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyJ9.eyJpc3MiOiJodHRwczovL2x1ZHkuZ2FtZS5vbnN0b3ZlLmNvbSIsImF1ZCI6Imh0dHBzOi8vbHVkeS5nYW1lLm9uc3RvdmUuY29tL3Jlc291cmNlcyIsImNsaWVudF9pZCI6IjEwMDAwMDAwMDA1ODU3OTMifQ.pGbLttyxM_QTAJxMGW2XeMYQ1TSfArJiyLv-TK4yxZJDes4nhnMfAlyJ6nSmVMHT6q2P_YqGkavwhCkfYAylI94FR74G47yeQuWLu3abw76wzBGN9pVRtCLu6OJ4RcIexr0rpQLARZhIiuNUrr3LLN_sbV7cNUQfQGVr0v9x77cbxVI5hPgSgAWAIcMX4Z7a6wj4QSnl7qi9HBZG1CH8PQ7ftGuBgFG7Htbh2ABj3xyza44vrwPN5VL-S3SUQtnJ1azOTfXvjCTJjPZv8rOmCllK9dMNoPFRjj7bsjeooYHfhK1rF9yiCJb9tdVcTa2puxs3YKQlZpN9UvaVhqquQg"
+
+HEADERS = {
+    "accept": "application/json",
+    "authorization": f"bearer {JWT_TOKEN}"
+}
+
+# 요청 제한 상태 저장
+RATE_LIMIT = {
+    "limit": 100,
+    "remaining": 100,
+    "reset": time.time() + 60
+}
+
+def update_rate_limit(headers):
+    """응답 헤더에서 요청 제한 정보 업데이트"""
+    if "X-RateLimit-Limit" in headers:
+        RATE_LIMIT["limit"] = int(headers.get("X-RateLimit-Limit"))
+    if "X-RateLimit-Remaining" in headers:
+        RATE_LIMIT["remaining"] = int(headers.get("X-RateLimit-Remaining"))
+    if "X-RateLimit-Reset" in headers:
+        RATE_LIMIT["reset"] = int(headers.get("X-RateLimit-Reset"))
+
+def check_rate_limit():
+    """요청 제한 확인, 필요 시 대기"""
+    now = time.time()
+    if RATE_LIMIT["remaining"] <= 0:
+        wait_time = RATE_LIMIT["reset"] - now
+        if wait_time > 0:
+            time.sleep(wait_time)
+
+# Armories 엔드포인트 매핑
+VALID_ENDPOINTS = [
+    "summary", "profiles", "equipment", "avatars", "combat-skills", 
+    "engravings", "cards", "gems", "colosseums", "collectibles", "arkpassive"
+]
+
+@app.route("/armories/<character_name>/<endpoint>", methods=["GET"])
+def get_armory(character_name, endpoint):
+    """
+    캐릭터 이름과 엔드포인트로 조회
+    endpoint: summary, profiles, equipment, avatars, combat-skills, engravings, 
+              cards, gems, colosseums, collectibles, arkpassive
+    """
+    if endpoint not in VALID_ENDPOINTS:
+        return jsonify({"error": "Invalid endpoint"}), 400
+
+    check_rate_limit()
+    
+    path = "" if endpoint == "summary" else endpoint
+    url = f"https://developer-lostark.game.onstove.com/armories/characters/{character_name}"
+    if path:
+        url += f"/{path}"
+
+    try:
+        resp = requests.get(url, headers=HEADERS)
+        update_rate_limit(resp.headers)
+        resp.raise_for_status()
+        return jsonify(resp.json())
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": str(e)}), 500
+
 # KorLark API URL
 KORLARK_API_URL = "https://api.korlark.com/lostark/merchant/reports"
 
@@ -643,6 +706,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
