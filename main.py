@@ -95,6 +95,45 @@ def get_all_characters():
 
     return jsonify(resp.json())
 
+# 카카오 챗봇용 POST 엔드포인트
+@app.route("/account/characters", methods=["POST"])
+def kakao_get_all_characters():
+    try:
+        # 카카오 챗봇에서 전달한 JSON body 파싱
+        data = request.get_json()
+        char_name = data.get("characterName")  # POST JSON: { "characterName": "Coolguy" }
+
+        if not char_name:
+            return jsonify({"version": "v2", "template": {"outputs": [{"simpleText": {"text": "characterName을 입력해주세요."}}]}}), 400
+
+        url = f"https://developer-lostark.game.onstove.com/characters/{char_name}/siblings"
+        headers = {
+            "accept": "application/json",
+            "authorization": f"bearer {JWT_TOKEN}"
+        }
+
+        resp = requests.get(url, headers=headers)
+        if resp.status_code != 200:
+            return jsonify({"version": "v2", "template": {"outputs": [{"simpleText": {"text": f"API 에러 {resp.status_code}"}}]}}), resp.status_code
+
+        characters = resp.json()
+
+        # 챗봇에서 보여줄 텍스트 형태로 변환
+        text_output = "\n".join([f"{c['CharacterName']} ({c['CharacterClassName']}) - 레벨 {c['CharacterLevel']}, 평균 아이템 레벨 {c['ItemAvgLevel']}" for c in characters])
+
+        return jsonify({
+            "version": "v2",
+            "template": {
+                "outputs": [
+                    {"simpleText": {"text": text_output or "캐릭터 정보가 없습니다."}}
+                ]
+            }
+        })
+
+    except Exception as e:
+        return jsonify({"version": "v2", "template": {"outputs": [{"simpleText": {"text": f"오류 발생: {str(e)}"}}]}}), 500
+
+
 # KorLark API URL
 KORLARK_API_URL = "https://api.korlark.com/lostark/merchant/reports"
 
@@ -727,6 +766,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
