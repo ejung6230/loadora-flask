@@ -41,7 +41,7 @@ def fallback():
         json_data = request.get_json()
         user_input = json_data.get("action", {}).get("params", {}).get("value", "").strip()
 
-        response_text = "죄송해요. 이해하지 못했습니다."
+        response_text = "죄송해요. 이해하지 못했습니다. 유효한 명령어를 입력해주세요."
 
         # ---------- 정보 관련 패턴 ----------
         match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ) (.+)$", user_input)
@@ -88,8 +88,18 @@ def fallback():
                         "textCard": {
                             "description": response_text,
                             "buttons": [
-                                {"label": "공유하기", "highlight": False, "action": "share"}
-                            ],
+                                {
+                                  "label": "공유하기",
+                                  "highlight": False,
+                                  "action": "share"
+                                },
+                                {
+                                  "label": "명령어 안내 GO",
+                                  "highlight": False,
+                                  "action": "webLink",
+                                  "webLinkUrl": "http://pf.kakao.com/_tLVen/110482315"
+                                }
+                              ],
                             "lock": False,
                             "forwardable": False
                         }
@@ -787,4 +797,5 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
