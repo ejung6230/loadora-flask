@@ -28,50 +28,78 @@ RATE_LIMIT = {
     "reset": time.time() + 60
 }
 
+def organize_characters_by_server(char_list):
+    organized = {}
+    for c in char_list:
+        server = c.get("ServerName", "Unknown")
+        organized.setdefault(server, []).append(c)
+    return organized
+
 @app.route("/fallback", methods=["POST"])
 def fallback():
-    json_data = request.get_json()
-    user_input = json_data.get("action", {}).get("params", {}).get("value", "").strip()
+    try:
+        json_data = request.get_json()
+        user_input = json_data.get("action", {}).get("params", {}).get("value", "").strip()
 
-    response_text = "죄송해요. 이해하지 못했습니다."
+        response_text = "죄송해요. 이해하지 못했습니다."
 
-    # 1️⃣ 정보 관련 패턴
-    match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ) (.+)$", user_input)
-    if match_info:
-        nickname = match_info.group(2).strip()
-        response_text = f"[정보 명령어]\n닉네임: {nickname}"
+        # ---------- 정보 관련 패턴 ----------
+        match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ) (.+)$", user_input)
+        if match_info:
+            char_name = match_info.group(2).strip()
 
-    # 2️⃣ 주급 관련 패턴
-    match_salary = re.match(r"^(\.주급|주급|\.ㅈㄱ|ㅈㄱ) (.+)$", user_input)
-    if match_salary:
-        salary_text = match_salary.group(2).strip()
-        response_text = f"[주급 명령어]\n내용: {salary_text}"
-
-    # 버튼 구조 그대로 유지
-    response = {
-        "version": "2.0",
-        "template": {
-            "outputs": [
-                {
-                    "textCard": {
-                        "description": response_text,
-                        "buttons": [
-                            {
-                                "label": "공유하기",
-                                "highlight": False,
-                                "action": "share"
-                            }
-                        ],
-                        "lock": False,
-                        "forwardable": False
-                    }
+            if not char_name:
+                response_text = "캐릭터 이름을 입력해주세요."
+            else:
+                url = f"https://developer-lostark.game.onstove.com/characters/{char_name}/siblings"
+                headers = {
+                    "accept": "application/json",
+                    "authorization": f"bearer {JWT_TOKEN}"
                 }
-            ],
-            "quickReplies": []
-        }
-    }
+                resp = requests.get(url, headers=headers)
+                resp.raise_for_status()
+                data = resp.json()
 
-    return jsonify(response)
+                organized = organize_characters_by_server(data)
+                text_output = ""
+                for server, chars in organized.items():
+                    chars.sort(key=lambda x: x['CharacterLevel'], reverse=True)
+                    text_output += f"[{server} 서버]\n"
+                    for c in chars:
+                        text_output += f"- {c['CharacterName']} Lv{c['CharacterLevel']} {c['CharacterClassName']} ({c['ItemAvgLevel']})\n"
+                    text_output += "\n"
+                response_text = text_output.strip()
+
+        # ---------- 주급 관련 패턴 ----------
+        match_salary = re.match(r"^(\.주급|주급|\.ㅈㄱ|ㅈㄱ) (.+)$", user_input)
+        if match_salary:
+            salary_text = match_salary.group(2).strip()
+            response_text = f"[주급 명령어]\n내용: {salary_text}"
+
+        # ---------- 카카오 챗봇 응답 포맷 ----------
+        response = {
+            "version": "2.0",
+            "template": {
+                "outputs": [
+                    {
+                        "textCard": {
+                            "description": response_text,
+                            "buttons": [
+                                {"label": "공유하기", "highlight": False, "action": "share"}
+                            ],
+                            "lock": False,
+                            "forwardable": False
+                        }
+                    }
+                ],
+                "quickReplies": []
+            }
+        }
+
+        return jsonify(response)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 def update_rate_limit(headers):
@@ -122,71 +150,6 @@ def get_armory(character_name, endpoint):
     except requests.exceptions.RequestException as e:
         return jsonify({"error": str(e)}), 500
 
-def organize_characters_by_server(char_data):
-    """
-    계정 내 캐릭터 조회 - 서버별로 캐릭터 정보를 묶어서 반환
-    """
-    organized = {}
-    for char in char_data:
-        server = char.get("ServerName", "Unknown")
-        if server not in organized:
-            organized[server] = []
-        organized[server].append({
-            "CharacterName": char.get("CharacterName"),
-            "CharacterLevel": char.get("CharacterLevel"),
-            "CharacterClassName": char.get("CharacterClassName"),
-            "ItemAvgLevel": char.get("ItemAvgLevel")
-        })
-    return organized
-
-# 계정 내 캐릭터 조회
-@app.route("/account/characters", methods=["GET", "POST"])
-def get_all_characters():
-    try:
-        if request.method == "GET":
-            char_name = request.args.get("characterName")
-        else:  # POST
-            json_data = request.get_json()
-            char_name = json_data.get("action", {}).get("params", {}).get("characterName")
-
-        if not char_name:
-            return jsonify({"error": "characterName parameter required"}), 400
-
-        url = f"https://developer-lostark.game.onstove.com/characters/{char_name}/siblings"
-        headers = {
-            "accept": "application/json",
-            "authorization": f"bearer {JWT_TOKEN}"
-        }
-
-        resp = requests.get(url, headers=headers)
-        resp.raise_for_status()
-        data = resp.json()
-
-        organized = organize_characters_by_server(data)
-        text_output = ""
-
-        for server, chars in organized.items():
-            chars.sort(key=lambda x: x['CharacterLevel'], reverse=True)  # 레벨 내림차순 정렬
-            text_output += f"[{server} 서버]\n"
-            for c in chars:
-                text_output += f"- {c['CharacterName']} Lv{c['CharacterLevel']} {c['CharacterClassName']} ({c['ItemAvgLevel']})\n"
-            text_output += "\n"
-        
-        # POST 요청이면 카카오 챗봇 포맷으로 감싸기
-        if request.method == "POST":
-            return jsonify({
-                "version": "2.0",
-                "template": {
-                    "outputs": [
-                        {"simpleText": {"text": text_output.strip()}}
-                    ]
-                }
-            })
-        # GET 요청 반환
-        return text_output.strip()
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 
 # KorLark API URL
@@ -821,6 +784,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
