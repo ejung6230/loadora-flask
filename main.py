@@ -50,9 +50,6 @@ def summary_in_gemini(url: str) -> str:
     Gemini API 테스트용 요약 함수.
     URL 내용을 가져오는 대신, URL 자체를 텍스트 입력으로 사용합니다.
     """
-    # API 요청 URL은 실제 사용하려는 엔드포인트에 맞게 수정해야 합니다.
-    # 예: https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=YOUR_API_KEY
-    GEMINI_API_URL = "YOUR_API_URL_HERE"
     
     # URL 내용을 요약하도록 프롬프트를 구성합니다.
     # prompt = f"다음 URL의 내용을 한마디로 요약해줘: {url}"
@@ -1057,6 +1054,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
