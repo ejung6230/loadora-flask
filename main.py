@@ -110,7 +110,10 @@ def fallback():
                     link = n.get("Link", "")
         
                     # 텍스트에는 제목과 날짜만 표시
-                    response_text += f"- {title} ({date})\n"
+                    summary_link = summarize_webpage_with_gemini(link, max_chars=30)
+                    
+                    response_text += f"- {title} ({date})\n한 줄 요약 : {summary_link}\n"
+                    
         
                     # 버튼으로 링크 제공
                     buttons.append({
@@ -1005,6 +1008,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
