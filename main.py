@@ -659,7 +659,7 @@ def get_remaining_time_text(remaining_text=""):
                 remaining = end_time - now
                 hours = remaining.seconds // 3600
                 minutes = (remaining.seconds % 3600) // 60
-                remaining_text += f"{hours}시간 {minutes:02d}분"
+                remaining_text += f"판매 마감까지 {hours}시간 {minutes:02d}분 남았습니다."
                 return remaining_text
         else:
             start_time = now.replace(hour=start_hour, minute=0, second=0, microsecond=0)
@@ -668,7 +668,7 @@ def get_remaining_time_text(remaining_text=""):
                 remaining = end_time - now
                 hours = remaining.seconds // 3600
                 minutes = (remaining.seconds % 3600) // 60
-                remaining_text += f"{hours}시간 {minutes:02d}분"
+                remaining_text += f"판매 마감까지 {hours}시간 {minutes:02d}분 남았습니다."
                 return remaining_text
 
     # 어느 구간에도 속하지 않으면
@@ -702,8 +702,8 @@ def korlark_summary():
         current_data = filter_active_reports(all_data)
         summary_text = "❙ 전체 서버 떠상 정보\n\n"
         summary_text += format_reports_by_region(current_data)
-        summary_text += f"\n\n판매 마감까지 {get_remaining_time_text()} 남았습니다."
-        
+        summary_text += f"\n\n{get_remaining_time_text()}"
+
         if request.method=="POST":
             return jsonify({"version":"2.0","template":{"outputs":[{"simpleText":{"text":summary_text}}]}})
         return summary_text
@@ -727,6 +727,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
