@@ -78,34 +78,38 @@ def get_armory(character_name, endpoint):
 # 계정 내 캐릭터 조회
 @app.route("/account/characters", methods=["GET", "POST"])
 def get_all_characters():
-    char_name = None
+    try:
+        # GET이면 query param, POST이면 JSON body에서 가져오기
+        char_name = request.args.get("characterName") if request.method=="GET" else request.json.get("characterName")
+        
+        if not char_name:
+            return jsonify({"error": "characterName parameter required"}), 400
 
-    # GET 요청에서 query parameter 확인
-    if request.method == "GET":
-        char_name = request.args.get("characterName")
+        url = f"https://developer-lostark.game.onstove.com/characters/{char_name}/siblings"
+        headers = {
+            "accept": "application/json",
+            "authorization": f"bearer {JWT_TOKEN}"
+        }
 
-    # POST 요청에서 JSON 또는 form-data 확인
-    if request.method == "POST":
-        data = request.get_json(silent=True)  # JSON 확인
-        if data:
-            char_name = data.get("characterName") or char_name
-        else:
-            char_name = request.form.get("characterName") or char_name
+        resp = requests.get(url, headers=headers)
+        resp.raise_for_status()
+        data = resp.json()
 
-    if not char_name:
-        return jsonify({"error": "characterName parameter required"}), 400
-
-    url = f"https://developer-lostark.game.onstove.com/characters/{char_name}/siblings"
-    headers = {
-        "accept": "application/json",
-        "authorization": f"bearer {JWT_TOKEN}"
-    }
-
-    resp = requests.get(url, headers=headers)
-    if resp.status_code != 200:
-        return jsonify({"error": f"API returned {resp.status_code}", "details": resp.text}), resp.status_code
-
-    return jsonify(resp.json())
+        # POST 요청이면 카카오 챗봇 포맷으로 감싸기
+        if request.method=="POST":
+            return jsonify({
+                "version": "2.0",
+                "template": {
+                    "outputs": [
+                        {"simpleText": {"text": json.dumps(data, ensure_ascii=False)}}
+                    ]
+                }
+            })
+        # GET 요청이면 그냥 원본 반환
+        return jsonify(data)
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # KorLark API URL
@@ -740,6 +744,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
