@@ -66,9 +66,9 @@ def fallback():
                 for server, chars in organized.items():
                     chars.sort(
                         key=lambda x: (
-                            -float(x['ItemAvgLevel']),
-                            -int(x['CharacterLevel']),
-                            x['CharacterName']
+                            -x['ItemAvgLevel'],    # 내림차순
+                            -x['CharacterLevel'],  # 내림차순
+                            x['CharacterName']     # 오름차순
                         )
                     )
                     text_output += f"[{server} 서버]\n"
@@ -834,6 +834,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
