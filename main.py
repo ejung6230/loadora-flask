@@ -17,12 +17,14 @@ JWT_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IktYMk40TkRDSTJ5NTA5NWp
 GEMINI_API_KEY = "AIzaSyBsxfr_8Mw-7fwr_PqZAcv3LyGuI0ybv08"
 GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
 
-
-
 HEADERS = {
     "accept": "application/json",
     "authorization": f"bearer {JWT_TOKEN}"
 }
+
+# 짧은 타임아웃 빠른 응답
+TIMEOUT_SECONDS = 8
+
 
 # 요청 제한 상태 저장
 RATE_LIMIT = {
@@ -39,37 +41,64 @@ def organize_characters_by_server(char_list):
     return organized
 
 def summary_in_gemini(content: str) -> str:
-    """
-    Gemini 1.5 Flash API를 이용해 텍스트를 300자 이내로 요약
-    """
+    """빠른 요약 처리를 위한 최적화된 함수"""
+    # 너무 긴 텍스트는 잘라서 처리
+    if len(content) > 2000:
+        content = content[:2000] + "..."
+    
     data = {
         "contents": [{
             "parts": [{
-                "text": f"다음 내용을 300자 이내로 요약해 주세요. 중요한 내용만 포함하세요:\n\n{content}"
+                "text": f"다음을 간단히 200자 이내로 요약하세요:\n\n{content}"
             }]
         }],
         "generationConfig": {
-            "temperature": 0.1,
-            "maxOutputTokens": 300
+            "temperature": 0,
+            "maxOutputTokens": 150,  # 토큰 수 줄여서 빠른 응답
+            "topK": 1,
+            "topP": 0.8
         }
     }
     
     try:
-        resp = requests.post(GEMINI_API_URL, json=data, timeout=15)
+        logger.info("Gemini API 요청 시작")
+        start_time = time.time()
+        
+        resp = requests.post(
+            GEMINI_API_URL, 
+            json=data, 
+            timeout=TIMEOUT_SECONDS,  # 짧은 타임아웃
+            headers={'Content-Type': 'application/json'}
+        )
+        
+        elapsed = time.time() - start_time
+        logger.info(f"Gemini API 응답 시간: {elapsed:.2f}초")
+        
         resp.raise_for_status()
         result = resp.json()
         
-        # 응답에서 텍스트 추출
+        # 응답 파싱
         candidates = result.get("candidates", [])
         if candidates and "content" in candidates[0]:
             parts = candidates[0]["content"].get("parts", [])
             if parts and "text" in parts[0]:
-                return parts[0]["text"].strip()
+                summary_text = parts[0]["text"].strip()
+                logger.info("요약 성공")
+                return summary_text
         
-        return "요약 정보를 불러오지 못했습니다."
+        logger.warning("응답 파싱 실패")
+        return "요약을 생성할 수 없습니다."
+        
+    except requests.Timeout:
+        logger.error(f"Gemini API 타임아웃 ({TIMEOUT_SECONDS}초)")
+        return "요청 시간이 초과되었습니다. 더 짧은 텍스트로 다시 시도해주세요."
+    except requests.RequestException as e:
+        logger.error(f"Gemini API 요청 실패: {e}")
+        return "API 요청에 실패했습니다."
     except Exception as e:
-        print(f"[ERROR] Gemini 요약 처리 실패: {e}")
-        return "요약 처리 중 오류가 발생했습니다."
+        logger.error(f"예상치 못한 오류: {e}")
+        return "처리 중 오류가 발생했습니다."
+        
 
 
 @app.route("/fallback", methods=["POST"])
@@ -1031,6 +1060,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
