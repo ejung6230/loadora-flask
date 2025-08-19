@@ -46,13 +46,6 @@ def fallback():
         
 
         # ---------- 1. 공지 관련 패턴 ----------
-        match_notice = re.match(r"^(\.공지|공지|\.ㄱㅈ|ㄱㅈ) (.+)$", user_input)
-        if match_notice:
-            notice_content = match_notice.group(2).strip()
-            response_text = "❙ 공지 정보\n\n"
-            response_text += f"[공지 명령어]\n내용: {notice_content}"
-
-        # ---------- 1. 공지 관련 패턴 ----------
         match_notice = re.match(r"^(\.공지|공지|\.ㄱㅈ|ㄱㅈ)$", user_input)
         if match_notice:
             notice_type = "공지"  # 항상 기본 공지 타입 사용
@@ -66,9 +59,7 @@ def fallback():
             resp.raise_for_status()
             notices = resp.json()
             
-            if not notices:
-                response_text = f"❙ 공지 정보\n\n[{notice_type}] 공지가 없습니다."
-            else:
+            if notices:
                 response_text = f"❙ 공지 정보 ({notice_type})\n\n"
                 for n in notices[:10]:  # 최대 10개까지만 표시
                     title = n.get("Title", "")
@@ -944,6 +935,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
