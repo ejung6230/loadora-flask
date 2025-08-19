@@ -44,7 +44,22 @@ def fallback():
 
         response_text = ""
         
-        # ---------- 원정대 관련 패턴 ----------
+
+        # ---------- 1. 공지 관련 패턴 ----------
+        match_notice = re.match(r"^(\.공지|공지|\.ㄱㅈ|ㄱㅈ) (.+)$", user_input)
+        if match_notice:
+            notice_content = match_notice.group(2).strip()
+            response_text = "❙ 공지 정보\n\n"
+            response_text += f"[공지 명령어]\n내용: {notice_content}"
+            
+        # ---------- 2. 모험섬 관련 패턴 ----------
+        match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ) (.+)$", user_input)
+        if match_adventure_island:
+            island_content = match_adventure_island.group(2).strip()
+            response_text = "❙ 모험섬 정보\n\n"
+            response_text += f"[모험섬 명령어]\n내용: {island_content}"
+
+        # ---------- 3. 원정대 관련 패턴 ----------
         match_expedition = re.match(r"^(\.원정대|원정대|\.ㅇㅈㄷ|ㅇㅈㄷ) (.+)$", user_input)
         if match_expedition:
             expedition_char_name = match_expedition.group(2).strip()
@@ -63,7 +78,7 @@ def fallback():
         
                 organized_chars = organize_characters_by_server(data)
                 if organized_chars:
-                    expedition_text = "❙ 전체 서버 캐릭터 정보\n\n"
+                    expedition_text = "❙ 원정대 전체 캐릭터 정보\n\n"
                     for server, chars in organized_chars.items():
                         chars.sort(key=lambda x: x['ItemAvgLevel'], reverse=True)
                         expedition_text += f"[{server} 서버]\n"
@@ -72,28 +87,15 @@ def fallback():
                         expedition_text += "\n"
         
                     response_text = expedition_text.strip()
-        
-        # ---------- 정보 관련 패턴 ----------
-        match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ) (.+)$", user_input)
-        if match_info:
-            info_char_name = match_info.group(2).strip()
-        
-            if not info_char_name:
-                response_text = "캐릭터 이름을 입력해주세요.\n ex) .정보 캐릭터명"
-            else:
-                response_text = f"[정보 명령어]\n내용: {info_char_name}"
-                
-        # ---------- 주급 관련 패턴 ----------
-        match_weekly = re.match(r"^(\.주급|주급|\.ㅈㄱ|ㅈㄱ) (.+)$", user_input)
-        if match_weekly:
-            weekly_text = match_weekly.group(2).strip()
 
-            if not weekly_text:
-                response_text = "캐릭터 이름을 입력해주세요.\n ex) .주급 캐릭터명"
-            else:
-                response_text = f"[주급 명령어]\n내용: {weekly_text}"
+        # ---------- 4. 이벤트 정보 관련 패턴 ----------
+        match_event = re.match(r"^(\.이벤트|이벤트|\.ㅇㅂㅌ|ㅇㅂㅌ) (.+)$", user_input)
+        if match_event:
+            event_content = match_event.group(2).strip()
+            response_text = "❙ 이벤트 정보\n\n"
+            response_text += f"[이벤트 명령어]\n내용: {event_content}"
 
-        # ---------- 떠상 관련 패턴 ----------
+        # ---------- 5. 전체 서버 떠상 관련 패턴 ----------
         match_merchant = re.match(r"^(\.떠상|떠상|\.ㄸㅅ|ㄸㅅ|떠돌이상인)( .+)?$", user_input)
         if match_merchant:
             # 전체 서버 처리
@@ -124,8 +126,28 @@ def fallback():
             # 공유 버튼 생성(카드형은 최대 400자)
             if len(response_text) <= 400:
                 use_share_button = True
+                
+        # ---------- 6. 주급 관련 패턴 ----------
+        match_weekly = re.match(r"^(\.주급|주급|\.ㅈㄱ|ㅈㄱ) (.+)$", user_input)
+        if match_weekly:
+            weekly_text = match_weekly.group(2).strip()
 
+            if not weekly_text:
+                response_text = "캐릭터 이름을 입력해주세요.\n ex) .주급 캐릭터명"
+            else:
+                response_text = "❙ 특정 캐릭터 주급\n\n"
+                response_text += f"[주급 명령어]\n내용: {weekly_text}"
+                
+        # ---------- 7. 특정 캐릭터 정보 관련 패턴 ----------
+        match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ) (.+)$", user_input)
+        if match_info:
+            info_char_name = match_info.group(2).strip()
         
+            if not info_char_name:
+                response_text = "캐릭터 이름을 입력해주세요.\n ex) .정보 캐릭터명"
+            else:
+                response_text = "❙ 특정 캐릭터 정보\n\n"
+                response_text += f"[정보 명령어]\n내용: {info_char_name}"
         
         # ---------- 카카오 챗봇 응답 포맷 ----------
         
@@ -897,6 +919,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
