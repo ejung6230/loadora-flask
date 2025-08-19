@@ -40,6 +40,7 @@ def fallback():
     try:
         json_data = request.get_json()
         user_input = json_data.get("userRequest", {}).get("utterance", "").strip()
+        use_share_button = False  # True: 공유 버튼 있는 카드, False: simpleText
 
         response_text = ""
 
@@ -108,10 +109,14 @@ def fallback():
             response_text += format_reports_by_region(current_data)
             response_text += f"\n\n{get_remaining_time_text()}"
 
+            # 공유 버튼 생성(카드형은 최대 400자)
+            if len(response_text) <= 400:
+                use_share_button = False
+
         
         
         # ---------- 카카오 챗봇 응답 포맷 ----------
-
+        
         if not response_text:
             # ❌ 응답이 없으면 textCard + 사용 방법 GO 버튼
             response = {
@@ -138,20 +143,37 @@ def fallback():
                 }
             }
         else:
-            # ✅ 응답이 있으면 simpleText
-            response = {
-                "version": "2.0",
-                "template": {
-                    "outputs": [
-                        {
-                            "simpleText": {
-                                "text": response_text
+            if use_share_button:
+                # ✅ 응답이 있으면 공유 버튼 있는 textCard
+                response = {
+                    "version": "2.0",
+                    "template": {
+                        "outputs": [
+                            {
+                                "textCard": {
+                                    "description": response_text,
+                                    "buttons": [
+                                        {"label": "공유하기", "highlight": True, "action": "share"}
+                                    ],
+                                    "lock": False,
+                                    "forwardable": False
+                                }
                             }
-                        }
-                    ],
-                    "quickReplies": []
+                        ],
+                        "quickReplies": []
+                    }
                 }
-            }
+            else:
+                # ✅ 응답이 있으면 simpleText
+                response = {
+                    "version": "2.0",
+                    "template": {
+                        "outputs": [
+                            {"simpleText": {"text": response_text}}
+                        ],
+                        "quickReplies": []
+                    }
+                }
 
         return jsonify(response)
 
@@ -863,6 +885,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
