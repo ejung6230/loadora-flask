@@ -20,7 +20,7 @@ CORS(app)  # 모든 도메인 허용
 JWT_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyIsImtpZCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyJ9.eyJpc3MiOiJodHRwczovL2x1ZHkuZ2FtZS5vbnN0b3ZlLmNvbSIsImF1ZCI6Imh0dHBzOi8vbHVkeS5nYW1lLm9uc3RvdmUuY29tL3Jlc291cmNlcyIsImNsaWVudF9pZCI6IjEwMDAwMDAwMDA1ODU3OTMifQ.pGbLttyxM_QTAJxMGW2XeMYQ1TSfArJiyLv-TK4yxZJDes4nhnMfAlyJ6nSmVMHT6q2P_YqGkavwhCkfYAylI94FR74G47yeQuWLu3abw76wzBGN9pVRtCLu6OJ4RcIexr0rpQLARZhIiuNUrr3LLN_sbV7cNUQfQGVr0v9x77cbxVI5hPgSgAWAIcMX4Z7a6wj4QSnl7qi9HBZG1CH8PQ7ftGuBgFG7Htbh2ABj3xyza44vrwPN5VL-S3SUQtnJ1azOTfXvjCTJjPZv8rOmCllK9dMNoPFRjj7bsjeooYHfhK1rF9yiCJb9tdVcTa2puxs3YKQlZpN9UvaVhqquQg"
 
 GEMINI_API_KEY = "AIzaSyBsxfr_8Mw-7fwr_PqZAcv3LyGuI0ybv08"
-GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={api_key}"
 
 HEADERS = {
     "accept": "application/json",
@@ -47,31 +47,56 @@ def organize_characters_by_server(char_list):
 
 def summary_in_gemini(url: str) -> str:
     """
-    Gemini API 테스트용 요약 함수
-    URL 내용을 가져오지 않고, URL 자체를 텍스트로 입력으로 사용
+    Gemini API 테스트용 요약 함수.
+    URL 내용을 가져오는 대신, URL 자체를 텍스트 입력으로 사용합니다.
     """
-    # prompt = f"다음 URL을 요약해줘: {url}"
-    prompt = f"한마디"
+    # API 요청 URL은 실제 사용하려는 엔드포인트에 맞게 수정해야 합니다.
+    # 예: https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=YOUR_API_KEY
+    GEMINI_API_URL = "YOUR_API_URL_HERE"
     
+    # URL 내용을 요약하도록 프롬프트를 구성합니다.
+    # prompt = f"다음 URL의 내용을 한마디로 요약해줘: {url}"
+    prompt = f"한마디"
+
+    # Gemini API는 'contents' 필드에 요청 내용을 담는 경우가 많습니다.
+    # 'parts' 리스트 안에 텍스트를 담아야 합니다.
     payload = {
-        "input": prompt,
-        "temperature": 0.3,
-        "maxOutputTokens": 200
+        "contents": [
+            {
+                "parts": [
+                    {
+                        "text": prompt
+                    }
+                ]
+            }
+        ],
+        "generationConfig": {
+            "temperature": 0.3,
+            "maxOutputTokens": 200,
+        }
     }
 
     headers = {"Content-Type": "application/json"}
-    response = requests.post(GEMINI_API_URL, headers=headers, data=json.dumps(payload))
-
-    if response.status_code == 200:
-        try:
-            result = response.json()
-            # Gemini API 응답 구조에서 첫 번째 candidate의 content 추출
-            text_output = result["candidates"][0]["content"]
-            return text_output
-        except Exception as e:
-            return f"응답 처리 중 오류 발생: {e}"
-    else:
-        return f"API 요청 실패: {response.status_code}, {response.text}"
+    
+    try:
+        response = requests.post(GEMINI_API_URL, headers=headers, data=json.dumps(payload))
+        response.raise_for_status() # HTTP 오류가 발생하면 예외를 발생시킵니다.
+        
+        result = response.json()
+        
+        # Gemini API 응답 구조에서 텍스트를 추출합니다.
+        # 'candidates' -> 'content' -> 'parts' -> 'text' 경로를 따라갑니다.
+        text_output = result["candidates"][0]["content"]["parts"][0]["text"]
+        return text_output
+        
+    except requests.exceptions.HTTPError as http_err:
+        return f"API 요청 실패: HTTP 오류 - {http_err}"
+    except requests.exceptions.RequestException as req_err:
+        return f"API 요청 실패: 네트워크 오류 - {req_err}"
+    except (KeyError, IndexError) as json_err:
+        return f"응답 처리 중 오류 발생: 예상치 못한 JSON 구조 - {json_err}"
+    except Exception as e:
+        return f"알 수 없는 오류 발생: {e}"
 
 @app.route("/fallback", methods=["POST"])
 def fallback():
@@ -1032,6 +1057,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
