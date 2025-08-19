@@ -126,7 +126,7 @@ def fallback():
                     "outputs": [
                         {
                             "textCard": {
-                                "description": response_text,
+                                "description": "죄송해요. 이해하지 못했습니다.\n유효한 명령어를 입력해주세요.",
                                 "buttons": [
                                     {
                                       "label": "사용 방법 GO",
@@ -152,7 +152,7 @@ def fallback():
                     "outputs": [
                         {
                             "simpleText": {
-                                "text": "죄송해요. 이해하지 못했습니다.\n유효한 명령어를 입력해주세요."
+                                "text": response_text
                             }
                         }
                     ],
@@ -870,6 +870,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
