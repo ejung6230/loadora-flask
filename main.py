@@ -13,7 +13,6 @@ import re
 GEMINI_API_KEY = "AIzaSyBsxfr_8Mw-7fwr_PqZAcv3LyGuI0ybv08"
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta2/models/gemini-1.5-flash:generateText"
 
-
 app = Flask(__name__)
 CORS(app)  # 모든 도메인 허용
 
@@ -42,8 +41,8 @@ def organize_characters_by_server(char_list):
 
 def summarize_webpage_with_gemini(url):
     try:
-        # 1. 웹페이지 텍스트 가져오기
-        resp = requests.get(url, timeout=5)
+        # 웹페이지 텍스트 가져오기
+        resp = requests.get(url, timeout=10)
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, 'html.parser')
         paragraphs = soup.find_all('p')
@@ -52,25 +51,23 @@ def summarize_webpage_with_gemini(url):
         if not text:
             return "웹페이지에서 텍스트를 찾을 수 없습니다."
 
-        # 2. Gemini API 호출
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {GEMINI_API_KEY}"
+            "X-goog-api-key": GEMINI_API_KEY
         }
 
-        prompt = f"다음 글을 한국어로 핵심만 요약하고, 한 줄 요약해주세요:\n\n{text}"
-
         payload = {
-            "prompt": prompt,
-            "temperature": 0.3
-            # max_output_tokens 제거
+            "contents": [
+                {"parts": [{"text": f"한국어로 핵심만 요약하고 한 줄로 만들어주세요:\n{text}"}]}
+            ]
         }
 
         response = requests.post(GEMINI_API_URL, headers=headers, data=json.dumps(payload))
         response.raise_for_status()
         result = response.json()
 
-        summary = result.get("candidates", [{}])[0].get("output", "")
+        # 결과 구조 확인 후 요약 추출
+        summary = result.get("candidates", [{}])[0].get("content", [{}])[0].get("text", "")
         return summary if summary else "요약을 생성할 수 없습니다."
 
     except Exception as e:
@@ -1008,6 +1005,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
