@@ -75,10 +75,16 @@ def fallback():
                 response_text = text_output.strip()
 
         # ---------- 주급 관련 패턴 ----------
-        match_salary = re.match(r"^(\.주급|주급|\.ㅈㄱ|ㅈㄱ) (.+)$", user_input)
-        if match_salary:
-            salary_text = match_salary.group(2).strip()
-            response_text = f"[주급 명령어]\n내용: {salary_text}"
+        match_weekly = re.match(r"^(\.주급|주급|\.ㅈㄱ|ㅈㄱ) (.+)$", user_input)
+        if match_weekly:
+            weekly_text = match_weekly.group(2).strip()
+            response_text = f"[주급 명령어]\n내용: {weekly_text}"
+        
+        # ---------- 떠상 관련 패턴 ----------
+        match_merchant = re.match(r"^(\.떠상|떠상|\.ㄸㅅ|ㄸㅅ|떠돌이상인) (.+)$", user_input)
+        if match_merchant:
+            merchant_text = match_merchant.group(2).strip()
+            response_text = f"[떠상 명령어]\n내용: {merchant_text}"
         
         # ---------- 카카오 챗봇 응답 포맷 ----------
 
@@ -834,6 +840,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
