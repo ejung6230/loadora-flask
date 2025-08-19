@@ -62,7 +62,8 @@ def fallback():
                 data = resp.json()
 
                 organized = organize_characters_by_server(data)
-                text_output = "❙ 전체 서버 캐릭터 정보\n\n"
+                if organized:
+                    text_output = "❙ 전체 서버 캐릭터 정보\n\n"
                 
                 for server, chars in organized.items():
                     chars.sort(key=lambda x: x['ItemAvgLevel'], reverse=True)
@@ -889,6 +890,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
