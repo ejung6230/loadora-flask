@@ -3,11 +3,15 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import requests
 from datetime import datetime, timezone, timedelta
+from bs4 import BeautifulSoup
 import os
 import json
 import time
 import re
 
+
+GEMINI_API_KEY = "AIzaSyBsxfr_8Mw-7fwr_PqZAcv3LyGuI0ybv08"
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta2/models/gemini-1.5-flash:generateText"
 
 
 app = Flask(__name__)
@@ -35,6 +39,43 @@ def organize_characters_by_server(char_list):
         organized.setdefault(server, []).append(c)
     return organized
 
+
+def summarize_webpage_with_gemini(url, max_chars=300):
+    try:
+        # 1. 웹페이지 텍스트 가져오기
+        resp = requests.get(url, timeout=5)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, 'html.parser')
+        paragraphs = soup.find_all('p')
+        text = ' '.join(p.get_text() for p in paragraphs).strip()
+
+        if not text:
+            return "웹페이지에서 텍스트를 찾을 수 없습니다."
+
+        # 2. Gemini API 호출
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {GEMINI_API_KEY}"
+        }
+
+        prompt = f"다음 글을 한국어로 핵심만 요약하고, 글자 수를 {max_chars}자 정도로 맞춰 주세요:\n\n{text}"
+
+        payload = {
+            "prompt": prompt,
+            "temperature": 0.3,
+            "max_output_tokens": max_chars  # 토큰 수 기준, 글자 수와 비슷하게 조정 가능
+        }
+
+        response = requests.post(GEMINI_API_URL, headers=headers, data=json.dumps(payload))
+        response.raise_for_status()
+        result = response.json()
+
+        summary = result.get("candidates", [{}])[0].get("output", "")
+        return summary if summary else "요약을 생성할 수 없습니다."
+
+    except Exception as e:
+        return f"요약 처리 중 오류가 발생했습니다.\n{str(e)}"
+
 @app.route("/fallback", methods=["POST"])
 def fallback():
     try:
@@ -43,6 +84,7 @@ def fallback():
         use_share_button = False  # True: 공유 버튼 있는 카드, False: simpleText
 
         response_text = ""
+        buttons = []
         
 
         # ---------- 1. 공지 관련 패턴 ----------
@@ -60,12 +102,22 @@ def fallback():
             notices = resp.json()
             
             if notices:
-                response_text = f"❙ 공지 정보 ({notice_type})\n\n"
-                for n in notices[:10]:  # 최대 10개까지만 표시
+                response_text = f"❙ 공지 정보\n\n"
+                
+                for n in notices[:5]:  # 최대 5개 버튼
                     title = n.get("Title", "")
                     date = n.get("Date", "")[:10]  # YYYY-MM-DD
                     link = n.get("Link", "")
-                    response_text += f"- {title} ({date})\n링크: {link}\n\n"
+        
+                    # 텍스트에는 제목과 날짜만 표시
+                    response_text += f"- {title} ({date})\n"
+        
+                    # 버튼으로 링크 제공
+                    buttons.append({
+                        "label": title[:13] + "...",  # 버튼 글자 제한
+                        "action": "webLink",
+                        "webLinkUrl": link
+                    })
                 response_text = response_text.strip()
             
         # ---------- 2. 모험섬 관련 패턴 ----------
@@ -184,6 +236,24 @@ def fallback():
                                       "webLinkUrl": "http://pf.kakao.com/_tLVen/110482315"
                                     }
                                 ],
+                                "lock": False,
+                                "forwardable": False
+                            }
+                        }
+                    ],
+                    "quickReplies": []
+                }
+            }
+        elif buttons:
+            # ✅ 응답이 있으면, 정의해둔 버튼이 있는 textCard
+            response = {
+                "version": "2.0",
+                "template": {
+                    "outputs": [
+                        {
+                            "textCard": {
+                                "description": response_text,
+                                "buttons": buttons,
                                 "lock": False,
                                 "forwardable": False
                             }
@@ -935,6 +1005,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
