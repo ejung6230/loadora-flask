@@ -3,15 +3,12 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import requests
 from datetime import datetime, timezone, timedelta
-from bs4 import BeautifulSoup
 import os
 import json
 import time
 import re
 
 
-GEMINI_API_KEY = "AIzaSyBsxfr_8Mw-7fwr_PqZAcv3LyGuI0ybv08"
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
 app = Flask(__name__)
 CORS(app)  # 모든 도메인 허용
@@ -38,63 +35,6 @@ def organize_characters_by_server(char_list):
         organized.setdefault(server, []).append(c)
     return organized
 
-
-def summarize_webpage_with_gemini(url):
-    try:
-        # 1. 웹페이지 텍스트 가져오기
-        resp = requests.get(url, timeout=30)
-        resp.raise_for_status()
-        soup = BeautifulSoup(resp.text, 'html.parser')
-
-        # article__data 섹션 가져오기
-        section = soup.find("section", class_="article__data")
-        if not section:
-            return "공지 내용을 찾을 수 없습니다."
-
-        content_div = section.find("div", class_="fr-view")
-        if not content_div:
-            return "공지 내용을 찾을 수 없습니다."
-
-        paragraphs = content_div.find_all('p')
-        text = " ".join(p.get_text(strip=True) for p in paragraphs if p.get_text(strip=True))
-        if not text:
-            return "공지 내용을 찾을 수 없습니다."
-
-        # 2. Gemini API 호출
-        headers = {
-            "Content-Type": "application/json",
-            "X-goog-api-key": GEMINI_API_KEY
-        }
-
-        payload = {
-            "contents": [
-                {
-                    "parts": [
-                        {
-                            "text": f"다음 글을 한국어로 핵심만 요약하고 한 줄로 만들어주세요:\n{text}"
-                        }
-                    ]
-                }
-            ]
-        }
-
-        response = requests.post(GEMINI_API_URL, headers=headers, data=json.dumps(payload), timeout=60)
-        response.raise_for_status()
-        result = response.json()
-
-        # 3. 요약 결과 추출
-        summary = ""
-        candidates = result.get("candidates", [])
-        if candidates and "content" in candidates[0]:
-            parts = candidates[0].get("content", [])
-            if parts:
-                summary = parts[0].get("text", "")
-
-        return summary if summary else "요약을 생성할 수 없습니다."
-
-    except Exception as e:
-        return f"요약 처리 중 오류가 발생했습니다.\n{str(e)}"
-
 @app.route("/fallback", methods=["POST"])
 def fallback():
     try:
@@ -103,7 +43,6 @@ def fallback():
         use_share_button = False  # True: 공유 버튼 있는 카드, False: simpleText
 
         response_text = ""
-        buttons = []
         
 
         # ---------- 1. 공지 관련 패턴 ----------
@@ -121,25 +60,12 @@ def fallback():
             notices = resp.json()
             
             if notices:
-                response_text = f"❙ 공지 정보\n\n"
-                
-                for n in notices[:5]:  # 최대 5개 버튼
+                response_text = f"❙ 공지 정보 ({notice_type})\n\n"
+                for n in notices[:10]:  # 최대 10개까지만 표시
                     title = n.get("Title", "")
                     date = n.get("Date", "")[:10]  # YYYY-MM-DD
                     link = n.get("Link", "")
-        
-                    # 텍스트에는 제목과 날짜만 표시
-                    summary_link = summarize_webpage_with_gemini(link)
-                    
-                    response_text += f"- {title} ({date})\n한 줄 요약: {summary_link}\n"
-                    
-        
-                    # 버튼으로 링크 제공
-                    buttons.append({
-                        "label": title[:11] + "...",  # 버튼 글자 제한
-                        "action": "webLink",
-                        "webLinkUrl": link
-                    })
+                    response_text += f"- {title} ({date})\n링크: {link}\n\n"
                 response_text = response_text.strip()
             
         # ---------- 2. 모험섬 관련 패턴 ----------
@@ -258,24 +184,6 @@ def fallback():
                                       "webLinkUrl": "http://pf.kakao.com/_tLVen/110482315"
                                     }
                                 ],
-                                "lock": False,
-                                "forwardable": False
-                            }
-                        }
-                    ],
-                    "quickReplies": []
-                }
-            }
-        elif buttons:
-            # ✅ 응답이 있으면, 정의해둔 버튼이 있는 textCard
-            response = {
-                "version": "2.0",
-                "template": {
-                    "outputs": [
-                        {
-                            "textCard": {
-                                "description": response_text,
-                                "buttons": buttons,
                                 "lock": False,
                                 "forwardable": False
                             }
@@ -1027,14 +935,6 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
-
-
-
-
-
-
 
 
 
