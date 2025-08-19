@@ -75,6 +75,26 @@ def get_armory(character_name, endpoint):
     except requests.exceptions.RequestException as e:
         return jsonify({"error": str(e)}), 500
 
+# 계정 내 캐릭터 조회
+@app.route("/account/characters", methods=["GET"])
+def get_all_characters():
+    # query parameter로 캐릭터 이름 받기
+    char_name = request.args.get("characterName")
+    if not char_name:
+        return jsonify({"error": "characterName parameter required"}), 400
+
+    url = f"https://developer-lostark.game.onstove.com/characters/{char_name}/siblings"
+    headers = {
+        "accept": "application/json",
+        "authorization": f"bearer {JWT_TOKEN}"
+    }
+
+    resp = requests.get(url, headers=headers)
+    if resp.status_code != 200:
+        return jsonify({"error": f"API returned {resp.status_code}", "details": resp.text}), resp.status_code
+
+    return jsonify(resp.json())
+
 # KorLark API URL
 KORLARK_API_URL = "https://api.korlark.com/lostark/merchant/reports"
 
@@ -707,6 +727,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
