@@ -8,8 +8,6 @@ import json
 import time
 import re
 
-
-
 app = Flask(__name__)
 CORS(app)  # 모든 도메인 허용
 
@@ -79,8 +77,8 @@ def fallback():
                         formatted_time = date_time  # 실패하면 원본 그대로
             
                     card = {
-                        "title": f"{title}",
-                        "description": f"게시일: {formatted_time}\n\n요약: 임시",
+                        "title": f"[{formatted_time}]",
+                        "description": f"{title}\n\n요약: 임시",
                         "buttons": [
                             {
                                 "label": "공지 보기",
@@ -973,6 +971,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
