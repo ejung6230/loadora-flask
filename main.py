@@ -775,7 +775,56 @@ def korlark_summary():
         summary_text += f"\n\n{get_remaining_time_text()}"
 
         if request.method=="POST":
-            return jsonify({"version":"2.0","template":{"outputs":[{"simpleText":{"text":summary_text}}]}})
+            return jsonify({
+                "version":"2.0",
+                "template":{
+                "outputs":[
+                    {
+                        "textCard": {
+                            "description": summary_text,
+                            "buttons": [
+                                {
+                                  "label": "공유하기",
+                                  "highlight": False,
+                                  "action": "share"
+                                },
+                                {
+                                  "label": "명령어 안내 GO",
+                                  "highlight": False,
+                                  "action": "webLink",
+                                  "webLinkUrl": "http://pf.kakao.com/_tLVen/110482315"
+                                }
+                              ],
+                            "lock": False,
+                            "forwardable": False
+                        }
+                    }
+                ]}
+            })
+
+                "outputs": [
+                    {
+                        "textCard": {
+                            "description": response_text,
+                            "buttons": [
+                                {
+                                  "label": "공유하기",
+                                  "highlight": False,
+                                  "action": "share"
+                                },
+                                {
+                                  "label": "명령어 안내 GO",
+                                  "highlight": False,
+                                  "action": "webLink",
+                                  "webLinkUrl": "http://pf.kakao.com/_tLVen/110482315"
+                                }
+                              ],
+                            "lock": False,
+                            "forwardable": False
+                        }
+                    }
+                ],
+        
         return summary_text
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -797,5 +846,6 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
