@@ -104,6 +104,19 @@ def fallback():
 
         response_text = ""
         items = []
+        inspection_item = [
+            {
+                "title": "⚠️ 현재 로스트아크 서버 점검 중입니다.",
+                "description": "잠시 후 다시 시도해주세요.",
+                "buttons": [
+                    {
+                        "label": "공식 공지 이동",
+                        "action": "webLink",
+                        "webLinkUrl": "https://lostark.game.onstove.com/News/Notice/List"
+                    }
+                ]
+            }
+        ]
 
         # ---------- 1. 공지 관련 패턴 ----------
         match_notice = re.match(r"^(\.공지|공지|\.ㄱㅈ|ㄱㅈ)$", user_input)
@@ -128,7 +141,7 @@ def fallback():
                         all_notices.append(n)
                 except requests.exceptions.HTTPError as e:
                     if resp.status_code == 503:
-                        response_text = "⚠️ 현재 로스트아크 서버 점검 중입니다.\n잠시 후 다시 시도해주세요."
+                        items = inspection_item
                         server_down = True
                         break
                     continue
@@ -218,7 +231,7 @@ def fallback():
         
                 except requests.exceptions.HTTPError as e:
                     if resp.status_code == 503:
-                        response_text = "⚠️ 현재 로스트아크 서버 점검 중입니다.\n잠시 후 다시 시도해주세요."
+                        items = inspection_item
                     else:
                         response_text = f"캐릭터 정보를 불러올 수 없습니다. (오류 코드: {resp.status_code})"
                 except Exception as e:
@@ -235,7 +248,7 @@ def fallback():
         
             except requests.exceptions.HTTPError as e:
                 if resp.status_code == 503:
-                    response_text = "⚠️ 현재 로스트아크 서버 점검 중입니다.\n잠시 후 다시 시도해주세요."
+                    items = inspection_item
                 else:
                     response_text = f"이벤트 정보를 불러올 수 없습니다. (오류 코드: {resp.status_code})"
             except Exception:
@@ -1080,6 +1093,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
