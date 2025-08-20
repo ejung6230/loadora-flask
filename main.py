@@ -931,7 +931,7 @@ def filter_active_reports(api_data):
 # 예외 아이템 ID: 항상 포함
 EXCEPTION_ITEMS = {"192"}  # 문자열로 itemId 넣기
 
-def format_reports_by_region(current_data):
+def format_reports_by_region(current_data, is_sale_time=True):
     """
     서버별 떠돌이 상인 요약 텍스트 생성
     - type 1, type 2 아이템만 포함
@@ -939,7 +939,7 @@ def format_reports_by_region(current_data):
     - 예외 itemId "192"는 grade/type 상관없이 항상 포함
     - type 2 아이템은 "전설호감도 N개" 형식으로 개수 집계
     - type 1 아이템은 이름 그대로
-    - 서버별 아이템 없으면 "없음"
+    - 판매 구간 여부에 따라 '없음', '제보자가 없습니다', '아이템 정보' 표시
     """
     from collections import defaultdict
 
@@ -953,9 +953,12 @@ def format_reports_by_region(current_data):
 
     for r in current_data:
         server = r["serverName"]
-        # type 1,2 또는 예외 item만 포함, grade 4 이상
-        items = [i for i in r["itemIds"]
-                 if (item_type.get(i) in [1,2] and item_grade.get(i,0) >= 4) or i in EXCEPTION_ITEMS]
+
+        # 조건 함수로 분리
+        def include_item(i):
+            return (item_type.get(i) in [1,2] and item_grade.get(i,0) >= 4) or i in EXCEPTION_ITEMS
+
+        items = [i for i in r["itemIds"] if include_item(i)]
 
         for i in items:
             if i in EXCEPTION_ITEMS or item_type.get(i) == 1:
@@ -968,56 +971,79 @@ def format_reports_by_region(current_data):
         type2_count = len(server_dict_type2.get(server, []))
         type2_items = [f"전설호감도 {type2_count}개"] if type2_count else []
 
-        type1_items = list(server_dict_type1.get(server, []))
+        type1_items = sorted(server_dict_type1.get(server, []))  # 정렬
         all_items = type2_items + type1_items  # type2가 맨 앞
 
-        if not all_items:
-            all_items = ["없음"]
+        # 판매 구간 판단
+        if is_sale_time:
+            if all_items:
+                display = ", ".join(all_items)  # 아이템 정보
+            else:
+                display = "제보자가 없습니다"
+        else:
+            display = "없음"
 
-        lines.append(f"{server}: {', '.join(all_items)}")
+        lines.append(f"{server}: {display}")
 
     return "\n".join(lines)
 
-def get_remaining_time_text(remaining_text=""):
+def is_sale_time(now=None):
     """
-    현재 시각(KST)에 하루 4구간 중 하나에 포함되는지 확인하고,
-    포함된다면 종료시각까지 얼마나 남았는지 0시 00분 형식으로 계산
+    현재 시각(KST)이 판매 구간에 속하는지 여부 반환
     """
-    # KST 기준 현재 시각
-    kst = timezone(timedelta(hours=9))
-    now = datetime.now(kst)
-
-    # 하루 4구간 (start_hour, end_hour, end_minute)
-    periods = [
+    PERIODS = [
         (22, 3, 30),  # 22:00 ~ 03:30 (다음날)
         (4, 9, 30),   # 04:00 ~ 09:30
         (10, 15, 30), # 10:00 ~ 15:30
         (16, 21, 30)  # 16:00 ~ 21:30
     ]
+    if now is None:
+        kst = timezone(timedelta(hours=9))
+        now = datetime.now(kst)
 
-    for start_hour, end_hour, end_minute in periods:
-        # 종료 시각 계산
-        if start_hour > end_hour:  # 다음날로 넘어가는 경우
+    for start_hour, end_hour, end_minute in PERIODS:
+        if start_hour > end_hour:  # 자정 넘어가는 구간
+            start_time = now.replace(hour=start_hour, minute=0, second=0, microsecond=0)
             end_time = now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0) + timedelta(days=1)
-            if now.hour >= start_hour or now.hour < end_hour:
+            if now >= start_time or now <= end_time:
+                return True
+        else:
+            start_time = now.replace(hour=start_hour, minute=0, second=0, microsecond=0)
+            end_time = now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0)
+            if start_time <= now <= end_time:
+                return True
+    return False
+
+
+def get_remaining_time_text(now=None):
+    """
+    판매 구간일 경우 종료 시각까지 남은 시간을 '0시간 00분' 형식으로 반환
+    판매 구간이 아닐 경우 안내 문구 반환
+    """
+    if now is None:
+        # KST 기준 현재 시각
+        kst = timezone(timedelta(hours=9))
+        now = datetime.now(kst)
+
+    for start_hour, end_hour, end_minute in PERIODS:
+        if start_hour > end_hour:  # 자정 넘어가는 구간
+            start_time = now.replace(hour=start_hour, minute=0, second=0, microsecond=0)
+            end_time = now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0) + timedelta(days=1)
+            if now >= start_time or now <= end_time:
                 remaining = end_time - now
-                hours = remaining.seconds // 3600
-                minutes = (remaining.seconds % 3600) // 60
-                remaining_text += f"판매 마감까지 {hours}시간 {minutes:02d}분 남았습니다."
-                return remaining_text
+                total_minutes = int(remaining.total_seconds() // 60)
+                hours, minutes = divmod(total_minutes, 60)
+                return f"판매 마감까지 {hours}시간 {minutes:02d}분 남았습니다."
         else:
             start_time = now.replace(hour=start_hour, minute=0, second=0, microsecond=0)
             end_time = now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0)
             if start_time <= now <= end_time:
                 remaining = end_time - now
-                hours = remaining.seconds // 3600
-                minutes = (remaining.seconds % 3600) // 60
-                remaining_text += f"판매 마감까지 {hours}시간 {minutes:02d}분 남았습니다."
-                return remaining_text
+                total_minutes = int(remaining.total_seconds() // 60)
+                hours, minutes = divmod(total_minutes, 60)
+                return f"판매 마감까지 {hours}시간 {minutes:02d}분 남았습니다."
 
-    # 어느 구간에도 속하지 않으면
-    remaining_text += "현재 시각은 판매 구간이 아닙니다."
-    return remaining_text
+    return "현재 시각은 판매 구간이 아닙니다."
 
 # ------------------ Flask endpoints ------------------
 @app.route("/")
@@ -1093,6 +1119,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
