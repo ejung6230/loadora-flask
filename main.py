@@ -38,6 +38,14 @@ RATE_LIMIT = {
     "reset": time.time() + 60
 }
 
+# 떠상 등장 시간
+PERIODS = [
+    (22, 3, 30),  # 22:00 ~ 03:30 (다음날)
+    (4, 9, 30),   # 04:00 ~ 09:30
+    (10, 15, 30), # 10:00 ~ 15:30
+    (16, 21, 30)  # 16:00 ~ 21:30
+]
+
 def organize_characters_by_server(char_list):
     organized = {}
     for c in char_list:
@@ -991,12 +999,6 @@ def is_sale_time(now=None):
     """
     현재 시각(KST)이 판매 구간에 속하는지 여부 반환
     """
-    PERIODS = [
-        (22, 3, 30),  # 22:00 ~ 03:30 (다음날)
-        (4, 9, 30),   # 04:00 ~ 09:30
-        (10, 15, 30), # 10:00 ~ 15:30
-        (16, 21, 30)  # 16:00 ~ 21:30
-    ]
     if now is None:
         kst = timezone(timedelta(hours=9))
         now = datetime.now(kst)
