@@ -84,7 +84,7 @@ def summary_in_gemini_batch(urls: list[str]) -> dict:
 
         # 안전하게 dict로 변환
         try:
-            summaries = json.loads(text_output.replace("'", '"'))
+            summaries = json.loads(text_output.replace("'", '"').replace(";", "").strip())
             if isinstance(summaries, dict):
                 return summaries
             else:
@@ -1101,6 +1101,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
