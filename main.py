@@ -212,61 +212,48 @@ def fallback():
                     items = []
                 else:
                     response_text = "❙ 이벤트 정보\n\n"
-                    items = []
+                    cards = []
+                    
                     for ev in events:
                         title = ev.get("Title", "")
+                        thumbnail = ev.get("Thumbnail", "")
+                        link = ev.get("Link", "")
                         start_date = ev.get("StartDate", "")
                         end_date = ev.get("EndDate", "")
-                        link = ev.get("Link", "")
-        
-                        # 기본값: 원본 문자열
+                    
                         formatted_time = f"{start_date} ~ {end_date}"
-        
+                    
                         try:
-                            logging.info("원본 start_date: %s", start_date)
-                            logging.info("원본 end_date: %s", end_date)
-        
-                            # UTC 기준 datetime 생성
                             start_obj = datetime.fromisoformat(start_date.replace("Z", "")).replace(tzinfo=timezone.utc)
                             end_obj = datetime.fromisoformat(end_date.replace("Z", "")).replace(tzinfo=timezone.utc)
-        
-                            logging.info("UTC 변환 후 start_obj: %s", start_obj)
-                            logging.info("UTC 변환 후 end_obj: %s", end_obj)
-        
-                            # KST 변환
+                    
                             start_obj = start_obj.astimezone(timezone(timedelta(hours=9)))
                             end_obj = end_obj.astimezone(timezone(timedelta(hours=9)))
-        
-                            logging.info("KST 변환 후 start_obj: %s", start_obj)
-                            logging.info("KST 변환 후 end_obj: %s", end_obj)
-        
-                            # 보기 좋은 문자열로 변환
+                    
                             formatted_time = f"{start_obj.strftime('%Y-%m-%d %H:%M')} ~ {end_obj.strftime('%Y-%m-%d %H:%M')}"
-                            logging.info("최종 formatted_time: %s", formatted_time)
-        
                         except Exception as e:
                             logging.error("날짜 변환 중 오류 발생: %s", e)
-                            formatted_time = f"{start_date} ~ {end_date}"
-        
+                    
                         card = {
                             "title": f"[이벤트] {title}",
                             "description": f"기간: {formatted_time}\n",
+                            "thumbnail": {
+                                "imageUrl": f"{thumbnail}",
+                                "link": {"web": link},
+                                "fixedRatio": False,
+                                "altText": ""
+                            },
                             "buttons": [
-                                {
-                                    "label": "이벤트 보기",
-                                    "action": "webLink",
-                                    "highlight": True,
-                                    "webLinkUrl": link
-                                },
-                                {
-                                    "label": "공유하기",
-                                    "highlight": False,
-                                    "action": "share"
-                                }
+                                {"label": "이벤트 보기", "action": "webLink", "highlight": True, "webLinkUrl": link},
+                                {"label": "공유하기", "highlight": False, "action": "share"}
                             ]
                         }
+                        cards.append(card)
+                    
+                    items = {
+                        "basicCard": cards
+                    }
 
-                        items.append(card)
         
             except requests.exceptions.HTTPError as e:
                 if resp.status_code == 503:
@@ -1111,6 +1098,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
