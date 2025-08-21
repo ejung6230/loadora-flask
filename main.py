@@ -310,6 +310,8 @@ def fallback():
                     link = n.get("Link", "")
                     notice_type = n.get("Type", "")
                     summary_article_text = summaries.get(link, "요약 없음")
+                    logger.warning("전체 summaries", summaries)
+                    logger.warning("특정 summary_article_text", summary_article_text)
         
                     # 보기 좋게 날짜 변환
                     try:
@@ -1233,6 +1235,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
