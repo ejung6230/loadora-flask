@@ -74,10 +74,10 @@ def summary_in_gemini_batch(urls: list[str]) -> dict:
 
         # 응답 텍스트 추출
         text_output = result["candidates"][0]["content"]["parts"][0]["text"].strip()
-        logger.info("Gemini 요약 결과 원본: %s", text_output)
 
         # 1. 세미콜론 제거, 2. 작은따옴표 → 큰따옴표, 3. 공백 제거
         text_output = text_output.replace(";", "").replace("'", '"').strip()
+        logger.info("Gemini 요약 결과 원본: %s", text_output)
 
         # 4. 중괄호로 시작/끝 확인
         match = re.search(r"\{.*\}", text_output, re.DOTALL)
@@ -1101,6 +1101,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
