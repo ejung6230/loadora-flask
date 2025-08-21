@@ -212,6 +212,7 @@ def fallback():
                         start_date = ev.get("StartDate", "")
                         end_date = ev.get("EndDate", "")
                         link = ev.get("Link", "")
+                        formatted_time = f"{start_date} ~ {end_date}"
 
                         # 보기 좋게 날짜 변환
                         try:
@@ -1098,6 +1099,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
