@@ -103,7 +103,6 @@ def summary_in_gemini_batch(urls: list[str]) -> dict:
     if not urls:
         return {}
 
-    # Gemini 프롬프트
     prompt = (
         "다음 URL들의 내용을 100자 이내로 요약해줘.\n"
         "제목이 될만한 부분은 지우고, 반드시 본문 내용만 포함해\n"
@@ -112,17 +111,8 @@ def summary_in_gemini_batch(urls: list[str]) -> dict:
     )
 
     payload = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": prompt}
-                ]
-            }
-        ],
-        "generationConfig": {
-            "temperature": 0.3,
-            "maxOutputTokens": 500,
-        }
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.3, "maxOutputTokens": 2000}
     }
 
     headers = {"Content-Type": "application/json"}
@@ -130,36 +120,20 @@ def summary_in_gemini_batch(urls: list[str]) -> dict:
     try:
         response = requests.post(GEMINI_API_URL, headers=headers, data=json.dumps(payload))
         response.raise_for_status()
+        text_output = response.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
 
-        result = response.json()
-        text_output = result["candidates"][0]["content"]["parts"][0]["text"]
-
-        # Gemini 응답이 JSON 문자열이라고 가정하고 파싱
+        # JSON 파싱 시도
         try:
             summaries = json.loads(text_output)
             return summaries
         except json.JSONDecodeError:
-            # Gemini가 JSON이 아닌 텍스트로 답할 경우 fallback 처리
-            return {url: text_output for url in urls}
+            # JSON이 깨졌으면 한 줄씩 매핑
+            lines = text_output.split("\n")
+            return {url: lines[i].strip() if i < len(lines) else "" for i, url in enumerate(urls)}
 
-        try:
-            summaries = json.loads(text_output)
-            return summaries
-        except json.JSONDecodeError:
-            # Gemini가 JSON이 아닌 텍스트로 준 경우
-            # 한 줄씩 분리해서 매핑 시도
-            lines = text_output.strip().split("\n")
-            summaries = {}
-            for url, line in zip(urls, lines):
-                summaries[url] = line.strip()
-            return summaries
-
-    except requests.exceptions.HTTPError as http_err:
-        return {url: f"API 요청 실패: HTTP 오류 - {http_err}" for url in urls}
-    except requests.exceptions.RequestException as req_err:
-        return {url: f"API 요청 실패: 네트워크 오류 - {req_err}" for url in urls}
     except Exception as e:
-        return {url: f"알 수 없는 오류 발생: {e}" for url in urls}
+        # 요청 실패 시
+        return {url: f"요약 실패: {e}" for url in urls}
 
 @app.route("/fallback", methods=["POST"])
 def fallback():
@@ -233,7 +207,9 @@ def fallback():
                 links = [n.get("Link", "") for n in latest_notices if n.get("Link")]
                 summaries = summary_in_gemini_batch(links)
 
-                response_text = "\n\n".join(f"{url}\n→ {summary}" for url, summary in summaries.items())
+                response_text = "\n\n".join(
+                    f"{url}\n→ {summaries.get(url, '')}" for url in links
+                )
                 
                 # for n in latest_notices:
                 #     title = n.get("Title", "")
@@ -1164,6 +1140,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
