@@ -69,7 +69,7 @@ def summary_in_gemini_batch(urls: list[str]) -> dict:
     # 프롬프트 개선
     prompt = (
         "다음 URL들의 내용을 각각 한국어로 100자 이내로 요약해주세요.\n"
-        "각 URL에 접근할 수 없는 경우 '접근 불가'로 표시해주세요.\n"
+        "URL에 접근해서 내용을 읽어달라\n"
         "실제 내용만 요약하고 허구 생성 금지:\n"
         "반드시 아래와 같은 JSON 형태로만 응답해주세요:\n"
         '{"url1": "요약문1", "url2": "요약문2"}\n\n'
@@ -1235,6 +1235,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
