@@ -135,9 +135,10 @@ def fallback():
                             {
                                 "label": "공지 보기",
                                 "action": "webLink",
+                                "highlight": True,
                                 "webLinkUrl": link
                             },
-                            {"label": "공유하기", "highlight": True, "action": "share"}
+                            {"label": "공유하기", "highlight": False, "action": "share"}
                         ]
                     }
                     items.append(card)
@@ -311,7 +312,7 @@ def fallback():
                                 "textCard": {
                                     "description": response_text,
                                     "buttons": [
-                                        {"label": "공유하기", "highlight": True, "action": "share"}
+                                        {"label": "공유하기", "highlight": False, "action": "share"}
                                     ],
                                     "lock": False,
                                     "forwardable": False
@@ -1009,7 +1010,7 @@ def korlark_summary():
                                 "buttons": [
                                     {
                                         "label": "공유하기",
-                                        "highlight": True,
+                                        "highlight": False,
                                         "action": "share"
                                     }
                                 ],
@@ -1043,6 +1044,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
