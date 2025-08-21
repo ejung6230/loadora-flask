@@ -192,9 +192,14 @@ def fallback():
         match_event = re.match(r"^(\.이벤트|이벤트|\.ㅇㅂㅌ|ㅇㅂㅌ)$", user_input)
         if match_event:
             try:
-                # 이벤트 API 호출
-                resp = requests.get("https://example.com/news/events", timeout=5)
-                resp.raise_for_status()  # HTTP 오류 발생 시 예외 발생
+                url = "https://developer-lostark.game.onstove.com/news/events"
+                headers = {
+                    "accept": "application/json",
+                    "authorization": f"bearer {JWT_TOKEN}"
+                }
+        
+                resp = requests.get(url, headers=headers, timeout=5)
+                resp.raise_for_status()  # HTTP 오류 시 예외 발생
         
                 events = resp.json()
                 if not events:
@@ -1055,6 +1060,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
