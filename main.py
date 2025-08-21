@@ -54,9 +54,8 @@ def summary_in_gemini_batch(urls: list[str]) -> dict:
         return {}
 
     prompt = (
-        "다음 URL들의 내용을 100자 이내로 요약해줘.\n"
-        "제목이 될만한 부분은 지우고, 반드시 본문 내용만 포함해\n"
-        "반드시 JSON 형식으로 {url: 요약문, url: 요약문...} 형태로 반환해.\n"
+        "URL 내용을 100자 이내로 가져와.\n"
+        "반드시 {url: 요약문, url: 요약문...} 형태로 반환해.\n"
         f"URL 목록: {urls}"
     )
 
@@ -1088,6 +1087,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
