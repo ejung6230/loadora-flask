@@ -192,18 +192,29 @@ def fallback():
         match_event = re.match(r"^(\.이벤트|이벤트|\.ㅇㅂㅌ|ㅇㅂㅌ)$", user_input)
         if match_event:
             try:
-                # 실제 이벤트 API 호출 부분이 들어간다면 여기에 작성
-                event_content = match_event.group(2).strip()
-                response_text = "❙ 이벤트 정보\n\n"
-                response_text += f"[이벤트 명령어]\n내용: {event_content}"
+                # 이벤트 API 호출
+                resp = requests.get("https://example.com/news/events", timeout=5)
+                resp.raise_for_status()  # HTTP 오류 발생 시 예외 발생
+        
+                events = resp.json()
+                if not events:
+                    response_text = "현재 진행 중인 이벤트가 없습니다."
+                else:
+                    response_text = "❙ 이벤트 정보\n\n"
+                    for ev in events:
+                        response_text += (
+                            f"제목: {ev.get('Title','')}\n"
+                            f"기간: {ev.get('StartDate','')} ~ {ev.get('EndDate','')}\n"
+                            f"링크: {ev.get('Link','')}\n\n"
+                        )
         
             except requests.exceptions.HTTPError as e:
                 if resp.status_code == 503:
-                    items = inspection_item
+                    response_text = "서비스 점검 중입니다. 잠시 후 다시 시도해주세요."
                 else:
                     response_text = f"이벤트 정보를 불러올 수 없습니다. (오류 코드: {resp.status_code})"
-            except Exception:
-                response_text = "⚠️ 이벤트 정보를 가져오는 중 오류가 발생했습니다."
+            except Exception as e:
+                response_text = f"⚠️ 이벤트 정보를 가져오는 중 오류가 발생했습니다. ({e})"
 
         # ---------- 5. 전체 서버 떠상 관련 패턴 ----------
         match_merchant = re.match(r"^(\.떠상|떠상|\.ㄸㅅ|ㄸㅅ|떠돌이상인)$", user_input)
@@ -1044,6 +1055,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
