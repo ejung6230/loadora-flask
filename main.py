@@ -233,7 +233,7 @@ def fallback():
                 links = [n.get("Link", "") for n in latest_notices if n.get("Link")]
                 summaries = summary_in_gemini_batch(links)
 
-                response_text = summaries
+                response_text = "\n\n".join(f"{url}\n→ {summary}" for url, summary in summaries.items())
                 
                 # for n in latest_notices:
                 #     title = n.get("Title", "")
@@ -1164,6 +1164,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
