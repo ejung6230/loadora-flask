@@ -212,23 +212,19 @@ def fallback():
                         start_date = ev.get("StartDate", "")
                         end_date = ev.get("EndDate", "")
                         link = ev.get("Link", "")
-                        
-                        # UTC → KST 변환 함수
-                        def to_kst(iso_str):
-                            try:
-                                # UTC 기준 datetime으로 변환
-                                dt_utc = datetime.fromisoformat(iso_str.replace("Z", "")).replace(tzinfo=timezone.utc)
-                                # KST로 변환
-                                dt_kst = dt_utc.astimezone(timezone(timedelta(hours=9)))
-                                return dt_kst.strftime('%Y-%m-%d %H:%M')
-                            except Exception:
-                                return iso_str  # 실패 시 원본 반환
 
-                        
-                        
+                        # 보기 좋게 날짜 변환
                         try:
-                            formatted_time = f"{to_kst(start_date)} ~ {to_kst(end_date)}"
+                            # UTC 기준으로 datetime 생성 후 KST(+9)로 변환
+                            start_obj = datetime.fromisoformat(start_date.replace("Z", "")).replace(tzinfo=timezone.utc)
+                            start_obj = start_obj.astimezone(timezone(timedelta(hours=9)))
+                        
+                            end_obj = datetime.fromisoformat(end_date.replace("Z", "")).replace(tzinfo=timezone.utc)
+                            end_obj = end_obj.astimezone(timezone(timedelta(hours=9)))
+                        
+                            formatted_time = f"{start_obj.strftime('%Y-%m-%d %H:%M')} ~ {end_obj.strftime('%Y-%m-%d %H:%M')}"
                         except Exception:
+                            # 변환 실패 시 원본 문자열 사용
                             formatted_time = f"{start_date} ~ {end_date}"
         
                         card = {
@@ -1102,6 +1098,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
