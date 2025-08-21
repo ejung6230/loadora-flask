@@ -45,56 +45,6 @@ def organize_characters_by_server(char_list):
         organized.setdefault(server, []).append(c)
     return organized
 
-def summary_in_gemini(url: str) -> str:
-    """
-    Gemini API 테스트용 요약 함수.
-    URL 내용을 가져오는 대신, URL 자체를 텍스트 입력으로 사용합니다.
-    """
-    
-    # URL 내용을 요약하도록 프롬프트를 구성합니다.
-    # prompt = f"다음 URL의 내용을 한마디로 요약해줘: {url}"
-    prompt = f"한마디"
-
-    # Gemini API는 'contents' 필드에 요청 내용을 담는 경우가 많습니다.
-    # 'parts' 리스트 안에 텍스트를 담아야 합니다.
-    payload = {
-        "contents": [
-            {
-                "parts": [
-                    {
-                        "text": prompt
-                    }
-                ]
-            }
-        ],
-        "generationConfig": {
-            "temperature": 0.3,
-            "maxOutputTokens": 200,
-        }
-    }
-
-    headers = {"Content-Type": "application/json"}
-    
-    try:
-        response = requests.post(GEMINI_API_URL, headers=headers, data=json.dumps(payload))
-        response.raise_for_status() # HTTP 오류가 발생하면 예외를 발생시킵니다.
-        
-        result = response.json()
-        
-        # Gemini API 응답 구조에서 텍스트를 추출합니다.
-        # 'candidates' -> 'content' -> 'parts' -> 'text' 경로를 따라갑니다.
-        text_output = result["candidates"][0]["content"]["parts"][0]["text"]
-        return text_output
-        
-    except requests.exceptions.HTTPError as http_err:
-        return f"API 요청 실패: HTTP 오류 - {http_err}"
-    except requests.exceptions.RequestException as req_err:
-        return f"API 요청 실패: 네트워크 오류 - {req_err}"
-    except (KeyError, IndexError) as json_err:
-        return f"응답 처리 중 오류 발생: 예상치 못한 JSON 구조 - {json_err}"
-    except Exception as e:
-        return f"알 수 없는 오류 발생: {e}"
-
 def summary_in_gemini_batch(urls: list[str]) -> dict:
     """
     Gemini API를 이용해 여러 개 URL을 한 번에 요약합니다.
@@ -208,7 +158,7 @@ def fallback():
                 summaries = summary_in_gemini_batch(links)
 
                 response_text = "\n\n".join(
-                    f"{url}\n→ {summaries.get(url, '')}" for url in links
+                    f"{summaries.get(url, '')}" for url in links
                 )
                 
                 # for n in latest_notices:
@@ -1140,6 +1090,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
