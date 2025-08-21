@@ -250,7 +250,7 @@ def fallback():
         
                     card = {
                         "title": f"[{notice_type}] {title}",
-                        "description": f"게시일: {formatted_time}\n\n{summary_article_text}",
+                        "description": f"게시일: {formatted_time}\n\n{summaries}",
                         "buttons": [
                             {
                                 "label": "공지 보기",
@@ -1162,6 +1162,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
