@@ -207,11 +207,37 @@ def fallback():
                 else:
                     response_text = "❙ 이벤트 정보\n\n"
                     for ev in events:
-                        response_text += (
-                            f"제목: {ev.get('Title','')}\n"
-                            f"기간: {ev.get('StartDate','')} ~ {ev.get('EndDate','')}\n"
-                            f"링크: {ev.get('Link','')}\n\n"
-                        )
+                        title = ev.get("Title", "")
+                        start_date = ev.get("StartDate", "")
+                        end_date = ev.get("EndDate", "")
+                        link = ev.get("Link", "")
+                        
+                        # 보기 좋게 날짜 변환
+                        try:
+                            start_obj = datetime.fromisoformat(start_date.replace("Z", "")).astimezone(timezone(timedelta(hours=9)))
+                            end_obj = datetime.fromisoformat(end_date.replace("Z", "")).astimezone(timezone(timedelta(hours=9)))
+                            formatted_time = f"{start_obj.strftime('%Y-%m-%d %H:%M')} ~ {end_obj.strftime('%Y-%m-%d %H:%M')}"
+                        except Exception:
+                            formatted_time = f"{start_date} ~ {end_date}"
+                    
+                        card = {
+                            "title": title,
+                            "description": f"기간: {formatted_time}\n",
+                            "buttons": [
+                                {
+                                    "label": "이벤트 보기",
+                                    "action": "webLink",
+                                    "highlight": True,
+                                    "webLinkUrl": link
+                                },
+                                {
+                                    "label": "공유하기",
+                                    "highlight": False,
+                                    "action": "share"
+                                }
+                            ]
+                        }
+                        items.append(card)
         
             except requests.exceptions.HTTPError as e:
                 if resp.status_code == 503:
@@ -1060,6 +1086,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
