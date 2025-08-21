@@ -54,36 +54,42 @@ def summary_in_gemini_batch(urls: list[str]) -> dict:
         return {}
 
     prompt = (
-        "URL 내용을 100자 이내로 가져와.\n"
-        "URL 내용을 가져올 수 있을 때까지 재실행해.\n"
-        "반드시 {url: 요약문, url: 요약문...} 형태로 반환해.\n"
+        "URL 내용을 100자 이내로 가져와.\n"
+        "URL 내용을 가져올 수 있을 때까지 재실행해.\n"
+        "반드시 {url: 요약문, url: 요약문...} 형태로 반환해.\n"
         f"URL 목록: {urls}"
     )
 
     payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.3, "maxOutputTokens": 2000}
+        "prompt": {"text": prompt},
+        "temperature": 0.3,
+        "maxOutputTokens": 2000
     }
 
-    headers = {"Content-Type": "application/json"}
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {GEMINI_API_KEY}"
+    }
 
     try:
-        response = requests.post(GEMINI_API_URL, headers=headers, data=json.dumps(payload))
+        response = requests.post(GEMINI_API_URL, headers=headers, json=payload, timeout=30)
         response.raise_for_status()
-        text_output = response.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
-
-        # JSON 파싱 시도
+        result_text = response.json()["candidates"][0]["outputText"]
+        
+        # 안전하게 dict로 변환
         try:
-            summaries = json.loads(text_output)
-            return summaries
+            summaries = json.loads(result_text.replace("'", '"'))
+            if isinstance(summaries, dict):
+                return summaries
+            else:
+                return {}
         except json.JSONDecodeError:
-            # JSON이 깨졌으면 한 줄씩 매핑
-            lines = text_output.split("\n")
-            return {url: lines[i].strip() if i < len(lines) else "" for i, url in enumerate(urls)}
+            print("응답 파싱 실패:", result_text)
+            return {}
 
-    except Exception as e:
-        # 요청 실패 시
-        return {url: f"요약 실패: {e}" for url in urls}
+    except requests.RequestException as e:
+        print("Gemini API 호출 실패:", e)
+        return {}
 
 @app.route("/fallback", methods=["POST"])
 def fallback():
@@ -1088,6 +1094,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
