@@ -214,19 +214,31 @@ def fallback():
                         link = ev.get("Link", "")
                         formatted_time = f"{start_date} ~ {end_date}"
 
-                        # 보기 좋게 날짜 변환
                         try:
-                            # UTC 기준으로 datetime 생성 후 KST(+9)로 변환
-                            start_obj = datetime.fromisoformat(start_date.replace("Z", "")).replace(tzinfo=timezone.utc)
-                            start_obj = start_obj.astimezone(timezone(timedelta(hours=9)))
+                            logging.info("원본 start_date: %s", start_date)
+                            logging.info("원본 end_date: %s", end_date)
                         
+                            # UTC 기준 datetime 생성
+                            start_obj = datetime.fromisoformat(start_date.replace("Z", "")).replace(tzinfo=timezone.utc)
                             end_obj = datetime.fromisoformat(end_date.replace("Z", "")).replace(tzinfo=timezone.utc)
+                        
+                            logging.info("UTC 변환 후 start_obj: %s", start_obj)
+                            logging.info("UTC 변환 후 end_obj: %s", end_obj)
+                        
+                            # KST 변환
+                            start_obj = start_obj.astimezone(timezone(timedelta(hours=9)))
                             end_obj = end_obj.astimezone(timezone(timedelta(hours=9)))
                         
+                            logging.info("KST 변환 후 start_obj: %s", start_obj)
+                            logging.info("KST 변환 후 end_obj: %s", end_obj)
+                        
                             formatted_time = f"{start_obj.strftime('%Y-%m-%d %H:%M')} ~ {end_obj.strftime('%Y-%m-%d %H:%M')}"
-                        except Exception:
-                            # 변환 실패 시 원본 문자열 사용
+                            logging.info("최종 formatted_time: %s", formatted_time)
+                        
+                        except Exception as e:
+                            logging.error("날짜 변환 중 오류 발생: %s", e)
                             formatted_time = f"{start_date} ~ {end_date}"
+    
         
                         card = {
                             "title": f"[이벤트] {title}",
@@ -1099,6 +1111,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
