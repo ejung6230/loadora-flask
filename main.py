@@ -54,6 +54,7 @@ def fallback():
 
         response_text = ""
         items = []
+        
         inspection_item = [
             {
                 "title": "⚠️ 현재 로스트아크 서버 점검 중입니다.",
@@ -112,36 +113,41 @@ def fallback():
         
                 # 최신 5개만 선택
                 latest_notices = all_notices[:5]
-        
-                items = []
+
+                cards = []
                 for n in latest_notices:
                     title = n.get("Title", "")
                     date_time = n.get("Date", "")
                     link = n.get("Link", "")
                     notice_type = n.get("Type", "")
-        
-                    # 보기 좋게 날짜 변환
+                
+                    # 날짜 변환
                     try:
                         dt_obj = datetime.fromisoformat(date_time.replace("Z", ""))
                         dt_obj = dt_obj.astimezone(timezone(timedelta(hours=9)))
                         formatted_time = dt_obj.strftime("%Y-%m-%d %H:%M")
                     except Exception:
                         formatted_time = date_time
-        
+                
                     card = {
                         "title": f"[{notice_type}] {title}",
                         "description": f"게시일: {formatted_time}\n",
+                        "thumbnail": {"imageUrl": n.get("Thumbnail", "")},  # 썸네일 추가
                         "buttons": [
-                            {
-                                "label": "공지 보기",
-                                "action": "webLink",
-                                "highlight": True,
-                                "webLinkUrl": link
-                            },
-                            {"label": "공유하기", "highlight": False, "action": "share"}
+                            {"label": "공지 보기", "action": "webLink", "webLinkUrl": link, "highlight": True},
+                            {"label": "공유하기", "action": "share", "highlight": False}
                         ]
                     }
-                    items.append(card)
+                
+                    cards.append(card)
+
+                # 캐러셀 카드로 여러 개 카드 삽입
+                items = {
+                    "carousel": {
+                        "type": "textCard",
+                        "items": cards
+                    }
+                }
             
         # ---------- 2. 모험섬 관련 패턴 ----------
         match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)$", user_input)
@@ -260,6 +266,7 @@ def fallback():
                                 }
                             ]
                         }
+
                         items.append(card)
         
             except requests.exceptions.HTTPError as e:
@@ -358,14 +365,7 @@ def fallback():
             response = {
                 "version": "2.0",
                 "template": {
-                    "outputs": [
-                        {
-                            "carousel": {
-                                "type": "textCard",
-                                "items": items
-                            }
-                        }
-                    ],
+                    "outputs": [items],
                     "quickReplies": []
                 }
             }
@@ -1112,6 +1112,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
