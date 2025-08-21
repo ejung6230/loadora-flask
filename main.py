@@ -50,54 +50,189 @@ def summary_in_gemini_batch(urls: list[str]) -> dict:
     Gemini API를 이용해 여러 개 URL을 한 번에 요약합니다.
     결과는 {url: 요약문} 딕셔너리로 반환됩니다.
     """
+
+def summary_in_gemini_batch(urls: list[str]) -> dict:
+    """
+    Gemini API를 이용해 여러 개 URL을 한 번에 요약합니다.
+    
+    Args:
+        urls: 요약할 URL 리스트
+        gemini_api_url: Gemini API 엔드포인트 URL
+        api_key: Gemini API 키
+        
+    Returns:
+        dict: {url: 요약문} 형태의 딕셔너리
+    """
     if not urls:
         return {}
-
+    
+    # URL 개수 제한 (API 제한 고려)
+    if len(urls) > 10:
+        logger.warning(f"URL 개수가 많습니다 ({len(urls)}개). 처음 10개만 처리합니다.")
+        urls = urls[:10]
+    
+    # 프롬프트 개선
     prompt = (
-        "다음 URL들의 내용을 각각 100자 이내로 요약해줘.\n"
-        "URL 내용을 가져올 수 있을 때까지 재실행해.\n"
-        "반드시 {url: 요약문, url: 요약문...} json 딕셔너리 형태로 반환해.\n"
-        "세미콜론(;) 같은 문자로 응답 파싱이 실패되지 않도록 조심해.\n"
-        f"URL 목록: {urls}"
+        "다음 URL들의 내용을 각각 한국어로 100자 이내로 요약해주세요.\n"
+        "각 URL에 접근할 수 없는 경우 '접근 불가'로 표시해주세요.\n"
+        "반드시 아래와 같은 JSON 형태로만 응답해주세요:\n"
+        '{"url1": "요약문1", "url2": "요약문2"}\n\n'
+        f"URL 목록:\n" + "\n".join(f"- {url}" for url in urls)
     )
-
+    
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.3, "maxOutputTokens": 2000}
+        "generationConfig": {
+            "temperature": 0.1,  # 더 일관된 응답을 위해 낮춤
+            "maxOutputTokens": 2000,
+            "topP": 0.8
+        }
+    }
+    
+    headers = {
+        "Content-Type": "application/json",
+        "x-goog-api-key": GEMINI_API_KEY  # API 키 헤더 추가
     }
 
-    headers = {"Content-Type": "application/json"}
-
     try:
-        response = requests.post(GEMINI_API_URL, headers=headers, data=json.dumps(payload))
+        response = requests.post(
+            GEMINI_API_URL, 
+            headers=headers, 
+            data=json.dumps(payload),
+            timeout=30  # 타임아웃 설정
+        )
         response.raise_for_status()
+        
         result = response.json()
-
+        
+        # 응답 구조 검증
+        if "candidates" not in result or not result["candidates"]:
+            logger.error("응답에 candidates가 없습니다: %s", result)
+            return {}
+            
+        if "content" not in result["candidates"][0]:
+            logger.error("응답에 content가 없습니다: %s", result["candidates"][0])
+            return {}
+        
         # 응답 텍스트 추출
         text_output = result["candidates"][0]["content"]["parts"][0]["text"].strip()
-
-        # 1. 세미콜론 제거, 2. 작은따옴표 → 큰따옴표, 3. 공백 제거
-        text_output = text_output.replace(";", "").replace("'", '"').strip()
         logger.info("Gemini 요약 결과 원본: %s", text_output)
-
-        # 4. 중괄호로 시작/끝 확인
-        match = re.search(r"\{.*\}", text_output, re.DOTALL)
-        if match:
-            text_output = match.group(0)
-            try:
-                summaries = json.loads(text_output)
-                if isinstance(summaries, dict):
-                    return summaries
-            except json.JSONDecodeError:
-                logger.error("응답 파싱 실패")
-                return {}
-        else:
-            logger.warning("응답에서 JSON 형태를 찾지 못함")
-            return {}
-
+        
+        # JSON 파싱 개선
+        summaries = parse_json_response(text_output)
+        
+        # 결과 검증 및 필터링
+        validated_summaries = validate_summaries(summaries, urls)
+        
+        return validated_summaries
+        
+    except requests.Timeout:
+        logger.error("Gemini API 요청 타임아웃")
+        return {}
     except requests.RequestException as e:
         logger.error("Gemini API 호출 실패: %s", e)
         return {}
+    except Exception as e:
+        logger.error("예상치 못한 오류: %s", e)
+        return {}
+
+
+def parse_json_response(text_output: str) -> dict:
+    """
+    Gemini API 응답에서 JSON을 추출하고 파싱합니다.
+    """
+    # 1. 코드 블록 제거 (```json ... ``` 형태)
+    text_output = re.sub(r'```(?:json)?\s*', '', text_output)
+    text_output = re.sub(r'```\s*$', '', text_output)
+    
+    # 2. 중괄호로 감싸진 JSON 부분 추출
+    json_match = re.search(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', text_output, re.DOTALL)
+    
+    if not json_match:
+        logger.warning("응답에서 JSON 형태를 찾지 못함: %s", text_output)
+        return {}
+    
+    json_text = json_match.group(0)
+    
+    # 3. 일반적인 JSON 파싱 문제 해결
+    try:
+        # 먼저 그대로 파싱 시도
+        return json.loads(json_text)
+    except json.JSONDecodeError:
+        # 파싱 실패 시 문제 해결 시도
+        cleaned_json = clean_json_text(json_text)
+        try:
+            return json.loads(cleaned_json)
+        except json.JSONDecodeError as e:
+            logger.error("JSON 파싱 실패: %s, 원본: %s", e, json_text)
+            return {}
+
+
+def clean_json_text(json_text: str) -> str:
+    """
+    JSON 텍스트의 일반적인 문제들을 수정합니다.
+    """
+    # 줄바꿈 문자 제거
+    json_text = json_text.replace('\n', ' ').replace('\r', ' ')
+    
+    # 연속된 공백을 하나로
+    json_text = re.sub(r'\s+', ' ', json_text)
+    
+    # 키와 값 주변의 불필요한 따옴표 정리
+    # 작은따옴표를 큰따옴표로 변경 (키와 값 모두)
+    json_text = re.sub(r"'([^']*)':", r'"\1":', json_text)  # 키
+    json_text = re.sub(r":\s*'([^']*)'", r': "\1"', json_text)  # 값
+    
+    # 따옴표 없는 키 처리
+    json_text = re.sub(r'([{,]\s*)(\w+)(\s*:)', r'\1"\2"\3', json_text)
+    
+    # 마지막 쉼표 제거
+    json_text = re.sub(r',\s*}', '}', json_text)
+    json_text = re.sub(r',\s*]', ']', json_text)
+    
+    return json_text.strip()
+
+
+def validate_summaries(summaries: dict, original_urls: list[str]) -> dict:
+    """
+    요약 결과를 검증하고 필터링합니다.
+    """
+    if not isinstance(summaries, dict):
+        logger.warning("요약 결과가 딕셔너리가 아닙니다: %s", type(summaries))
+        return {}
+    
+    validated = {}
+    
+    for url, summary in summaries.items():
+        # URL 형태 검증 (기본적인 검증)
+        if not isinstance(url, str) or not url.startswith(('http://', 'https://')):
+            logger.warning("잘못된 URL 형태: %s", url)
+            continue
+            
+        # 요약문 검증
+        if not isinstance(summary, str):
+            logger.warning("요약문이 문자열이 아닙니다: %s -> %s", url, summary)
+            continue
+            
+        # 요약문 길이 검증
+        if len(summary.strip()) == 0:
+            logger.warning("빈 요약문: %s", url)
+            continue
+            
+        if len(summary) > 150:  # 100자 + 여유분
+            logger.warning("요약문이 너무 깁니다 (%d자): %s", len(summary), url)
+            summary = summary[:100] + "..."
+            
+        validated[url] = summary.strip()
+    
+    # 누락된 URL 확인
+    missing_urls = set(original_urls) - set(validated.keys())
+    if missing_urls:
+        logger.warning("요약되지 않은 URL들: %s", missing_urls)
+        for missing_url in missing_urls:
+            validated[missing_url] = "요약 실패"
+    
+    return validated
 
 @app.route("/fallback", methods=["POST"])
 def fallback():
@@ -1102,6 +1237,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
