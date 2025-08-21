@@ -80,11 +80,14 @@ def summary_in_gemini_batch(urls: list[str]) -> dict:
         try:
             summaries = json.loads(result_text.replace("'", '"'))
             if isinstance(summaries, dict):
+                # logger로 summaries 확인
+                logger.info("Gemini 요약 결과: %s", summaries)
                 return summaries
             else:
+                logger.warning("응답이 dict가 아님: %s", result_text)
                 return {}
         except json.JSONDecodeError:
-            print("응답 파싱 실패:", result_text)
+            logger.error("응답 파싱 실패: %s", result_text)
             return {}
 
     except requests.RequestException as e:
@@ -1094,6 +1097,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
