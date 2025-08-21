@@ -191,13 +191,13 @@ def fallback():
         # ---------- 4. 이벤트 정보 관련 패턴 ----------
         match_event = re.match(r"^(\.이벤트|이벤트|\.ㅇㅂㅌ|ㅇㅂㅌ)$", user_input)
         if match_event:
-            try:
-                url = "https://developer-lostark.game.onstove.com/news/events"
-                headers = {
-                    "accept": "application/json",
-                    "authorization": f"bearer {JWT_TOKEN}"
-                }
+            url = "https://developer-lostark.game.onstove.com/news/events"
+            headers = {
+                "accept": "application/json",
+                "authorization": f"bearer {JWT_TOKEN}"
+            }
         
+            try:
                 resp = requests.get(url, headers=headers, timeout=5)
                 resp.raise_for_status()  # HTTP 오류 시 예외 발생
         
@@ -206,20 +206,21 @@ def fallback():
                     response_text = "현재 진행 중인 이벤트가 없습니다."
                 else:
                     response_text = "❙ 이벤트 정보\n\n"
+                    items = []
                     for ev in events:
                         title = ev.get("Title", "")
                         start_date = ev.get("StartDate", "")
                         end_date = ev.get("EndDate", "")
                         link = ev.get("Link", "")
-                        
-                        # 보기 좋게 날짜 변환
+        
+                        # 날짜 변환 (KST)
                         try:
                             start_obj = datetime.fromisoformat(start_date.replace("Z", "")).astimezone(timezone(timedelta(hours=9)))
                             end_obj = datetime.fromisoformat(end_date.replace("Z", "")).astimezone(timezone(timedelta(hours=9)))
                             formatted_time = f"{start_obj.strftime('%Y-%m-%d %H:%M')} ~ {end_obj.strftime('%Y-%m-%d %H:%M')}"
                         except Exception:
                             formatted_time = f"{start_date} ~ {end_date}"
-                    
+        
                         card = {
                             "title": title,
                             "description": f"기간: {formatted_time}\n",
@@ -240,12 +241,17 @@ def fallback():
                         items.append(card)
         
             except requests.exceptions.HTTPError as e:
-                if resp.status_code == 503:
+                code = getattr(e.response, 'status_code', None)
+                if code == 503:
                     response_text = "서비스 점검 중입니다. 잠시 후 다시 시도해주세요."
+                elif code == 429:
+                    response_text = "요청이 너무 많습니다. 잠시 후 다시 시도해주세요."
                 else:
-                    response_text = f"이벤트 정보를 불러올 수 없습니다. (오류 코드: {resp.status_code})"
+                    response_text = f"이벤트 정보를 불러올 수 없습니다. (오류 코드: {code})"
+            except requests.exceptions.RequestException as e:
+                response_text = f"⚠️ 이벤트 정보를 가져오는 중 네트워크 오류가 발생했습니다. ({e})"
             except Exception as e:
-                response_text = f"⚠️ 이벤트 정보를 가져오는 중 오류가 발생했습니다. ({e})"
+                response_text = f"⚠️ 이벤트 정보를 처리하는 중 오류가 발생했습니다. ({e})"
 
         # ---------- 5. 전체 서버 떠상 관련 패턴 ----------
         match_merchant = re.match(r"^(\.떠상|떠상|\.ㄸㅅ|ㄸㅅ|떠돌이상인)$", user_input)
@@ -1086,6 +1092,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
