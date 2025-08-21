@@ -204,6 +204,7 @@ def fallback():
                 events = resp.json()
                 if not events:
                     response_text = "현재 진행 중인 이벤트가 없습니다."
+                    items = []
                 else:
                     response_text = "❙ 이벤트 정보\n\n"
                     items = []
@@ -212,33 +213,35 @@ def fallback():
                         start_date = ev.get("StartDate", "")
                         end_date = ev.get("EndDate", "")
                         link = ev.get("Link", "")
+        
+                        # 기본값: 원본 문자열
                         formatted_time = f"{start_date} ~ {end_date}"
-
+        
                         try:
                             logging.info("원본 start_date: %s", start_date)
                             logging.info("원본 end_date: %s", end_date)
-                        
+        
                             # UTC 기준 datetime 생성
                             start_obj = datetime.fromisoformat(start_date.replace("Z", "")).replace(tzinfo=timezone.utc)
                             end_obj = datetime.fromisoformat(end_date.replace("Z", "")).replace(tzinfo=timezone.utc)
-                        
+        
                             logging.info("UTC 변환 후 start_obj: %s", start_obj)
                             logging.info("UTC 변환 후 end_obj: %s", end_obj)
-                        
+        
                             # KST 변환
                             start_obj = start_obj.astimezone(timezone(timedelta(hours=9)))
                             end_obj = end_obj.astimezone(timezone(timedelta(hours=9)))
-                        
+        
                             logging.info("KST 변환 후 start_obj: %s", start_obj)
                             logging.info("KST 변환 후 end_obj: %s", end_obj)
-                        
+        
+                            # 보기 좋은 문자열로 변환
                             formatted_time = f"{start_obj.strftime('%Y-%m-%d %H:%M')} ~ {end_obj.strftime('%Y-%m-%d %H:%M')}"
                             logging.info("최종 formatted_time: %s", formatted_time)
-                        
+        
                         except Exception as e:
                             logging.error("날짜 변환 중 오류 발생: %s", e)
                             formatted_time = f"{start_date} ~ {end_date}"
-    
         
                         card = {
                             "title": f"[이벤트] {title}",
@@ -260,17 +263,15 @@ def fallback():
                         items.append(card)
         
             except requests.exceptions.HTTPError as e:
-                code = getattr(e.response, 'status_code', None)
-                if code == 503:
+                if resp.status_code == 503:
                     response_text = "서비스 점검 중입니다. 잠시 후 다시 시도해주세요."
-                elif code == 429:
-                    response_text = "요청이 너무 많습니다. 잠시 후 다시 시도해주세요."
                 else:
-                    response_text = f"이벤트 정보를 불러올 수 없습니다. (오류 코드: {code})"
-            except requests.exceptions.RequestException as e:
-                response_text = f"⚠️ 이벤트 정보를 가져오는 중 네트워크 오류가 발생했습니다. ({e})"
+                    response_text = f"이벤트 정보를 불러올 수 없습니다. (오류 코드: {resp.status_code})"
+                items = []
             except Exception as e:
-                response_text = f"⚠️ 이벤트 정보를 처리하는 중 오류가 발생했습니다. ({e})"
+                response_text = f"⚠️ 이벤트 정보를 가져오는 중 오류가 발생했습니다. ({e})"
+                items = []
+        
 
         # ---------- 5. 전체 서버 떠상 관련 패턴 ----------
         match_merchant = re.match(r"^(\.떠상|떠상|\.ㄸㅅ|ㄸㅅ|떠돌이상인)$", user_input)
@@ -1111,6 +1112,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
