@@ -233,34 +233,35 @@ def fallback():
                 links = [n.get("Link", "") for n in latest_notices if n.get("Link")]
                 summaries = summary_in_gemini_batch(links)
 
+                response_text = summaries
                 
-                for n in latest_notices:
-                    title = n.get("Title", "")
-                    date_time = n.get("Date", "")
-                    link = n.get("Link", "")
-                    notice_type = n.get("Type", "")
-                    summary_article_text = summaries.get(link, "")
+                # for n in latest_notices:
+                #     title = n.get("Title", "")
+                #     date_time = n.get("Date", "")
+                #     link = n.get("Link", "")
+                #     notice_type = n.get("Type", "")
+                #     summary_article_text = summaries.get(link, "")
         
-                    # 보기 좋게 날짜 변환
-                    try:
-                        dt_obj = datetime.fromisoformat(date_time.replace("Z", ""))
-                        dt_obj = dt_obj.astimezone(timezone(timedelta(hours=9)))
-                        formatted_time = dt_obj.strftime("%Y-%m-%d %H:%M")
-                    except Exception:
-                        formatted_time = date_time
+                #     # 보기 좋게 날짜 변환
+                #     try:
+                #         dt_obj = datetime.fromisoformat(date_time.replace("Z", ""))
+                #         dt_obj = dt_obj.astimezone(timezone(timedelta(hours=9)))
+                #         formatted_time = dt_obj.strftime("%Y-%m-%d %H:%M")
+                #     except Exception:
+                #         formatted_time = date_time
         
-                    card = {
-                        "title": f"[{notice_type}] {title}",
-                        "description": f"게시일: {formatted_time}\n\n{summaries}",
-                        "buttons": [
-                            {
-                                "label": "공지 보기",
-                                "action": "webLink",
-                                "webLinkUrl": link
-                            }
-                        ]
-                    }
-                    items.append(card)
+                #     card = {
+                #         "title": f"[{notice_type}] {title}",
+                #         "description": f"게시일: {formatted_time}\n\n{summary_article_text}",
+                #         "buttons": [
+                #             {
+                #                 "label": "공지 보기",
+                #                 "action": "webLink",
+                #                 "webLinkUrl": link
+                #             }
+                #         ]
+                #     }
+                #     items.append(card)
             
         # ---------- 2. 모험섬 관련 패턴 ----------
         match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)$", user_input)
@@ -1163,6 +1164,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
