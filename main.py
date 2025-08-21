@@ -53,22 +53,15 @@ def summary_in_gemini_batch(urls: list[str]) -> dict:
     if not urls:
         return {}
 
-    # 여러 URL을 한꺼번에 프롬프트로 작성
     prompt = (
         "다음 URL들의 내용을 각각 100자 이내로 요약해줘.\n"
-        "URL 내용을 가져올 수 있을 때까지 재실행해.\n"
         "반드시 {url: 요약문, url: 요약문...} 형태로 반환해.\n"
         f"URL 목록: {urls}"
     )
 
     payload = {
-        "contents": [
-            {"parts": [{"text": prompt}]}
-        ],
-        "generationConfig": {
-            "temperature": 0.3,
-            "maxOutputTokens": 2000
-        }
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.3, "maxOutputTokens": 2000}
     }
 
     headers = {"Content-Type": "application/json"}
@@ -77,21 +70,27 @@ def summary_in_gemini_batch(urls: list[str]) -> dict:
         response = requests.post(GEMINI_API_URL, headers=headers, data=json.dumps(payload))
         response.raise_for_status()
         result = response.json()
-        
+
         # 응답 텍스트 추출
-        text_output = result["candidates"][0]["content"]["parts"][0]["text"].strip().replace(";", "").strip()
+        text_output = result["candidates"][0]["content"]["parts"][0]["text"].strip()
         logger.info("Gemini 요약 결과 원본: %s", text_output)
 
-        # 안전하게 dict로 변환
-        try:
-            summaries = json.loads(text_output.replace("'", '"'))
-            if isinstance(summaries, dict):
-                return summaries
-            else:
-                logger.warning("응답이 dict 형태가 아님.")
+        # 1. 세미콜론 제거, 2. 작은따옴표 → 큰따옴표, 3. 공백 제거
+        text_output = text_output.replace(";", "").replace("'", '"').strip()
+
+        # 4. 중괄호로 시작/끝 확인
+        match = re.search(r"\{.*\}", text_output, re.DOTALL)
+        if match:
+            text_output = match.group(0)
+            try:
+                summaries = json.loads(text_output)
+                if isinstance(summaries, dict):
+                    return summaries
+            except json.JSONDecodeError:
+                logger.error("응답 파싱 실패")
                 return {}
-        except json.JSONDecodeError:
-            logger.error("응답 파싱 실패")
+        else:
+            logger.warning("응답에서 JSON 형태를 찾지 못함")
             return {}
 
     except requests.RequestException as e:
@@ -1101,6 +1100,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
