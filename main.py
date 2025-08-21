@@ -105,8 +105,8 @@ def summary_in_gemini_batch(urls: list[str]) -> dict:
 
     # Gemini 프롬프트
     prompt = (
-        "다음 URL들의 내용을 각각 한마디로 요약해줘.\n"
-        "반드시 JSON 형식으로 {\"url\": \"요약문\"} 딕셔너리 형태로만 출력해.\n"
+        "다음 URL들의 내용을 300자 이내로 요약해줘.\n"
+        "반드시 JSON 형식으로 {url: 요약문, url: 요약문...} 형태로 반환해.\n"
         f"URL 목록: {urls}"
     )
 
@@ -231,7 +231,8 @@ def fallback():
                 items = []
                 links = [n.get("Link", "") for n in latest_notices if n.get("Link")]
                 summaries = summary_in_gemini_batch(links)
-                    
+
+                
                 for n in latest_notices:
                     title = n.get("Title", "")
                     date_time = n.get("Date", "")
@@ -1161,6 +1162,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
