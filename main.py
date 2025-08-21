@@ -95,6 +95,59 @@ def summary_in_gemini(url: str) -> str:
     except Exception as e:
         return f"알 수 없는 오류 발생: {e}"
 
+def summary_in_gemini_batch(urls: list[str]) -> dict:
+    """
+    Gemini API를 이용해 여러 개 URL을 한 번에 요약합니다.
+    결과는 {url: 요약문} 딕셔너리로 반환됩니다.
+    """
+    if not urls:
+        return {}
+
+    # Gemini 프롬프트
+    prompt = (
+        "다음 URL들의 내용을 각각 한마디로 요약해줘.\n\n"
+        "반드시 JSON 형식으로 {url: 요약문} 형태로 반환해.\n"
+        f"URL 목록: {urls}"
+    )
+
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": prompt}
+                ]
+            }
+        ],
+        "generationConfig": {
+            "temperature": 0.3,
+            "maxOutputTokens": 500,
+        }
+    }
+
+    headers = {"Content-Type": "application/json"}
+
+    try:
+        response = requests.post(GEMINI_API_URL, headers=headers, data=json.dumps(payload))
+        response.raise_for_status()
+
+        result = response.json()
+        text_output = result["candidates"][0]["content"]["parts"][0]["text"]
+
+        # Gemini 응답이 JSON 문자열이라고 가정하고 파싱
+        try:
+            summaries = json.loads(text_output)
+            return summaries
+        except json.JSONDecodeError:
+            # Gemini가 JSON이 아닌 텍스트로 답할 경우 fallback 처리
+            return {url: text_output for url in urls}
+
+    except requests.exceptions.HTTPError as http_err:
+        return {url: f"API 요청 실패: HTTP 오류 - {http_err}" for url in urls}
+    except requests.exceptions.RequestException as req_err:
+        return {url: f"API 요청 실패: 네트워크 오류 - {req_err}" for url in urls}
+    except Exception as e:
+        return {url: f"알 수 없는 오류 발생: {e}" for url in urls}
+
 @app.route("/fallback", methods=["POST"])
 def fallback():
     try:
@@ -164,12 +217,15 @@ def fallback():
                 latest_notices = all_notices[:5]
         
                 items = []
+                links = [n.get("Link", "") for n in latest_notices if n.get("Link")]
+                summaries = summary_in_gemini_batch(links)
+                    
                 for n in latest_notices:
                     title = n.get("Title", "")
                     date_time = n.get("Date", "")
                     link = n.get("Link", "")
                     notice_type = n.get("Type", "")
-                    summary_article_text = summary_in_gemini(link)
+                    summary_article_text = summaries.get(link, "")
         
                     # 보기 좋게 날짜 변환
                     try:
@@ -1093,6 +1149,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
