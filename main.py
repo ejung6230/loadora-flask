@@ -157,14 +157,14 @@ def fallback():
                 links = [n.get("Link", "") for n in latest_notices if n.get("Link")]
                 summaries = summary_in_gemini_batch(links)
 
-                summary_article_text = summaries.get(link, "요약 없음")
+                
                 
                 for n in latest_notices:
                     title = n.get("Title", "")
                     date_time = n.get("Date", "")
                     link = n.get("Link", "")
                     notice_type = n.get("Type", "")
-                    summary_article_text = summaries.get(link, "")
+                    summary_article_text = summaries.get(link, "요약 없음")
         
                     # 보기 좋게 날짜 변환
                     try:
@@ -1088,6 +1088,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
