@@ -67,15 +67,14 @@ def summary_in_gemini_batch(urls: list[str]) -> dict:
     }
 
     headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {GEMINI_API_KEY}"
+        "Content-Type": "application/json"
     }
 
     try:
         response = requests.post(GEMINI_API_URL, headers=headers, json=payload, timeout=30)
         response.raise_for_status()
         result_text = response.json()["candidates"][0]["outputText"]
-        
+                
         # 안전하게 dict로 변환
         try:
             summaries = json.loads(result_text.replace("'", '"'))
@@ -1097,6 +1096,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
