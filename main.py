@@ -45,190 +45,55 @@ def organize_characters_by_server(char_list):
         organized.setdefault(server, []).append(c)
     return organized
 
+def summary_in_gemini(url: str) -> str:
+    """
+    Gemini API 테스트용 요약 함수.
+    URL 내용을 가져오는 대신, URL 자체를 텍스트 입력으로 사용합니다.
+    """
+    
+    # URL 내용을 요약하도록 프롬프트를 구성합니다.
+    # prompt = f"다음 URL의 내용을 한마디로 요약해줘: {url}"
+    prompt = f"한마디"
 
-def summary_in_gemini_batch(urls: list[str]) -> dict:
-    """
-    Gemini API를 이용해 여러 개 URL을 한 번에 요약합니다.
-    
-    Args:
-        urls: 요약할 URL 리스트
-        gemini_api_url: Gemini API 엔드포인트 URL
-        api_key: Gemini API 키
-        
-    Returns:
-        dict: {url: 요약문} 형태의 딕셔너리
-    """
-    if not urls:
-        return {}
-    
-    # URL 개수 제한 (API 제한 고려)
-    if len(urls) > 10:
-        logger.warning(f"URL 개수가 많습니다 ({len(urls)}개). 처음 10개만 처리합니다.")
-        urls = urls[:10]
-    
-    # 프롬프트 개선
-    prompt = (
-        "다음 URL들의 내용을 각각 한국어로 100자 이내로 요약해주세요.\n"
-        "URL에 접근해서 내용을 읽어달라\n"
-        "실제 내용만 요약하고 허구 생성 금지:\n"
-        "반드시 아래와 같은 JSON 형태로만 응답해주세요:\n"
-        '{"url1": "요약문1", "url2": "요약문2"}\n\n'
-        f"URL 목록:\n" + "\n".join(f"- {url}" for url in urls)
-    )
-    
+    # Gemini API는 'contents' 필드에 요청 내용을 담는 경우가 많습니다.
+    # 'parts' 리스트 안에 텍스트를 담아야 합니다.
     payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
+        "contents": [
+            {
+                "parts": [
+                    {
+                        "text": prompt
+                    }
+                ]
+            }
+        ],
         "generationConfig": {
-            "temperature": 0.1,  # 더 일관된 응답을 위해 낮춤
-            "maxOutputTokens": 2000,
-            "topP": 0.8
+            "temperature": 0.3,
+            "maxOutputTokens": 200,
         }
     }
-    
-    headers = {
-        "Content-Type": "application/json",
-        "x-goog-api-key": GEMINI_API_KEY  # API 키 헤더 추가
-    }
 
+    headers = {"Content-Type": "application/json"}
+    
     try:
-        response = requests.post(
-            GEMINI_API_URL, 
-            headers=headers, 
-            data=json.dumps(payload),
-            timeout=30  # 타임아웃 설정
-        )
-        response.raise_for_status()
+        response = requests.post(GEMINI_API_URL, headers=headers, data=json.dumps(payload))
+        response.raise_for_status() # HTTP 오류가 발생하면 예외를 발생시킵니다.
         
         result = response.json()
         
-        # 응답 구조 검증
-        if "candidates" not in result or not result["candidates"]:
-            logger.error("응답에 candidates가 없습니다: %s", result)
-            return {}
-            
-        if "content" not in result["candidates"][0]:
-            logger.error("응답에 content가 없습니다: %s", result["candidates"][0])
-            return {}
+        # Gemini API 응답 구조에서 텍스트를 추출합니다.
+        # 'candidates' -> 'content' -> 'parts' -> 'text' 경로를 따라갑니다.
+        text_output = result["candidates"][0]["content"]["parts"][0]["text"]
+        return text_output
         
-        # 응답 텍스트 추출
-        text_output = result["candidates"][0]["content"]["parts"][0]["text"].strip()
-        logger.info("Gemini 요약 결과 원본: %s", text_output)
-        
-        # JSON 파싱 개선
-        summaries = parse_json_response(text_output)
-        
-        # 결과 검증 및 필터링
-        validated_summaries = validate_summaries(summaries, urls)
-        
-        return validated_summaries
-        
-    except requests.Timeout:
-        logger.error("Gemini API 요청 타임아웃")
-        return {}
-    except requests.RequestException as e:
-        logger.error("Gemini API 호출 실패: %s", e)
-        return {}
+    except requests.exceptions.HTTPError as http_err:
+        return f"API 요청 실패: HTTP 오류 - {http_err}"
+    except requests.exceptions.RequestException as req_err:
+        return f"API 요청 실패: 네트워크 오류 - {req_err}"
+    except (KeyError, IndexError) as json_err:
+        return f"응답 처리 중 오류 발생: 예상치 못한 JSON 구조 - {json_err}"
     except Exception as e:
-        logger.error("예상치 못한 오류: %s", e)
-        return {}
-
-
-def parse_json_response(text_output: str) -> dict:
-    """
-    Gemini API 응답에서 JSON을 추출하고 파싱합니다.
-    """
-    # 1. 코드 블록 제거 (```json ... ``` 형태)
-    text_output = re.sub(r'```(?:json)?\s*', '', text_output)
-    text_output = re.sub(r'```\s*$', '', text_output)
-    
-    # 2. 중괄호로 감싸진 JSON 부분 추출
-    json_match = re.search(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', text_output, re.DOTALL)
-    
-    if not json_match:
-        logger.warning("응답에서 JSON 형태를 찾지 못함: %s", text_output)
-        return {}
-    
-    json_text = json_match.group(0)
-    
-    # 3. 일반적인 JSON 파싱 문제 해결
-    try:
-        # 먼저 그대로 파싱 시도
-        return json.loads(json_text)
-    except json.JSONDecodeError:
-        # 파싱 실패 시 문제 해결 시도
-        cleaned_json = clean_json_text(json_text)
-        try:
-            return json.loads(cleaned_json)
-        except json.JSONDecodeError as e:
-            logger.error("JSON 파싱 실패: %s, 원본: %s", e, json_text)
-            return {}
-
-
-def clean_json_text(json_text: str) -> str:
-    """
-    JSON 텍스트의 일반적인 문제들을 수정합니다.
-    """
-    # 줄바꿈 문자 제거
-    json_text = json_text.replace('\n', ' ').replace('\r', ' ')
-    
-    # 연속된 공백을 하나로
-    json_text = re.sub(r'\s+', ' ', json_text)
-    
-    # 키와 값 주변의 불필요한 따옴표 정리
-    # 작은따옴표를 큰따옴표로 변경 (키와 값 모두)
-    json_text = re.sub(r"'([^']*)':", r'"\1":', json_text)  # 키
-    json_text = re.sub(r":\s*'([^']*)'", r': "\1"', json_text)  # 값
-    
-    # 따옴표 없는 키 처리
-    json_text = re.sub(r'([{,]\s*)(\w+)(\s*:)', r'\1"\2"\3', json_text)
-    
-    # 마지막 쉼표 제거
-    json_text = re.sub(r',\s*}', '}', json_text)
-    json_text = re.sub(r',\s*]', ']', json_text)
-    
-    return json_text.strip()
-
-
-def validate_summaries(summaries: dict, original_urls: list[str]) -> dict:
-    """
-    요약 결과를 검증하고 필터링합니다.
-    """
-    if not isinstance(summaries, dict):
-        logger.warning("요약 결과가 딕셔너리가 아닙니다: %s", type(summaries))
-        return {}
-    
-    validated = {}
-    
-    for url, summary in summaries.items():
-        # URL 형태 검증 (기본적인 검증)
-        if not isinstance(url, str) or not url.startswith(('http://', 'https://')):
-            logger.warning("잘못된 URL 형태: %s", url)
-            continue
-            
-        # 요약문 검증
-        if not isinstance(summary, str):
-            logger.warning("요약문이 문자열이 아닙니다: %s -> %s", url, summary)
-            continue
-            
-        # 요약문 길이 검증
-        if len(summary.strip()) == 0:
-            logger.warning("빈 요약문: %s", url)
-            continue
-            
-        if len(summary) > 150:  # 100자 + 여유분
-            logger.warning("요약문이 너무 깁니다 (%d자): %s", len(summary), url)
-            summary = summary[:100] + "..."
-            
-        validated[url] = summary.strip()
-    
-    # 누락된 URL 확인
-    missing_urls = set(original_urls) - set(validated.keys())
-    if missing_urls:
-        logger.warning("요약되지 않은 URL들: %s", missing_urls)
-        for missing_url in missing_urls:
-            validated[missing_url] = "요약 실패"
-    
-    return validated
+        return f"알 수 없는 오류 발생: {e}"
 
 @app.route("/fallback", methods=["POST"])
 def fallback():
@@ -299,19 +164,12 @@ def fallback():
                 latest_notices = all_notices[:5]
         
                 items = []
-                links = [n.get("Link", "") for n in latest_notices if n.get("Link")]
-                summaries = summary_in_gemini_batch(links)
-
-                
-                
                 for n in latest_notices:
                     title = n.get("Title", "")
                     date_time = n.get("Date", "")
                     link = n.get("Link", "")
                     notice_type = n.get("Type", "")
-                    summary_article_text = summaries.get(link, "요약 없음")
-                    logger.warning(f"전체 summaries: {summaries}")
-                    logger.warning(f"특정 summary_article_text: {summary_article_text}")
+                    summary_article_text = summary_in_gemini(link)
         
                     # 보기 좋게 날짜 변환
                     try:
@@ -1235,36 +1093,6 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
