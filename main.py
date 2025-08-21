@@ -212,17 +212,27 @@ def fallback():
                         start_date = ev.get("StartDate", "")
                         end_date = ev.get("EndDate", "")
                         link = ev.get("Link", "")
-        
-                        # 날짜 변환 (KST)
+                        
+                        # UTC → KST 변환 함수
+                        def to_kst(iso_str):
+                            try:
+                                # UTC 기준 datetime으로 변환
+                                dt_utc = datetime.fromisoformat(iso_str.replace("Z", "")).replace(tzinfo=timezone.utc)
+                                # KST로 변환
+                                dt_kst = dt_utc.astimezone(timezone(timedelta(hours=9)))
+                                return dt_kst.strftime('%Y-%m-%d %H:%M')
+                            except Exception:
+                                return iso_str  # 실패 시 원본 반환
+
+                        
+                        
                         try:
-                            start_obj = datetime.fromisoformat(start_date.replace("Z", "")).astimezone(timezone(timedelta(hours=9)))
-                            end_obj = datetime.fromisoformat(end_date.replace("Z", "")).astimezone(timezone(timedelta(hours=9)))
-                            formatted_time = f"{start_obj.strftime('%Y-%m-%d %H:%M')} ~ {end_obj.strftime('%Y-%m-%d %H:%M')}"
+                            formatted_time = f"{to_kst(start_date)} ~ {to_kst(end_date)}"
                         except Exception:
                             formatted_time = f"{start_date} ~ {end_date}"
         
                         card = {
-                            "title": title,
+                            "title": f"[이벤트] {title}",
                             "description": f"기간: {formatted_time}\n",
                             "buttons": [
                                 {
@@ -1092,6 +1102,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
