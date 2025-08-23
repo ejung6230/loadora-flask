@@ -124,7 +124,6 @@ def fallback():
                     # 날짜 변환
                     try:
                         dt_obj = datetime.fromisoformat(date_time.replace("Z", ""))
-                        dt_obj = dt_obj.astimezone(timezone(timedelta(hours=9)))
                         formatted_time = dt_obj.strftime("%Y-%m-%d %H:%M")
                     except Exception:
                         formatted_time = date_time
@@ -1098,6 +1097,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
