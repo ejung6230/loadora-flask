@@ -231,19 +231,30 @@ def fallback():
                         link = ev.get("Link", "")
                         start_date = ev.get("StartDate", "")
                         end_date = ev.get("EndDate", "")
-                    
+                        
                         formatted_time = f"{start_date} ~ {end_date}"
-
+                    
                         try:
-                            start_obj = datetime.fromisoformat(start_date)  # naive datetime
-                            end_obj = datetime.fromisoformat(end_date)      # naive datetime
+                            start_obj = datetime.fromisoformat(start_date)
+                            end_obj = datetime.fromisoformat(end_date)
                             formatted_time = f"{start_obj.strftime('%Y-%m-%d %H:%M')} ~ {end_obj.strftime('%Y-%m-%d %H:%M')}"
+                    
+                            # D-day 계산
+                            today = datetime.now()
+                            delta = (end_obj.date() - today.date()).days
+                            if delta > 0:
+                                dday_str = f"D-{delta}"
+                            elif delta == 0:
+                                dday_str = "D-Day"
+                            else:
+                                dday_str = f"D+{abs(delta)}"
                         except Exception as e:
                             logging.error("날짜 변환 중 오류 발생: %s", e)
-
+                            dday_str = "기간 확인 불가"
+                    
                         card = {
                             "title": f"[이벤트] {title}",
-                            "description": f"기간: {formatted_time}\n",
+                            "description": f"기간: {formatted_time} ({dday_str})\n",
                             "thumbnail": {
                                 "imageUrl": f"{thumbnail}",
                                 "link": {"web": link},
@@ -1123,6 +1134,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
