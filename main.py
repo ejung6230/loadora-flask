@@ -138,7 +138,7 @@ def fallback():
                         new_label = " 🔥NEW"
         
                     card = {
-                        "title": f"{date_time}",
+                        "title": f"[{notice_type}] {title}{new_label}",
                         "description": f"게시일: {formatted_time}\n",
                         "buttons": [
                             {"label": "공지 보기", "action": "webLink", "webLinkUrl": link, "highlight": True},
@@ -1119,6 +1119,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
