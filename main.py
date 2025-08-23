@@ -105,7 +105,7 @@ def fallback():
                 def parse_date(date_str):
                     try:
                         dt_obj = datetime.fromisoformat(date_str.replace("Z", ""))
-                        return dt_obj.astimezone(timezone(timedelta(hours=9)))  # 한국시간 변환
+                        return dt_obj
                     except Exception:
                         return datetime.min
         
@@ -225,9 +225,6 @@ def fallback():
                         try:
                             start_obj = datetime.fromisoformat(start_date.replace("Z", "")).replace(tzinfo=timezone.utc)
                             end_obj = datetime.fromisoformat(end_date.replace("Z", "")).replace(tzinfo=timezone.utc)
-                    
-                            start_obj = start_obj.astimezone(timezone(timedelta(hours=9)))
-                            end_obj = end_obj.astimezone(timezone(timedelta(hours=9)))
                     
                             formatted_time = f"{start_obj.strftime('%Y-%m-%d %H:%M')} ~ {end_obj.strftime('%Y-%m-%d %H:%M')}"
                         except Exception as e:
@@ -1097,6 +1094,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
