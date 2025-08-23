@@ -135,10 +135,10 @@ def fallback():
                     # 🔥 NEW 여부 체크 (24시간 이내)
                     new_label = ""
                     if dt_obj and (now_kst - dt_obj) <= timedelta(hours=24):
-                        new_label = " 🔥NEW"
+                        new_label = "🆕 "
         
                     card = {
-                        "title": f"[{notice_type}] {title}{new_label}",
+                        "title": f"[{notice_type}] {new_label}{title}",
                         "description": f"게시일: {formatted_time}\n",
                         "buttons": [
                             {"label": "공지 보기", "action": "webLink", "webLinkUrl": link, "highlight": True},
@@ -233,15 +233,17 @@ def fallback():
                         end_date = ev.get("EndDate", "")
                         
                         formatted_time = f"{start_date} ~ {end_date}"
+
+                        # 현재 시간
+                        now_kst = datetime.now()
                     
                         try:
                             start_obj = datetime.fromisoformat(start_date)
                             end_obj = datetime.fromisoformat(end_date)
                             formatted_time = f"{start_obj.strftime('%Y-%m-%d %H:%M')} ~ {end_obj.strftime('%Y-%m-%d %H:%M')}"
-                    
+
                             # D-day 계산
-                            today = datetime.now()
-                            delta = (end_obj.date() - today.date()).days
+                            delta = (end_obj.date() - now_kst.date()).days
                             if delta > 0:
                                 dday_str = f"D-{delta}"
                             elif delta == 0:
@@ -251,9 +253,15 @@ def fallback():
                         except Exception as e:
                             logging.error("날짜 변환 중 오류 발생: %s", e)
                             dday_str = "기간 확인 불가"
+
+                    
+                        # 🔥 NEW 여부 체크 (24시간 이내)
+                        new_label = ""
+                        if start_obj and timedelta(0) <= (now_kst - start_obj) <= timedelta(hours=24):
+                            new_label = "🆕 "
                     
                         card = {
-                            "title": f"[이벤트] {title}",
+                            "title": f"[이벤트] {new_label}{title}",
                             "description": f"기간: {formatted_time} ({dday_str})\n",
                             "thumbnail": {
                                 "imageUrl": f"{thumbnail}",
@@ -1133,6 +1141,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
