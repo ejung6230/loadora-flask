@@ -130,8 +130,6 @@ def fallback():
                     except Exception:
                         dt_obj = None
                         formatted_time = date_time
-
-# 날짜 변환 try: dt_obj = datetime.fromisoformat(date_time.replace("Z", "")) formatted_time = dt_obj.strftime("%Y-%m-%d %H:%M") except Exception: formatted_time = date_time
                     
                     # 🔥 NEW 여부 체크 (24시간 이내면 NEW 붙이기)
                     new_label = ""
@@ -1104,6 +1102,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
