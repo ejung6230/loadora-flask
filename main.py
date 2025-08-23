@@ -81,7 +81,7 @@ def fallback():
             notice_types = ["공지", "점검", "상점", "이벤트"]
             all_notices = []
             server_down = False  # 서버 점검 여부 플래그
-            
+        
             for notice_type in notice_types:
                 try:
                     resp = requests.get(url, headers=headers, params={"type": notice_type}, timeout=5)
@@ -113,40 +113,40 @@ def fallback():
         
                 # 최신 5개만 선택
                 latest_notices = all_notices[:5]
-
-                now_kst = datetime.now(timezone(timedelta(hours=9)))  # 현재 한국시간
-                
+        
                 cards = []
                 for n in latest_notices:
                     title = n.get("Title", "")
                     date_time = n.get("Date", "")
                     link = n.get("Link", "")
                     notice_type = n.get("Type", "")
-                    
+        
                     # 날짜 변환
                     try:
                         dt_obj = datetime.fromisoformat(date_time.replace("Z", ""))
                         formatted_time = dt_obj.strftime("%Y-%m-%d %H:%M")
                     except Exception:
-                        dt_obj = None
                         formatted_time = date_time
-                    
+
+                    # 현재 KST 시간
+                    now_kst = datetime.now(timezone(timedelta(hours=9)))
+                                        
                     # 🔥 NEW 여부 체크 (24시간 이내면 NEW 붙이기)
                     new_label = ""
                     if dt_obj and (now_kst - dt_obj) <= timedelta(hours=24):
                         new_label = " 🔥NEW"
-                    
+        
                     card = {
-                        "title": f"[{notice_type}] {title}{new_label}한국시간:{now_kst}",
+                        "title": f"[{notice_type}] {title} {new_label}",
                         "description": f"게시일: {formatted_time}\n",
                         "buttons": [
                             {"label": "공지 보기", "action": "webLink", "webLinkUrl": link, "highlight": True},
                             {"label": "공유하기", "action": "share", "highlight": False}
                         ]
                     }
-                    
+        
                     cards.append(card)
-
+        
                 # 캐러셀 카드로 여러 개 카드 삽입
                 items = {
                     "carousel": {
@@ -154,6 +154,7 @@ def fallback():
                         "items": cards
                     }
                 }
+
             
         # ---------- 2. 모험섬 관련 패턴 ----------
         match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)$", user_input)
@@ -1102,6 +1103,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
