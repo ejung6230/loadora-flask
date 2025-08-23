@@ -131,13 +131,13 @@ def fallback():
                     # 현재 KST 시간
                     now_kst = datetime.now(timezone(timedelta(hours=9)))
                                         
-                    # 🔥 NEW 여부 체크 (24시간 이내면 NEW 붙이기)
-                    new_label = ""
-                    if dt_obj and (now_kst - dt_obj) <= timedelta(hours=24):
-                        new_label = " 🔥NEW"
+                    # # 🔥 NEW 여부 체크 (24시간 이내면 NEW 붙이기)
+                    # new_label = ""
+                    # if dt_obj and (now_kst - dt_obj) <= timedelta(hours=24):
+                    #     new_label = " 🔥NEW"
         
                     card = {
-                        "title": f"[{notice_type}] {title} {new_label}",
+                        "title": f"[{notice_type}] {title} {now_kst}",
                         "description": f"게시일: {formatted_time}\n",
                         "buttons": [
                             {"label": "공지 보기", "action": "webLink", "webLinkUrl": link, "highlight": True},
@@ -1103,6 +1103,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
