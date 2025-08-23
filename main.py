@@ -123,15 +123,16 @@ def fallback():
         
                     # 날짜 변환
                     try:
-                        dt_obj = datetime.fromisoformat(date_time.replace("Z", ""))
+                        # dt_obj를 naive datetime으로 생성
+                        dt_obj = datetime.fromisoformat(date_time.replace("Z", ""))  # Z 제거
                         formatted_time = dt_obj.strftime("%Y-%m-%d %H:%M")
                     except Exception:
                         formatted_time = date_time
 
-                    # 현재 KST 시간
-                    now_kst = datetime.now(timezone(timedelta(hours=9)))
+                    # 현재 한국 시간 (naive)
+                    now_kst = datetime.now()  # 이미 dt_obj와 같은 naive datetime 기준
                 
-                    # 🔥 NEW 여부 체크 (24시간 이내면 NEW 붙이기)
+                    # 🔥 NEW 여부 체크 (24시간 이내)
                     new_label = ""
                     if dt_obj and (now_kst - dt_obj) <= timedelta(hours=24):
                         new_label = " 🔥NEW"
@@ -1118,6 +1119,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
