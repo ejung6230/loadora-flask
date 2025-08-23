@@ -394,9 +394,24 @@ def fallback():
                 }
 
         return jsonify(response)
-
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        # 1️⃣ 로그 기록 (stack trace 포함)
+        logger.exception("예외 발생: %s", e)
+        
+        # 2️⃣ 챗봇용 메시지 생성
+        response_text = f"에러가 발생했습니다: {str(e)}"
+        response = {
+            "version": "2.0",
+            "template": {
+                "outputs": [
+                    {"simpleText": {"text": response_text}}
+                ],
+                "quickReplies": []
+            }
+        }
+        
+        # 3️⃣ JSON으로 반환 (HTTP 500)
+        return jsonify(response), 500
 
 
 def update_rate_limit(headers):
@@ -1103,6 +1118,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
