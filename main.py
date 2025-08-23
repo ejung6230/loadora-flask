@@ -124,7 +124,7 @@ def fallback():
                     # 날짜 변환
                     try:
                         # dt_obj를 naive datetime으로 생성
-                        dt_obj = datetime.fromisoformat(date_time.replace("Z", ""))  # Z 제거
+                        dt_obj = datetime.fromisoformat(date_time)
                         formatted_time = dt_obj.strftime("%Y-%m-%d %H:%M")
                     except Exception:
                         formatted_time = date_time
@@ -233,12 +233,12 @@ def fallback():
                         formatted_time = f"{start_date} ~ {end_date}"
 
                         try:
-                            start_obj = datetime.fromisoformat(start_date.replace("Z", ""))  # naive datetime
-                            end_obj = datetime.fromisoformat(end_date.replace("Z", ""))      # naive datetime
+                            start_obj = datetime.fromisoformat(start_date)  # naive datetime
+                            end_obj = datetime.fromisoformat(end_date)      # naive datetime
                             formatted_time = f"{start_obj.strftime('%Y-%m-%d %H:%M')} ~ {end_obj.strftime('%Y-%m-%d %H:%M')}"
                         except Exception as e:
                             logging.error("날짜 변환 중 오류 발생: %s", e)
-                    
+
                         card = {
                             "title": f"[이벤트] {title}",
                             "description": f"기간: {formatted_time}\n",
@@ -1118,6 +1118,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
