@@ -212,6 +212,8 @@ def fallback():
             }
         
             try:
+                from datetime import datetime, timezone, timedelta
+                
                 resp = requests.get(url, headers=headers, timeout=5)
                 resp.raise_for_status()  # HTTP 오류 시 예외 발생
         
@@ -1118,6 +1120,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
