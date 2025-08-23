@@ -114,29 +114,39 @@ def fallback():
                 # 최신 5개만 선택
                 latest_notices = all_notices[:5]
 
+                now_kst = datetime.now(timezone(timedelta(hours=9)))  # 현재 한국시간
+                
                 cards = []
                 for n in latest_notices:
                     title = n.get("Title", "")
                     date_time = n.get("Date", "")
                     link = n.get("Link", "")
                     notice_type = n.get("Type", "")
-                
+                    
                     # 날짜 변환
                     try:
                         dt_obj = datetime.fromisoformat(date_time.replace("Z", ""))
                         formatted_time = dt_obj.strftime("%Y-%m-%d %H:%M")
                     except Exception:
+                        dt_obj = None
                         formatted_time = date_time
-                
+
+# 날짜 변환 try: dt_obj = datetime.fromisoformat(date_time.replace("Z", "")) formatted_time = dt_obj.strftime("%Y-%m-%d %H:%M") except Exception: formatted_time = date_time
+                    
+                    # 🔥 NEW 여부 체크 (24시간 이내면 NEW 붙이기)
+                    new_label = ""
+                    if dt_obj and (now_kst - dt_obj) <= timedelta(hours=24):
+                        new_label = " 🔥NEW"
+                    
                     card = {
-                        "title": f"[{notice_type}] {title}",
+                        "title": f"[{notice_type}] {title}{new_label}한국시간:{now_kst}",
                         "description": f"게시일: {formatted_time}\n",
                         "buttons": [
                             {"label": "공지 보기", "action": "webLink", "webLinkUrl": link, "highlight": True},
                             {"label": "공유하기", "action": "share", "highlight": False}
                         ]
                     }
-                
+                    
                     cards.append(card)
 
                 # 캐러셀 카드로 여러 개 카드 삽입
@@ -1094,6 +1104,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
