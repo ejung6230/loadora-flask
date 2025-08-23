@@ -412,7 +412,7 @@ def fallback():
         }
         
         # 3️⃣ JSON으로 반환 (HTTP 500)
-        return jsonify(response), 500
+        return jsonify(response)
 
 
 def update_rate_limit(headers):
@@ -1119,6 +1119,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
