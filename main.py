@@ -165,7 +165,7 @@ def fallback():
             response_text += f"[모험섬 명령어]\n내용: {island_content}"
 
         # ---------- 3. 원정대 관련 패턴 ----------
-        match_expedition = re.match(r"^(\.원정대|원정대|\.ㅇㅈㄷ|ㅇㅈㄷ)\b", user_input)
+        match_expedition = re.match(r"^(\.원정대|원정대|\.ㅇㅈㄷ|ㅇㅈㄷ)\s*(.*)$", user_input)
         if match_expedition:
             print("group(0):", match_expedition.group(0))  # ".원정대 카마인"
             print("group(1):", match_expedition.group(1))  # ".원정대"
@@ -1302,6 +1302,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
