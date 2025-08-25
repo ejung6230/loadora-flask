@@ -231,7 +231,6 @@ def fallback():
                     response_text = "현재 진행 중인 이벤트가 없습니다."
                     items = []
                 else:
-                    response_text = "◕ᴗ◕🌸\n이벤트 정보를 알려드릴게요.\n\n"
                     cards = []
                     
                     for ev in events:
@@ -284,6 +283,13 @@ def fallback():
                             ]
                         }
                         cards.append(card)
+
+                    items.append({
+                        "simpleText": {
+                            "text": f"◕ᴗ◕🌸\n진행중인 {len(cards)}개의 이벤트를 알려드릴게요.",
+                            "extra": {}
+                        }
+                    })
                     
                     cards_per_page = 10
                     # cards: 모든 이벤트 카드 리스트를 10개씩 나눠서 삽입
@@ -295,7 +301,9 @@ def fallback():
                                 "items": chunk
                             }
                         }
+                        
                         items.append(carousel)
+
         
             except requests.exceptions.HTTPError as e:
                 if resp.status_code == 503:
@@ -1361,6 +1369,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
