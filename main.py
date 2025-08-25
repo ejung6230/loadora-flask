@@ -148,9 +148,16 @@ def fallback():
                     }
         
                     cards.append(card)
-        
+
                 # 캐러셀 카드로 여러 개 삽입
-                items = [{
+                items = [
+                    {
+                        "simpleText": {
+                            "text": f"◕ᴗ◕🌟 최신 {lens(cards)}개의 공지를 보여드릴게요.\n\n",
+                            "extra": {}
+                        }
+                    },
+                    {
                     "carousel": {
                         "type": "textCard",
                         "items": cards
@@ -1311,6 +1318,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
