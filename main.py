@@ -389,8 +389,8 @@ def fallback():
                 def make_preview_with_more(text, max_lines=6):
                     lines = text.split("\n")
                     if len(lines) > max_lines:
-                        allsee = "\u034F" * 1000  # 숨김 문자
-                        return "\n".join(lines[:max_lines]) + f"\n▼ 더보기{allsee}"
+                        allsee = "\u034F" * 50  # 숨김 문자
+                        return "\n".join(lines[:max_lines]) + f"\n▼ 더보기 {allsee}"
                     return text
                 
                 # 전체 텍스트 예시 (API 데이터를 기반으로 구성)
@@ -1391,6 +1391,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
