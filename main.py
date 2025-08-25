@@ -165,8 +165,7 @@ def fallback():
             response_text += f"[모험섬 명령어]\n내용: {island_content}"
 
         # ---------- 3. 원정대 관련 패턴 ----------
-        match_expedition = re.match(r"^(\.원정대|원정대|\.ㅇㅈㄷ|ㅇㅈㄷ)(.*)$", user_input)
-        
+        match_expedition = re.match(r"^(\.원정대|원정대|\.ㅇㅈㄷ|ㅇㅈㄷ)\b", user_input)
         if match_expedition:
             expedition_char_name = match_expedition.group(2).strip()
             if not expedition_char_name:
@@ -333,7 +332,7 @@ def fallback():
                 use_share_button = True
                 
         # ---------- 6. 주급 관련 패턴 ----------
-        match_weekly = re.match(r"^(\.주급|주급|\.ㅈㄱ|ㅈㄱ)(.*)$", user_input)
+        match_weekly = re.match(r"^(\.주급|주급|\.ㅈㄱ|ㅈㄱ)\b", user_input)
         if match_weekly:  # 먼저 매칭 여부 체크
             weekly_text = match_weekly.group(2)  # strip은 나중에
             if not weekly_text or weekly_text.strip() == "":
@@ -345,7 +344,7 @@ def fallback():
 
 
         # ---------- 7. 클리어골드 관련 패턴 ----------
-        match_cleargold = re.match(r"^(\.클골|클골|\.ㅋㄱ|ㅋㄱ|\.클리어골드|클리어골드|\.ㅋㄹㅇㄱㄷ|ㅋㄹㅇㄱㄷ)(.*)$", user_input)
+        match_cleargold = re.match(r"^(\.클골|클골|\.ㅋㄱ|ㅋㄱ|\.클리어골드|클리어골드|\.ㅋㄹㅇㄱㄷ|ㅋㄹㅇㄱㄷ)\b", user_input)
         if match_cleargold:
             dungeon_name = match_cleargold.group(2).strip()
             if not dungeon_name:
@@ -364,7 +363,7 @@ def fallback():
             )
                 
         # ---------- 8. 특정 캐릭터 정보 관련 패턴 ----------
-        match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ)(.*)$", user_input)
+        match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ)\b", user_input)
         if match_info:
             info_char_name = match_info.group(2).strip()
             if not info_char_name:
@@ -1304,6 +1303,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
