@@ -187,7 +187,7 @@ def fallback():
                     if resp.status_code == 503:
                         items = inspection_item
                     else:
-                        response_text = f"캐릭터 정보를 불러올 수 없습니다. (오류 코드: {resp.status_code})"
+                        response_text = f"원정대 정보를 불러올 수 없습니다. (오류 코드: {resp.status_code})"
                 except Exception as e:
                     response_text = "⚠️ 서버와의 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
     
@@ -376,37 +376,48 @@ def fallback():
                 # 공식 api에서 데이터 받아오기
                 data = fetch_armory(info_char_name, "summary")
                 
-                # 데이터를 보기좋게 텍스트로 정제하기
+                # 데이터를 보기좋게 텍스트로 정제하기 (참조 : https://flask-production-df81.up.railway.app/armories/아도라o/summary)
                 # response_text = match_info_to_text(data)
 
-                
-                # 전투정보실 바로가기 url
-                user_info_url = (
-                    f"https://lostark.game.onstove.com/Profile/Character/{info_char_name}"
-                    if data else "최신화된 캐릭터 정보가 존재하지 않습니다."
-                )
-                response_text = f"◕ᴗ◕🌸\n❛{info_char_name}❜ 님의 캐릭터 정보를 알려드릴게요\n\n"
 
-                # 캐러셀 카드로 여러 개 삽입
-                items = [
-                    {
-                        "textCard": {
-                            "description": response_text,
-                            "buttons": [
-                                {"label": "전투정보실 보기", "action": "webLink", "webLinkUrl": user_info_url, "highlight": True},
-                                {"label": "공유하기", "highlight": False, "action": "share"}
-                            ],
-                            "lock": False,
-                            "forwardable": False
+                # 전투정보실 바로가기 url
+                user_info_url = f"https://lostark.game.onstove.com/Profile/Character/{info_char_name}"
+                
+                
+                if data:
+                    # 데이터가 있을 때만 텍스트 + 이미지 + 버튼
+                    character_image = data["ArmoryProfile"]["CharacterImage"]
+                    items = [
+                        {
+                            "textCard": {
+                                "description": f"◕ᴗ◕🌸\n❛{info_char_name}❜ 님의 캐릭터 정보를 알려드릴게요\n\n",
+                                "buttons": [
+                                    {"label": "전투정보실 보기", "action": "webLink", "webLinkUrl": user_info_url, "highlight": True},
+                                    {"label": "공유하기", "highlight": False, "action": "share"}
+                                ],
+                                "lock": False,
+                                "forwardable": False
+                            }
+                        },
+                        {
+                            "simpleImage": {
+                                "imageUrl": character_image,
+                                "altText": f"{info_char_name} 캐릭터 이미지"
+                            }
                         }
-                    },
-                    {
-                        "simpleImage": {
-                            "imageUrl": "https://img.lostark.co.kr/armory/0/6B815045D9E671CE3030770E73DD30FFC77C16F539CDFD334A1B3CBFC9F27073.jpg?v=20250824164025",
-                            "altText": ""
+                    ]
+                else:
+                    # 데이터 없으면 텍스트 카드만
+                    items = [
+                        {
+                            "textCard": {
+                                "description": "◕_◕💧\n최신화된 캐릭터 정보가 존재하지 않습니다.",
+                                "buttons": [],
+                                "lock": False,
+                                "forwardable": False
+                            }
                         }
-                    }
-                ]
+                    ]
 
         
         # ---------- 카카오 챗봇 응답 포맷 ----------
@@ -1321,6 +1332,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
