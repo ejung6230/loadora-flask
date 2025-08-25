@@ -410,10 +410,23 @@ def fallback():
                         }
                     },
                     {
-                        "simpleImage": {
-                            "imageUrl": "http://k.kakaocdn.net/dn/NkZnl/btsP6KsgZvZ/SAfRjjLXkQ58R94HkNuNKK/resize.jpg",
-                            "altText": "이미지"
-                        }
+                        "basicCard": {
+                        "title": "제목",
+                        "description": "설명",
+                        "thumbnail": {
+                            "imageUrl": "https://img.lostark.co.kr/armory/0/6B815045D9E671CE3030770E73DD30FFC77C16F539CDFD334A1B3CBFC9F27073.jpg?v=20250824164025",
+                            "link": {
+                              "web": ""
+                            },
+                            "fixedRatio": false,
+                            "altText": ""
+                        },
+                        "buttons": [
+                            {"label": "전투정보실 보기", "action": "webLink", "webLinkUrl": user_info_url, "highlight": True},
+                            {"label": "공유하기", "highlight": False, "action": "share"}
+                        ],
+                        "lock": false,
+                        "forwardable": false
                     }
                 ]
 
@@ -1337,6 +1350,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
