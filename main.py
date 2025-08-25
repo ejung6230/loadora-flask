@@ -380,7 +380,7 @@ def fallback():
             response = {
                 "version": "2.0",
                 "template": {
-                    "outputs": [items],
+                    "outputs": [items, items],
                     "quickReplies": []
                 }
             }
@@ -1142,6 +1142,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
