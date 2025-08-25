@@ -341,8 +341,31 @@ def fallback():
             else:
                 response_text = "❙ 특정 캐릭터 주급\n\n"
                 response_text += f"[주급 명령어]\n내용: {weekly_text}"
+
+        # ---------- 7. 클리어골드 관련 패턴 ----------
+        match_cleargold = re.match(r"^(\.클골|클골|\.ㅋㄱ|ㅋㄱ|\.클리어골드|\클리어골드|.ㅋㄹㅇㄱㄷ|ㅋㄹㅇㄱㄷ)(?:\s+(.+))?$", user_input)
+        if match_cleargold:
+            info_char_name = match_cleargold.group(2)
+            
+            if not info_char_name or info_char_name.strip() == "":
+                response_text = "조회할 던전을 입력해주세요.\nex) .클골 던전명 \n.클골 4막, \n.클골 하기르"
+            else:
+                info_char_name = info_char_name.strip()
+
+        if match_cleargold:
+            dungeon_name = match_cleargold.group(2)
+            
+            if not dungeon_name or dungeon_name.strip() == "":
+                response_text = (
+                    "조회할 던전을 입력해주세요.\n"
+                    "ex) .클골 4막\n"
+                    "    .클골 하기르"
+                )
+            else:
+                dungeon_name = dungeon_name.strip()
+                response_text = f"❙ 클리어골드 던전 정보\n\n[던전 명령어]\n내용: {dungeon_name}"
                 
-        # ---------- 7. 특정 캐릭터 정보 관련 패턴 ----------
+        # ---------- 8. 특정 캐릭터 정보 관련 패턴 ----------
         match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ)(?:\s+(.+))?$", user_input)
         if match_info:
             info_char_name = match_info.group(2)
@@ -1283,6 +1306,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
