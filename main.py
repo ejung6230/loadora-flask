@@ -465,28 +465,27 @@ VALID_ENDPOINTS = [
     "engravings", "cards", "gems", "colosseums", "collectibles", "arkpassive"
 ]
 
-@app.route("/armories/<character_name>/<endpoint>", methods=["GET"])
-def get_armory(character_name, endpoint):
-    """
-    캐릭터 이름과 엔드포인트로 조회
-    endpoint: summary, profiles, equipment, avatars, combat-skills, engravings, 
-              cards, gems, colosseums, collectibles, arkpassive
-    """
-    if endpoint not in VALID_ENDPOINTS:
-        return jsonify({"error": "Invalid endpoint"}), 400
 
-    check_rate_limit()
+def fetch_armory(character_name, endpoint):
+    if endpoint not in VALID_ENDPOINTS:
+        raise ValueError("Invalid endpoint")
     
     path = "" if endpoint == "summary" else endpoint
     url = f"https://developer-lostark.game.onstove.com/armories/characters/{character_name}"
     if path:
         url += f"/{path}"
 
+    resp = requests.get(url, headers=HEADERS)
+    resp.raise_for_status()
+    return resp.json()
+
+@app.route("/armories/<character_name>/<endpoint>", methods=["GET"])
+def get_armory(character_name, endpoint):
     try:
-        resp = requests.get(url, headers=HEADERS)
-        update_rate_limit(resp.headers)
-        resp.raise_for_status()
-        return jsonify(resp.json())
+        data = fetch_armory(character_name, endpoint)
+        return jsonify(data)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except requests.exceptions.RequestException as e:
         return jsonify({"error": str(e)}), 500
 
@@ -1146,6 +1145,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
