@@ -153,7 +153,7 @@ def fallback():
                 items = [
                     {
                         "simpleText": {
-                            "text": f"◕ᴗ◕🌟 최신 {lens(cards)}개의 공지를 보여드릴게요.\n\n",
+                            "text": f"◕ᴗ◕🌟 최신 {len(cards)}개의 공지를 보여드릴게요.\n\n",
                             "extra": {}
                         }
                     },
@@ -1318,6 +1318,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
