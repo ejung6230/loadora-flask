@@ -352,8 +352,12 @@ def fallback():
 
             # # 데이터를 보기좋게 텍스트로 정제하기
             # response_text = match_info_to_text(data)
+            user_info_url = f"최신화된 캐릭터 정보가 존재하지 않습니다."
 
-            user_info_url = f"https://lostark.game.onstove.com/Profile/Character/{info_char_name}"
+            if data:
+                user_info_url = f"https://lostark.game.onstove.com/Profile/Character/{info_char_name}"
+            else: 
+
             
             if not info_char_name:
                 response_text = "캐릭터 이름을 입력해주세요.\n ex) .정보 캐릭터명"
@@ -1278,6 +1282,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
