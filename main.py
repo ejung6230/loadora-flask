@@ -404,6 +404,12 @@ def fallback():
                                 "imageUrl": character_image,
                                 "altText": f"{info_char_name} 캐릭터 이미지"
                             }
+                        },
+                        {
+                            "simpleText": {
+                                "text": "캐릭터 정보",
+                                "extra": {}
+                            }
                         }
                     ]
                 else:
@@ -1332,6 +1338,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
