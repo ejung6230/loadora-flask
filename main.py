@@ -346,12 +346,20 @@ def fallback():
         match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ) (.+)$", user_input)
         if match_info:
             info_char_name = match_info.group(2).strip()
-        
+
+            # 공식 api에서 데이터 받아오기
+            data = fetch_armory(info_char_name, "summary")
+
+            # # 데이터를 보기좋게 텍스트로 정제하기
+            # response_text = match_info_to_text(data)
+
+            user_info_url = f"https://lostark.game.onstove.com/Profile/Character/{info_char_name}"
+            
             if not info_char_name:
                 response_text = "캐릭터 이름을 입력해주세요.\n ex) .정보 캐릭터명"
             else:
                 response_text = "❙ 특정 캐릭터 정보\n\n"
-                response_text += f"[정보 명령어]\n내용: {info_char_name}"
+                response_text += f"[정보 명령어]\n내용: {info_char_name}\n{user_info_url}"
         
         # ---------- 카카오 챗봇 응답 포맷 ----------
         
@@ -440,6 +448,131 @@ def fallback():
         
         # 3️⃣ JSON으로 반환 (HTTP 500)
         return jsonify(response), 500
+
+def match_info_to_text(data):
+    """
+    ArkGrid JSON 데이터를 읽기 쉬운 텍스트로 변환하는 함수
+    
+    Args:
+        data: 특정 유저 JSON 데이터 (dict 또는 JSON 문자열)
+    
+    Returns:
+        str: 변환된 텍스트
+    """
+    # 문자열인 경우 JSON으로 파싱
+    if isinstance(data, str):
+        try:
+            data = json.loads(data)
+        except json.JSONDecodeError:
+            return "잘못된 JSON 형식입니다."
+    
+    if not isinstance(data, dict) not in data:
+        return 데이터가 없습니다."
+
+    # 아크 그리드
+    arkgrid_data = data['ArkGrid']
+    
+    # 아크패시브
+    arkPassive_data = data['ArkPassive']
+    
+    # 장착 아바타 정보
+    armoryAvatars_data = data['ArmoryAvatars']
+
+    # 장착 카드 정보
+    armoryCard_data = data['ArmoryCard']
+
+    # 장착 각인 정보
+    armoryEngraving_data = data['ArmoryEngraving']
+
+    # 장착 장비 정보
+    armoryEquipment_data = data['ArmoryEquipment']
+
+    # 장착 보석 정보
+    armoryGem_data = data['ArmoryGem']
+
+    # 장착 젬 정보
+    gem_data = data['Gems']
+
+    # 프로필 정보
+    armoryProfile_data = data['ArmoryProfile']
+
+    # 스킬트리 정보
+    armorySkills_data = data['ArmorySkills']
+
+    # 수집 전체 정보
+    collectibles_data = data['Collectibles']
+
+    # 모코코 수집 정보 / "Type": "모코코 씨앗"
+    mococo_collectible_data = next((item for item in data["Collectibles"] if item["Type"] == "모코코 씨앗"), None)
+
+    # 섬의마음 수집 정보 / "Type": "섬의 마음"
+    island_heart_collectible_data = next((item for item in data["Collectibles"] if item["Type"] == "섬의 마음"), None)
+
+    # 미술품 수집 정보 / "Type": "위대한 미술품"
+    great_art_collectible_data = next((item for item in data["Collectibles"] if item["Type"] == "위대한 미술품"), None)
+
+    # 징표 수집 정보 / "Type": "이그네아의 징표"
+    igneas_mark_collectible     = next((item for item in data["Collectibles"] if item["Type"] == "이그네아의 징표"), None)
+    
+    # 모험물 수집 정보 / "Type": "항해 모험물"
+    naval_adventure_collectible = next((item for item in data["Collectibles"] if item["Type"] == "항해 모험물"), None)
+
+    # 세계수잎 수집 정보 / "Type": "세계수의 잎"
+    world_tree_leaf_collectible = next((item for item in data["Collectibles"] if item["Type"] == "세계수의 잎"), None)
+
+    # 오르페우스별 수집 정보 / "Type": "오르페우스의 별"
+    orpheus_star_collectible    = next((item for item in data["Collectibles"] if item["Type"] == "오르페우스의 별"), None)
+
+    # 오르골 수집 정보 / "Type": "기억의 오르골"
+    memory_musicbox_collectible = next((item for item in data["Collectibles"] if item["Type"] == "기억의 오르골"), None)
+
+    # 해도 수집 정보 / "Type": "크림스네일의 해도"
+    crim_snail_map_collectible  = next((item for item in data["Collectibles"] if item["Type"] == "크림스네일의 해도"), None)
+
+
+    # 콜로세움 정보
+    colosseumInfo_data = data['ColosseumInfo']
+    
+    
+    result_text = ""
+    
+    # 아크 그리드 효과 처리
+    if 'Effects' in arkgrid_data and arkgrid_data['Effects']:
+        result_text += "아크 그리드 효과:\n"
+        for effect in arkgrid_data['Effects']:
+            name = effect.get('Name', '알 수 없음')
+            level = effect.get('Level', 0)
+            tooltip = effect.get('Tooltip', '')
+            
+            # HTML 태그에서 수치 추출
+            percentage = extract_percentage(tooltip)
+            result_text += f"- {name} (레벨 {level}): {percentage}\n"
+        result_text += "\n"
+    
+    # 젬 정보 처리
+    if 'Slots' in arkgrid_data and arkgrid_data['Slots']:
+        result_text += "젬 정보:\n"
+        for slot_idx, slot in enumerate(arkgrid_data['Slots']):
+            if 'Gems' in slot and slot['Gems']:
+                for gem_idx, gem in enumerate(slot['Gems']):
+                    grade = gem.get('Grade', '알 수 없음')
+                    is_active = gem.get('IsActive', False)
+                    icon_url = gem.get('Icon', '')
+                    
+                    # 툴팁에서 젬 이름과 타입 추출
+                    tooltip = gem.get('Tooltip', '')
+                    gem_name, gem_type = extract_gem_info(tooltip)
+                    
+                    result_text += f"슬롯 {slot_idx + 1} - 젬 {gem_idx + 1}:\n"
+                    result_text += f"  - 등급: {grade}\n"
+                    result_text += f"  - 이름: {gem_name}\n"
+                    result_text += f"  - 타입: {gem_type}\n"
+                    result_text += f"  - 활성 상태: {'활성' if is_active else '비활성'}\n"
+                    if icon_url:
+                        result_text += f"  - 아이콘 URL: {icon_url}\n"
+                    result_text += "\n"
+    
+    return result_text.strip()
 
 
 def update_rate_limit(headers):
@@ -1145,6 +1278,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
