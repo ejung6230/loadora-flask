@@ -162,7 +162,7 @@ def fallback():
         match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)$", user_input)
         if match_adventure_island:
             island_content = match_adventure_island.group(1).strip()
-            response_text = "❙ 모험섬 정보\n\n"
+            response_text = "◕ᴗ◕ 모험섬 정보\n\n"
             response_text += f"[모험섬 명령어]\n내용: {island_content}"
 
         # ---------- 3. 원정대 관련 패턴 ----------
@@ -184,7 +184,7 @@ def fallback():
         
                     organized_chars = organize_characters_by_server(data)
                     if organized_chars:
-                        expedition_text = "❙ 원정대 전체 캐릭터 정보\n\n"
+                        expedition_text = f"◕ᴗ◕ [{expedition_char_name}]님의 원정대 전체 캐릭터 정보\n\n"
                         for server, chars in organized_chars.items():
                             chars.sort(key=lambda x: x['ItemAvgLevel'], reverse=True)
                             expedition_text += f"[{server} 서버]\n"
@@ -223,7 +223,7 @@ def fallback():
                     response_text = "현재 진행 중인 이벤트가 없습니다."
                     items = []
                 else:
-                    response_text = "❙ 이벤트 정보\n\n"
+                    response_text = "◕ᴗ◕ 이벤트 정보\n\n"
                     cards = []
                     
                     for ev in events:
@@ -341,7 +341,7 @@ def fallback():
             current_data = filter_active_reports(all_data)
         
             # 떠상 요약 텍스트 생성
-            response_text = "❙ 전체 서버 떠상 정보\n\n"
+            response_text = "◕ᴗ◕ 전체 서버 떠상 정보\n\n"
             response_text += format_reports_by_region(current_data)
             response_text += f"\n\n{get_remaining_time_text()}"
         
@@ -355,7 +355,7 @@ def fallback():
             if not weekly_text:
                 response_text = "캐릭터 이름을 입력해주세요.\nex) .주급 캐릭터명"
             else:
-                response_text = "❙ 특정 캐릭터 주급\n\n"
+                response_text = "◕ᴗ◕ 특정 캐릭터 주급\n\n"
                 response_text += f"[주급 명령어]\n내용: {weekly_text}"
 
 
@@ -369,7 +369,7 @@ def fallback():
                     "ex) .클골 4막, .클골 하기르"
                 )
             else:
-                response_text = "❙ 클리어골드 던전 정보\n\n"
+                response_text = "◕ᴗ◕ 클리어골드 던전 정보\n\n"
                 response_text += f"[던전 명령어]\n내용: {dungeon_name}"
                 
         # ---------- 8. 특정 캐릭터 정보 관련 패턴 ----------
@@ -390,7 +390,7 @@ def fallback():
                     f"https://lostark.game.onstove.com/Profile/Character/{info_char_name}"
                     if data else "최신화된 캐릭터 정보가 존재하지 않습니다."
                 )
-                response_text = f"❙ {info_char_name}의 캐릭터 정보\n\n"
+                response_text = f"◕ᴗ◕ [{info_char_name}]님의 캐릭터 정보\n\n"
                 response_text += f"[정보 명령어]\n내용: {user_info_url}"
 
         
@@ -1262,7 +1262,7 @@ def korlark_summary():
                 all_data.append(entry)
         
         current_data = filter_active_reports(all_data)
-        summary_text = "❙ 전체 서버 떠상 정보\n\n"
+        summary_text = "◕ᴗ◕ 전체 서버 떠상 정보\n\n"
         summary_text += format_reports_by_region(current_data)
         summary_text += f"\n\n{get_remaining_time_text()}"
 
@@ -1311,6 +1311,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
