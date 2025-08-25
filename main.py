@@ -149,12 +149,12 @@ def fallback():
                     cards.append(card)
         
                 # 캐러셀 카드로 여러 개 삽입
-                items = {
+                items = [{
                     "carousel": {
                         "type": "textCard",
                         "items": cards
                     }
-                }
+                }]
 
             
         # ---------- 2. 모험섬 관련 패턴 ----------
@@ -277,12 +277,12 @@ def fallback():
                         cards.append(card)
                     
                     # 캐러셀 카드로 여러 개 삽입
-                    items = {
+                    items = [{
                         "carousel": {
                             "type": "basicCard",
                             "items": cards
                         }
-                    }
+                    }]
         
             except requests.exceptions.HTTPError as e:
                 if resp.status_code == 503:
@@ -380,7 +380,7 @@ def fallback():
             response = {
                 "version": "2.0",
                 "template": {
-                    "outputs": [items],
+                    "outputs": items,
                     "quickReplies": []
                 }
             }
@@ -1142,6 +1142,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
