@@ -165,42 +165,40 @@ def fallback():
             response_text += f"[모험섬 명령어]\n내용: {island_content}"
 
         # ---------- 3. 원정대 관련 패턴 ----------
-        match_expedition = re.match(r"^(\.원정대|원정대|\.ㅇㅈㄷ|ㅇㅈㄷ)(?:\s+(.+))?$", user_input)
-        if match_expedition:
-            expedition_char_name = match_expedition.group(2)
-            
-            if not info_char_name or info_char_name.strip() == "":
-                response_text = "캐릭터 이름을 입력해주세요.\nex) .원정대 캐릭터명"
-            else:
-                url = f"https://developer-lostark.game.onstove.com/characters/{expedition_char_name}/siblings"
-                headers = {
-                    "accept": "application/json",
-                    "authorization": f"bearer {JWT_TOKEN}"
-                }
-                try:
-                    resp = requests.get(url, headers=headers, timeout=5)
-                    resp.raise_for_status()
-                    data = resp.json()
-        
-                    organized_chars = organize_characters_by_server(data)
-                    if organized_chars:
-                        expedition_text = "❙ 원정대 전체 캐릭터 정보\n\n"
-                        for server, chars in organized_chars.items():
-                            chars.sort(key=lambda x: x['ItemAvgLevel'], reverse=True)
-                            expedition_text += f"[{server} 서버]\n"
-                            for c in chars:
-                                expedition_text += f"- {c['CharacterName']} Lv{c['CharacterLevel']} {c['CharacterClassName']} ({c['ItemAvgLevel']})\n"
-                            expedition_text += "\n"
-        
-                        response_text = expedition_text.strip()
-        
-                except requests.exceptions.HTTPError as e:
-                    if resp.status_code == 503:
-                        items = inspection_item
-                    else:
-                        response_text = f"캐릭터 정보를 불러올 수 없습니다. (오류 코드: {resp.status_code})"
-                except Exception as e:
-                    response_text = "⚠️ 서버와의 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
+        match_expedition = re.match(r"^(\.원정대|원정대|\.ㅇㅈㄷ|ㅇㅈㄷ)(.*)$", user_input)
+        expedition_char_name = match_expedition.group(2).strip()
+        if not expedition_char_name:
+            response_text = "캐릭터 이름을 입력해주세요.\nex) .원정대 캐릭터명"
+        else:
+            url = f"https://developer-lostark.game.onstove.com/characters/{expedition_char_name}/siblings"
+            headers = {
+                "accept": "application/json",
+                "authorization": f"bearer {JWT_TOKEN}"
+            }
+            try:
+                resp = requests.get(url, headers=headers, timeout=5)
+                resp.raise_for_status()
+                data = resp.json()
+    
+                organized_chars = organize_characters_by_server(data)
+                if organized_chars:
+                    expedition_text = "❙ 원정대 전체 캐릭터 정보\n\n"
+                    for server, chars in organized_chars.items():
+                        chars.sort(key=lambda x: x['ItemAvgLevel'], reverse=True)
+                        expedition_text += f"[{server} 서버]\n"
+                        for c in chars:
+                            expedition_text += f"- {c['CharacterName']} Lv{c['CharacterLevel']} {c['CharacterClassName']} ({c['ItemAvgLevel']})\n"
+                        expedition_text += "\n"
+    
+                    response_text = expedition_text.strip()
+    
+            except requests.exceptions.HTTPError as e:
+                if resp.status_code == 503:
+                    items = inspection_item
+                else:
+                    response_text = f"캐릭터 정보를 불러올 수 없습니다. (오류 코드: {resp.status_code})"
+            except Exception as e:
+                response_text = "⚠️ 서버와의 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
 
         # ---------- 4. 이벤트 정보 관련 패턴 ----------
         match_event = re.match(r"^(\.이벤트|이벤트|\.ㅇㅂㅌ|ㅇㅂㅌ)$", user_input)
@@ -332,62 +330,47 @@ def fallback():
                 use_share_button = True
                 
         # ---------- 6. 주급 관련 패턴 ----------
-        match_weekly = re.match(r"^(\.주급|주급|\.ㅈㄱ|ㅈㄱ) (.+)$", user_input)
-        if match_weekly:
-            weekly_text = match_weekly.group(2).strip()
-
-            if not weekly_text:
-                response_text = "캐릭터 이름을 입력해주세요.\n ex) .주급 캐릭터명"
-            else:
-                response_text = "❙ 특정 캐릭터 주급\n\n"
-                response_text += f"[주급 명령어]\n내용: {weekly_text}"
+        match_weekly = re.match(r"^(\.주급|주급|\.ㅈㄱ|ㅈㄱ)(.*)$", user_input)
+        weekly_text = match_weekly.group(2).strip()
+        if not weekly_text:
+            response_text = "캐릭터 이름을 입력해주세요.\nex) .주급 캐릭터명"
+        else:
+            response_text = "❙ 특정 캐릭터 주급\n\n"
+            response_text += f"[주급 명령어]\n내용: {weekly_text}"
 
         # ---------- 7. 클리어골드 관련 패턴 ----------
-        match_cleargold = re.match(r"^(\.클골|클골|\.ㅋㄱ|ㅋㄱ|\.클리어골드|\클리어골드|.ㅋㄹㅇㄱㄷ|ㅋㄹㅇㄱㄷ)(?:\s+(.+))?$", user_input)
-        if match_cleargold:
-            info_char_name = match_cleargold.group(2)
-            
-            if not info_char_name or info_char_name.strip() == "":
-                response_text = "조회할 던전을 입력해주세요.\nex) .클골 던전명 \n.클골 4막, \n.클골 하기르"
-            else:
-                info_char_name = info_char_name.strip()
-
-        if match_cleargold:
-            dungeon_name = match_cleargold.group(2)
-            
-            if not dungeon_name or dungeon_name.strip() == "":
-                response_text = (
-                    "조회할 던전을 입력해주세요.\n"
-                    "ex) .클골 4막\n"
-                    "    .클골 하기르"
-                )
-            else:
-                dungeon_name = dungeon_name.strip()
-                response_text = f"❙ 클리어골드 던전 정보\n\n[던전 명령어]\n내용: {dungeon_name}"
+        match_cleargold = re.match(r"^(\.클골|클골|\.ㅋㄱ|ㅋㄱ|\.클리어골드|클리어골드|\.ㅋㄹㅇㄱㄷ|ㅋㄹㅇㄱㄷ)(.*)$", user_input)
+        dungeon_name = match_cleargold.group(2).strip()
+        if not dungeon_name:
+            response_text = (
+                "조회할 던전을 입력해주세요.\n"
+                "ex) .클골 4막\n"
+                "    .클골 하기르"
+            )
+        else:
+            response_text = f"❙ 클리어골드 던전 정보\n\n[던전 명령어]\n내용: {dungeon_name}"
                 
         # ---------- 8. 특정 캐릭터 정보 관련 패턴 ----------
-        match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ)(?:\s+(.+))?$", user_input)
-        if match_info:
-            info_char_name = match_info.group(2)
+        match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ)(.*)$", user_input)
+        info_char_name = match_info.group(2).strip()
+        if not info_char_name:
+            response_text = "캐릭터 이름을 입력해주세요.\nex) .정보 캐릭터명"
+        else:
+            info_char_name = info_char_name.strip()
+
+            # 공식 api에서 데이터 받아오기
+            data = fetch_armory(info_char_name, "summary")
             
-            if not info_char_name or info_char_name.strip() == "":
-                response_text = "캐릭터 이름을 입력해주세요.\nex) .정보 캐릭터명"
-            else:
-                info_char_name = info_char_name.strip()
+            # 데이터를 보기좋게 텍스트로 정제하기
+            # response_text = match_info_to_text(data)
 
-                # 공식 api에서 데이터 받아오기
-                data = fetch_armory(info_char_name, "summary")
-                
-                # 데이터를 보기좋게 텍스트로 정제하기
-                # response_text = match_info_to_text(data)
-
-                # 전투정보실 바로가기 url
-                user_info_url = (
-                    f"https://lostark.game.onstove.com/Profile/Character/{info_char_name}"
-                    if data else "최신화된 캐릭터 정보가 존재하지 않습니다."
-                )
-                response_text = f"❙ {info_char_name}의 캐릭터 정보\n\n"
-                response_text += f"[정보 명령어]\n내용: {user_info_url}"
+            # 전투정보실 바로가기 url
+            user_info_url = (
+                f"https://lostark.game.onstove.com/Profile/Character/{info_char_name}"
+                if data else "최신화된 캐릭터 정보가 존재하지 않습니다."
+            )
+            response_text = f"❙ {info_char_name}의 캐릭터 정보\n\n"
+            response_text += f"[정보 명령어]\n내용: {user_info_url}"
         
         # ---------- 카카오 챗봇 응답 포맷 ----------
         
@@ -1306,6 +1289,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
