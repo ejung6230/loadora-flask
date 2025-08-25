@@ -343,27 +343,28 @@ def fallback():
                 response_text += f"[주급 명령어]\n내용: {weekly_text}"
                 
         # ---------- 7. 특정 캐릭터 정보 관련 패턴 ----------
-        match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ) (.+)$", user_input)
+        match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ)(?:\s+(.+))?$", user_input)
         if match_info:
-            info_char_name = match_info.group(2).strip()
-
-            # 공식 api에서 데이터 받아오기
-            data = fetch_armory(info_char_name, "summary")
-
-            # 데이터를 보기좋게 텍스트로 정제하기
-            # response_text = match_info_to_text(data)
-
-            # 전투정보실 바로가기 url
-            user_info_url = f"최신화된 캐릭터 정보가 존재하지 않습니다."
-            if data:
-                user_info_url = f"https://lostark.game.onstove.com/Profile/Character/{info_char_name}"
-
+            info_char_name = match_info.group(2)
             
-            if not info_char_name:
-                response_text = "캐릭터 이름을 입력해주세요.\n ex) .정보 캐릭터명"
+            if not info_char_name or info_char_name.strip() == "":
+                response_text = "캐릭터 이름을 입력해주세요.\nex) .정보 캐릭터명"
             else:
-                response_text = "❙ 특정 캐릭터 정보\n\n"
-                response_text += f"[정보 명령어]\n내용: {info_char_name}\n{user_info_url}"
+                info_char_name = info_char_name.strip()
+
+                # 공식 api에서 데이터 받아오기
+                data = fetch_armory(info_char_name, "summary")
+                
+                # 데이터를 보기좋게 텍스트로 정제하기
+                # response_text = match_info_to_text(data)
+
+                # 전투정보실 바로가기 url
+                user_info_url = (
+                    f"https://lostark.game.onstove.com/Profile/Character/{info_char_name}"
+                    if data else "최신화된 캐릭터 정보가 존재하지 않습니다."
+                )
+                response_text = f"❙ {info_char_name}의 캐릭터 정보\n\n"
+                response_text += f"[정보 명령어]\n내용: {user_info_url}"
         
         # ---------- 카카오 챗봇 응답 포맷 ----------
         
@@ -1282,6 +1283,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
