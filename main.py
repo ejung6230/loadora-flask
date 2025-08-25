@@ -334,11 +334,14 @@ def fallback():
         if match_weekly:  # 먼저 매칭 여부 체크
             weekly_text = match_weekly.group(2)  # strip은 나중에
             if not weekly_text or weekly_text.strip() == "":
-                response_text = "캐릭터 이름을 입력해주세요.\nex) .주급 캐릭터명"
+                response_text = "캐릭터 이름을 입력해주세요1.\nex) .주급 캐릭터명"
             else:
                 weekly_text = weekly_text.strip()
                 response_text = "❙ 특정 캐릭터 주급\n\n"
                 response_text += f"[주급 명령어]\n내용: {weekly_text}"
+        else:
+            response_text = "캐릭터 이름을 입력해주세요2.\nex) .주급 캐릭터명"
+
 
         # ---------- 7. 클리어골드 관련 패턴 ----------
         match_cleargold = re.match(r"^(\.클골|클골|\.ㅋㄱ|ㅋㄱ|\.클리어골드|클리어골드|\.ㅋㄹㅇㄱㄷ|ㅋㄹㅇㄱㄷ)(.*)$", user_input)
@@ -1291,6 +1294,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
