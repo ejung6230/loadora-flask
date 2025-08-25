@@ -336,7 +336,7 @@ def fallback():
         if match_weekly:
             weekly_text = match_weekly.group(2).strip()
             if not weekly_text:
-                response_text = "캐릭터 이름을 입력해주세요1.\nex) .주급 캐릭터명"
+                response_text = "캐릭터 이름을 입력해주세요.\nex) .주급 캐릭터명"
             else:
                 response_text = "❙ 특정 캐릭터 주급\n\n"
                 response_text += f"[주급 명령어]\n내용: {weekly_text}"
@@ -349,8 +349,7 @@ def fallback():
             if not dungeon_name:
                 response_text = (
                     "조회할 던전을 입력해주세요.\n"
-                    "ex) .클골 4막\n"
-                    "    .클골 하기르"
+                    "ex) .클골 4막, .클골 하기르"
                 )
             else:
                 response_text = "❙ 클리어골드 던전 정보\n\n"
@@ -1295,6 +1294,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
