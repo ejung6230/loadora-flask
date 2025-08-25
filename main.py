@@ -167,6 +167,11 @@ def fallback():
         # ---------- 3. 원정대 관련 패턴 ----------
         match_expedition = re.match(r"^(\.원정대|원정대|\.ㅇㅈㄷ|ㅇㅈㄷ)\b", user_input)
         if match_expedition:
+            print("group(0):", match_expedition.group(0))  # ".원정대 카마인"
+            print("group(1):", match_expedition.group(1))  # ".원정대"
+            print("group(2):", match_expedition.group(2))  # "카마인"
+            print("groups():", match_expedition.groups())  # (".원정대", "카마인")
+            
             expedition_char_name = match_expedition.group(2).strip()
             if not expedition_char_name:
                 response_text = "캐릭터 이름을 입력해주세요.\nex) .원정대 캐릭터명"
@@ -1297,6 +1302,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
