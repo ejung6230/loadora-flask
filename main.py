@@ -405,15 +405,15 @@ def fallback():
                             "link": {
                               "web": ""
                             },
-                            "fixedRatio": false,
+                            "fixedRatio": False,
                             "altText": ""
                         },
                         "buttons": [
                             {"label": "전투정보실 보기", "action": "webLink", "webLinkUrl": user_info_url, "highlight": True},
                             {"label": "공유하기", "highlight": False, "action": "share"}
                         ],
-                        "lock": false,
-                        "forwardable": false
+                        "lock": False,
+                        "forwardable": False
                         }
                     }
                 ]
@@ -1331,6 +1331,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
