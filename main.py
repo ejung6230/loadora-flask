@@ -345,12 +345,10 @@ def fallback():
                     server_data = future.result()
                     if server_data:
                         all_data.extend(server_data)
-        
-            current_data = filter_active_reports(all_data)
 
-            is_on_sale = get_remaining_time_text() === "현재 시각은 판매 구간이 아닙니다."
-        
             # 떠상 요약 텍스트 생성
+            current_data = filter_active_reports(all_data)
+            is_on_sale = get_remaining_time_text() == "현재 시각은 판매 구간이 아닙니다."
             response_text = "◕ᴗ◕🌸\n전체 서버 떠상 정보를 알려드릴게요.\n\n"
             response_text += format_reports_by_region(current_data, is_on_sale)
             response_text += f"\n\n{get_remaining_time_text()}"
@@ -1310,12 +1308,13 @@ def korlark_summary():
                     report["endTime"] = entry.get("endTime", "")
                 all_data.append(entry)
 
-        is_on_sale = get_remaining_time_text() === "현재 시각은 판매 구간이 아닙니다."
-        
+
+        # 떠상 요약 텍스트 생성
         current_data = filter_active_reports(all_data)
-        summary_text = "◕ᴗ◕🌸\n전체 서버 떠상 정보를 알려드릴게요.\n\n"
-        summary_text += format_reports_by_region(current_data, is_on_sale)
-        summary_text += f"\n\n{get_remaining_time_text()}"
+        is_on_sale = get_remaining_time_text() == "현재 시각은 판매 구간이 아닙니다."
+        response_text = "◕ᴗ◕🌸\n전체 서버 떠상 정보를 알려드릴게요.\n\n"
+        response_text += format_reports_by_region(current_data, is_on_sale)
+        response_text += f"\n\n{get_remaining_time_text()}"
 
         if request.method == "POST":
             return jsonify({
@@ -1362,6 +1361,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
