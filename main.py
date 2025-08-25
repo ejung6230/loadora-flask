@@ -390,30 +390,20 @@ def fallback():
                 # 캐러셀 카드로 여러 개 삽입
                 items = [
                     {
-                        "simpleText": {
-                            "text": response_text,
-                            "extra": {}
+                        "textCard": {
+                            "description": response_text,
+                            "buttons": [
+                                {"label": "전투정보실 보기", "action": "webLink", "webLinkUrl": user_info_url, "highlight": True},
+                                {"label": "공유하기", "highlight": False, "action": "share"}
+                            ],
+                            "lock": False,
+                            "forwardable": False
                         }
                     },
                     {
-                        
-                        "basicCard": {
-                        "title": "제목",
-                        "description": "설명",
-                        "thumbnail": {
+                        "simpleImage": {
                             "imageUrl": "https://img.lostark.co.kr/armory/0/6B815045D9E671CE3030770E73DD30FFC77C16F539CDFD334A1B3CBFC9F27073.jpg?v=20250824164025",
-                            "link": {
-                              "web": ""
-                            },
-                            "fixedRatio": False,
                             "altText": ""
-                        },
-                        "buttons": [
-                            {"label": "전투정보실 보기", "action": "webLink", "webLinkUrl": user_info_url, "highlight": True},
-                            {"label": "공유하기", "highlight": False, "action": "share"}
-                        ],
-                        "lock": False,
-                        "forwardable": False
                         }
                     }
                 ]
@@ -1331,6 +1321,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
