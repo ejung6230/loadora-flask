@@ -54,6 +54,7 @@ def fallback():
 
         response_text = ""
         items = []
+        items_list = []
         
         inspection_item = [
             {
@@ -68,7 +69,9 @@ def fallback():
                 ]
             }
         ]
+                
 
+        
         # ---------- 1. 공지 관련 패턴 ----------
         match_notice = re.match(r"^(\.공지|공지|\.ㄱㅈ|ㄱㅈ)$", user_input)
         if match_notice:
@@ -98,10 +101,11 @@ def fallback():
                     continue
                 except Exception:
                     continue  # 실패한 타입은 무시
+
+            
+            if not server_down and all_notices:  # 서버 점검이 아닐 때만 공지 정리
+                from datetime import datetime, timedelta
         
-            if not server_down and all_notices:  # ✅ 서버 점검이 아닐 때만 공지 정리
-                # 날짜 기준 최신순 정렬
-                from datetime import datetime, timezone, timedelta
                 def parse_date(date_str):
                     try:
                         dt_obj = datetime.fromisoformat(date_str.replace("Z", ""))
@@ -109,12 +113,15 @@ def fallback():
                     except Exception:
                         return datetime.min
         
+                # 날짜 기준 최신순 정렬
                 all_notices.sort(key=lambda x: parse_date(x.get("Date", "")), reverse=True)
         
-                # 최신 5개만 선택
+                # 최신 10개만 선택
                 latest_notices = all_notices[:10]
         
                 cards = []
+                now_kst = datetime.now()  # naive datetime
+        
                 for n in latest_notices:
                     title = n.get("Title", "")
                     date_time = n.get("Date", "")
@@ -123,15 +130,12 @@ def fallback():
         
                     # 날짜 변환
                     try:
-                        # dt_obj를 naive datetime으로 생성
                         dt_obj = datetime.fromisoformat(date_time)
                         formatted_time = dt_obj.strftime("%Y-%m-%d %H:%M")
                     except Exception:
                         formatted_time = date_time
-
-                    # 현재 한국 시간 (naive)
-                    now_kst = datetime.now()  # 이미 dt_obj와 같은 naive datetime 기준
-                
+                        dt_obj = None
+        
                     # 🔥 NEW 여부 체크 (24시간 이내)
                     new_label = ""
                     if dt_obj and (now_kst - dt_obj) <= timedelta(hours=24):
@@ -145,16 +149,18 @@ def fallback():
                             {"label": "공유하기", "action": "share", "highlight": False}
                         ]
                     }
-        
                     cards.append(card)
         
-                # 캐러셀 카드로 여러 개 삽입
-                items = {
-                    "carousel": {
-                        "type": "textCard",
-                        "items": cards
+                # -----------------------------
+                # 10개 단위로 끊어서 items_list 생성
+                for i in range(0, len(cards), 10):
+                    chunk_items = {
+                        "carousel": {
+                            "type": "textCard",  # 기존 textCard 유지
+                            "items": cards[i:i+10]
+                        }
                     }
-                }
+                    items_list.append(chunk_items)
 
             
         # ---------- 2. 모험섬 관련 패턴 ----------
@@ -220,29 +226,28 @@ def fallback():
                 events = resp.json()
                 if not events:
                     response_text = "현재 진행 중인 이벤트가 없습니다."
-                    items = []
+                    items_list = []
                 else:
                     response_text = "❙ 이벤트 정보\n\n"
                     cards = []
-                    
-                    for ev in events[:10]:
+        
+                    now_kst = datetime.now(timezone(timedelta(hours=9)))
+        
+                    # 이벤트 카드 생성
+                    for ev in events:
                         title = ev.get("Title", "")
                         thumbnail = ev.get("Thumbnail", "")
                         link = ev.get("Link", "")
                         start_date = ev.get("StartDate", "")
                         end_date = ev.get("EndDate", "")
-                        
+        
                         formatted_time = f"{start_date} ~ {end_date}"
-
-                        # 현재 시간
-                        now_kst = datetime.now()
-                    
+        
                         try:
                             start_obj = datetime.fromisoformat(start_date)
                             end_obj = datetime.fromisoformat(end_date)
                             formatted_time = f"{start_obj.strftime('%Y-%m-%d %H:%M')} ~ {end_obj.strftime('%Y-%m-%d %H:%M')}"
-
-                            # D-day 계산
+        
                             delta = (end_obj.date() - now_kst.date()).days
                             if delta > 0:
                                 dday_str = f"D-{delta}"
@@ -253,18 +258,18 @@ def fallback():
                         except Exception as e:
                             logging.error("날짜 변환 중 오류 발생: %s", e)
                             dday_str = "기간 확인 불가"
-
-                    
+                            start_obj = None
+        
                         # 🔥 NEW 여부 체크 (24시간 이내)
                         new_label = ""
                         if start_obj and timedelta(0) <= (now_kst - start_obj) <= timedelta(hours=24):
                             new_label = "🆕 "
-                    
+        
                         card = {
                             "title": f"[이벤트] {new_label}{title}",
                             "description": f"기간: {formatted_time} ({dday_str})\n",
                             "thumbnail": {
-                                "imageUrl": f"{thumbnail}",
+                                "imageUrl": thumbnail,
                                 "link": {"web": ""},
                                 "fixedRatio": False,
                                 "altText": ""
@@ -275,14 +280,18 @@ def fallback():
                             ]
                         }
                         cards.append(card)
-                    
-                    # 캐러셀 카드로 여러 개 삽입
-                    items = {
-                        "carousel": {
-                            "type": "basicCard",
-                            "items": cards
+        
+                    # 10개 단위로 끊어서 items_list 생성
+                    items_list = []
+                    for i in range(0, len(cards), 10):
+                        chunk_items = {
+                            "carousel": {
+                                "type": "basicCard",
+                                "items": cards[i:i+10]  # 10개씩
+                            }
                         }
-                    }
+                        items_list.append(chunk_items)
+        
         
             except requests.exceptions.HTTPError as e:
                 if resp.status_code == 503:
@@ -380,10 +389,11 @@ def fallback():
             response = {
                 "version": "2.0",
                 "template": {
-                    "outputs": [items, items],
+                    "outputs": items_list,
                     "quickReplies": []
                 }
             }
+        
         else:
             if use_share_button:
                 # ✅ 응답이 있으면 공유 버튼 있는 textCard
@@ -1142,6 +1152,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
