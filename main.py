@@ -392,14 +392,30 @@ def fallback():
                 
                 # 데이터를 보기좋게 텍스트로 정제하기
                 # response_text = match_info_to_text(data)
-    
+
+                
                 # 전투정보실 바로가기 url
                 user_info_url = (
                     f"https://lostark.game.onstove.com/Profile/Character/{info_char_name}"
                     if data else "최신화된 캐릭터 정보가 존재하지 않습니다."
                 )
                 response_text = f"◕ᴗ◕ [{info_char_name}]님의 캐릭터 정보를 알려드릴게요.\n\n"
-                response_text += f"[정보 명령어]\n내용: {user_info_url}"
+
+                # 캐러셀 카드로 여러 개 삽입
+                items = [
+                    {
+                        "simpleText": {
+                            "text": response_text,
+                            "extra": {}
+                        }
+                    },
+                    {
+                        "simpleImage": {
+                            "imageUrl": "http://k.kakaocdn.net/dn/NkZnl/btsP6KsgZvZ/SAfRjjLXkQ58R94HkNuNKK/resize.jpg",
+                            "altText": "이미지"
+                        }
+                    }
+                }]
 
         
         # ---------- 카카오 챗봇 응답 포맷 ----------
@@ -1321,6 +1337,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
