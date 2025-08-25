@@ -8,6 +8,7 @@ import json
 import time
 import re
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -298,36 +299,52 @@ def fallback():
                 response_text = f"⚠️ 이벤트 정보를 가져오는 중 오류가 발생했습니다. ({e})"
                 items = []
         
-
+        
         # ---------- 5. 전체 서버 떠상 관련 패턴 ----------
         match_merchant = re.match(r"^(\.떠상|떠상|\.ㄸㅅ|ㄸㅅ|떠돌이상인)$", user_input)
         if match_merchant:
-            # 전체 서버 처리
             server_ids = list(SERVER_MAP.keys())
             all_data = []
-    
-            for server_id in server_ids:
-                resp = requests.get(KORLARK_API_URL, params={"server": server_id})
-                resp.raise_for_status()
-                server_data = resp.json()
-    
-                # 각 entry의 reports 안쪽에 server 정보 추가
-                for entry in server_data:
-                    for report in entry.get("reports", []):
-                        report["serverId"] = server_id
-                        report["serverName"] = SERVER_MAP.get(server_id, server_id)
-                        report["startTime"] = entry.get("startTime", "")
-                        report["endTime"] = entry.get("endTime", "")
-                    all_data.append(entry)
-    
+
+            def fetch_server_data(server_id):
+                """서버별 떠상 데이터 가져오기"""
+                try:
+                    resp = requests.get(
+                        KORLARK_API_URL,
+                        params={"server": server_id},
+                        timeout=5
+                    )
+                    resp.raise_for_status()
+                    server_data = resp.json()
+            
+                    # 각 entry의 reports 안쪽에 server 정보 추가
+                    for entry in server_data:
+                        for report in entry.get("reports", []):
+                            report["serverId"] = server_id
+                            report["serverName"] = SERVER_MAP.get(server_id, server_id)
+                            report["startTime"] = entry.get("startTime", "")
+                            report["endTime"] = entry.get("endTime", "")
+                    return server_data
+            
+                except Exception as e:
+                    logger.error(f"[ERROR] 서버({server_id}) 처리 실패: {e}")
+                    return []  # 실패 시 빈 리스트 반환
+            
+            # 병렬 처리 (스레드풀)
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                future_to_server = {executor.submit(fetch_server_data, sid): sid for sid in server_ids}
+                for future in as_completed(future_to_server):
+                    server_data = future.result()
+                    if server_data:
+                        all_data.extend(server_data)
+        
             current_data = filter_active_reports(all_data)
-    
+        
             # 떠상 요약 텍스트 생성
             response_text = "❙ 전체 서버 떠상 정보\n\n"
             response_text += format_reports_by_region(current_data)
             response_text += f"\n\n{get_remaining_time_text()}"
-
-            # 공유 버튼 생성(카드형은 최대 400자)
+        
             if len(response_text) <= 400:
                 use_share_button = True
                 
@@ -1294,6 +1311,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
