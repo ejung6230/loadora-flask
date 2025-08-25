@@ -331,12 +331,12 @@ def fallback():
                 
         # ---------- 6. 주급 관련 패턴 ----------
         match_weekly = re.match(r"^(\.주급|주급|\.ㅈㄱ|ㅈㄱ)(.*)$", user_input)
-        if match_weekly:
-            weekly_text = match_weekly.group(2).strip()  # 명령어 뒤 텍스트
-            
-            if not weekly_text:
+        if match_weekly:  # 먼저 매칭 여부 체크
+            weekly_text = match_weekly.group(2)  # strip은 나중에
+            if not weekly_text or weekly_text.strip() == "":
                 response_text = "캐릭터 이름을 입력해주세요.\nex) .주급 캐릭터명"
             else:
+                weekly_text = weekly_text.strip()
                 response_text = "❙ 특정 캐릭터 주급\n\n"
                 response_text += f"[주급 명령어]\n내용: {weekly_text}"
 
@@ -1291,6 +1291,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
