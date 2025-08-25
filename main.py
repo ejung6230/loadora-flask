@@ -347,7 +347,6 @@ def fallback():
                         all_data.extend(server_data)
         
             current_data = filter_active_reports(all_data)
-            logger.info("떠상 데이터: %s", all_data)
         
             # 떠상 요약 텍스트 생성
             response_text = "◕ᴗ◕ 전체 서버 떠상 정보를 알려드릴게요.\n\n"
@@ -1170,6 +1169,8 @@ def format_reports_by_region(current_data):
     """
     from collections import defaultdict
 
+    logger.info("떠상 데이터: %s", current_data)
+    
     # itemId -> grade, type, name
     item_grade = {item["id"]: item["grade"] for r in LIST_MAP for item in r["items"]}
     item_type = {item["id"]: item["type"] for r in LIST_MAP for item in r["items"]}
@@ -1320,6 +1321,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
