@@ -362,7 +362,7 @@ def fallback():
             if not weekly_text:
                 response_text = "◕_◕💧 캐릭터 이름을 입력해주세요.\nex) .주급 캐릭터명"
             else:
-                response_text = "◕ᴗ◕🌸 특정 캐릭터 주급 정보를 보여드릴게요.\n\n"
+                response_text = f"◕ᴗ◕🌸 [{weekly_text}]님의 주급 정보를 보여드릴게요.\n\n"
                 response_text += f"[주급 명령어]\n내용: {weekly_text}"
 
 
@@ -1318,6 +1318,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
