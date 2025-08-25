@@ -48,6 +48,7 @@ def organize_characters_by_server(char_list):
 
 @app.route("/fallback", methods=["POST"])
 def fallback():
+    # 특수문자 참고 ❘ ❙ ❚ ❛ ❜
     try:
         json_data = request.get_json()
         user_input = json_data.get("userRequest", {}).get("utterance", "").strip()
@@ -346,6 +347,7 @@ def fallback():
                         all_data.extend(server_data)
         
             current_data = filter_active_reports(all_data)
+            logger.info("떠상 데이터: %s", all_data)
         
             # 떠상 요약 텍스트 생성
             response_text = "◕ᴗ◕ 전체 서버 떠상 정보를 알려드릴게요.\n\n"
@@ -1199,7 +1201,7 @@ def format_reports_by_region(current_data):
         if not all_items:
             all_items = ["없음"]
 
-        lines.append(f"{server}: {', '.join(all_items)}")
+        lines.append(f"❚{server}: {', '.join(all_items)}")
 
     return "\n".join(lines)
 
@@ -1318,6 +1320,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
