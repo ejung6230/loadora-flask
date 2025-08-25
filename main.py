@@ -112,7 +112,7 @@ def fallback():
                 all_notices.sort(key=lambda x: parse_date(x.get("Date", "")), reverse=True)
         
                 # 최신 5개만 선택
-                latest_notices = all_notices[:5]
+                latest_notices = all_notices[:10]
         
                 cards = []
                 for n in latest_notices:
@@ -225,7 +225,7 @@ def fallback():
                     response_text = "❙ 이벤트 정보\n\n"
                     cards = []
                     
-                    for ev in events:
+                    for ev in events[:10]:
                         title = ev.get("Title", "")
                         thumbnail = ev.get("Thumbnail", "")
                         link = ev.get("Link", "")
@@ -1142,6 +1142,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
