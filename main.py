@@ -165,12 +165,12 @@ def fallback():
             response_text += f"[모험섬 명령어]\n내용: {island_content}"
 
         # ---------- 3. 원정대 관련 패턴 ----------
-        match_expedition = re.match(r"^(\.원정대|원정대|\.ㅇㅈㄷ|ㅇㅈㄷ) (.+)$", user_input)
+        match_expedition = re.match(r"^(\.원정대|원정대|\.ㅇㅈㄷ|ㅇㅈㄷ)(?:\s+(.+))?$", user_input)
         if match_expedition:
-            expedition_char_name = match_expedition.group(2).strip()
-        
-            if not expedition_char_name:
-                response_text = "캐릭터 이름을 입력해주세요.\n ex) .원정대 캐릭터명"
+            expedition_char_name = match_expedition.group(2)
+            
+            if not info_char_name or info_char_name.strip() == "":
+                response_text = "캐릭터 이름을 입력해주세요.\nex) .원정대 캐릭터명"
             else:
                 url = f"https://developer-lostark.game.onstove.com/characters/{expedition_char_name}/siblings"
                 headers = {
@@ -1283,6 +1283,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
