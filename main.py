@@ -200,8 +200,6 @@ def fallback():
                         response_text = f"캐릭터 정보를 불러올 수 없습니다. (오류 코드: {resp.status_code})"
                 except Exception as e:
                     response_text = "⚠️ 서버와의 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
-        else:
-            response_text = "캐릭터 이름을 입력해주세요.\nex) .원정대 캐릭터명"
     
 
 
@@ -344,8 +342,6 @@ def fallback():
                 weekly_text = weekly_text.strip()
                 response_text = "❙ 특정 캐릭터 주급\n\n"
                 response_text += f"[주급 명령어]\n내용: {weekly_text}"
-        else:
-            response_text = "캐릭터 이름을 입력해주세요2.\nex) .주급 캐릭터명"
 
 
         # ---------- 7. 클리어골드 관련 패턴 ----------
@@ -389,8 +385,6 @@ def fallback():
                 )
                 response_text = f"❙ {info_char_name}의 캐릭터 정보\n\n"
                 response_text += f"[정보 명령어]\n내용: {user_info_url}"
-        else:
-            response_text = "캐릭터 이름을 입력해주세요.\nex) .정보 캐릭터명"
 
         
         # ---------- 카카오 챗봇 응답 포맷 ----------
@@ -1310,6 +1304,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
