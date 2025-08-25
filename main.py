@@ -355,12 +355,6 @@ def fallback():
                 )
             else:
                 response_text = f"❙ 클리어골드 던전 정보\n\n[던전 명령어]\n내용: {dungeon_name}"
-        else:
-            response_text = (
-                "조회할 던전을 입력해주세요.\n"
-                "ex) .클골 4막\n"
-                "    .클골 하기르"
-            )
                 
         # ---------- 8. 특정 캐릭터 정보 관련 패턴 ----------
         match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ)\b", user_input)
@@ -1303,6 +1297,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
