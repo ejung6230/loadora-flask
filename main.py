@@ -379,9 +379,11 @@ def fallback():
                 # 데이터를 보기좋게 텍스트로 정제하기 (참조 : https://flask-production-df81.up.railway.app/armories/아도라o/summary)
                 # response_text = match_info_to_text(data)
 
-
-                # 전투정보실 바로가기 url
-                user_info_url = f"https://lostark.game.onstove.com/Profile/Character/{info_char_name}"
+                # 전투정보실 바로가기 URL
+                armory_url = f"https://lostark.game.onstove.com/Profile/Character/{info_char_name}"
+                
+                # 로펙(LOPEC) 바로가기 URL
+                lopec_url = f"https://lopec.kr/mobile/search/search.html?headerCharacterName={info_char_name}"
                 
                 
                 if data:
@@ -392,7 +394,8 @@ def fallback():
                             "textCard": {
                                 "description": f"◕ᴗ◕🌸\n❛{info_char_name}❜ 님의 캐릭터 정보를 알려드릴게요\n\n",
                                 "buttons": [
-                                    {"label": "전투정보실 보기", "action": "webLink", "webLinkUrl": user_info_url, "highlight": True},
+                                    {"label": "전투정보실 보기", "action": "webLink", "webLinkUrl": armory_url, "highlight": True},
+                                    {"label": "로펙 보기", "action": "webLink", "webLinkUrl": lopec_url, "highlight": True},
                                     {"label": "공유하기", "highlight": False, "action": "share"}
                                 ],
                                 "lock": False,
@@ -1338,6 +1341,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
