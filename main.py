@@ -170,7 +170,7 @@ def fallback():
         if match_expedition:
             expedition_char_name = match_expedition.group(2).strip()
             if not expedition_char_name:
-                response_text = "캐릭터 이름을 입력해주세요.\nex) .원정대 캐릭터명"
+                response_text = "◕︿◕💧 캐릭터 이름을 입력해주세요.\nex) .원정대 캐릭터명"
             else:
                 url = f"https://developer-lostark.game.onstove.com/characters/{expedition_char_name}/siblings"
                 headers = {
@@ -353,7 +353,7 @@ def fallback():
         if match_weekly:
             weekly_text = match_weekly.group(2).strip()
             if not weekly_text:
-                response_text = "캐릭터 이름을 입력해주세요.\nex) .주급 캐릭터명"
+                response_text = "◕︿◕💧 캐릭터 이름을 입력해주세요.\nex) .주급 캐릭터명"
             else:
                 response_text = "◕ᴗ◕ 특정 캐릭터 주급\n\n"
                 response_text += f"[주급 명령어]\n내용: {weekly_text}"
@@ -365,7 +365,7 @@ def fallback():
             dungeon_name = match_cleargold.group(2).strip()
             if not dungeon_name:
                 response_text = (
-                    "조회할 던전을 입력해주세요.\n"
+                    "◕︿◕💧 조회할 던전을 입력해주세요.\n"
                     "ex) .클골 4막, .클골 하기르"
                 )
             else:
@@ -377,7 +377,7 @@ def fallback():
         if match_info:
             info_char_name = match_info.group(2).strip()
             if not info_char_name:
-                response_text = "캐릭터 이름을 입력해주세요.\nex) .정보 캐릭터명"
+                response_text = "◕︿◕💧 캐릭터 이름을 입력해주세요.\nex) .정보 캐릭터명"
             else:
                 # 공식 api에서 데이터 받아오기
                 data = fetch_armory(info_char_name, "summary")
@@ -404,7 +404,7 @@ def fallback():
                     "outputs": [
                         {
                             "textCard": {
-                                "description": "유효한 명령어를 입력해주세요.",
+                                "description": "◕︿◕💧 유효한 명령어를 입력해주세요.",
                                 "buttons": [
                                     {
                                       "label": "사용 방법 GO",
@@ -468,7 +468,7 @@ def fallback():
         logger.exception("예외 발생: %s", e)
         
         # 2️⃣ 챗봇용 메시지 생성
-        response_text = f"에러가 발생했습니다: {str(e)}"
+        response_text = f"◕︿◕💧 에러가 발생했습니다: {str(e)}"
         response = {
             "version": "2.0",
             "template": {
@@ -1311,6 +1311,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
