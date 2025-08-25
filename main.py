@@ -331,12 +331,14 @@ def fallback():
                 
         # ---------- 6. 주급 관련 패턴 ----------
         match_weekly = re.match(r"^(\.주급|주급|\.ㅈㄱ|ㅈㄱ)(.*)$", user_input)
-        weekly_text = match_weekly.group(2).strip()
-        if not weekly_text:
-            response_text = "캐릭터 이름을 입력해주세요.\nex) .주급 캐릭터명"
-        else:
-            response_text = "❙ 특정 캐릭터 주급\n\n"
-            response_text += f"[주급 명령어]\n내용: {weekly_text}"
+        if match_weekly:
+            weekly_text = match_weekly.group(2).strip()  # 명령어 뒤 텍스트
+            
+            if not weekly_text:
+                response_text = "캐릭터 이름을 입력해주세요.\nex) .주급 캐릭터명"
+            else:
+                response_text = "❙ 특정 캐릭터 주급\n\n"
+                response_text += f"[주급 명령어]\n내용: {weekly_text}"
 
         # ---------- 7. 클리어골드 관련 패턴 ----------
         match_cleargold = re.match(r"^(\.클골|클골|\.ㅋㄱ|ㅋㄱ|\.클리어골드|클리어골드|\.ㅋㄹㅇㄱㄷ|ㅋㄹㅇㄱㄷ)(.*)$", user_input)
@@ -1289,6 +1291,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
