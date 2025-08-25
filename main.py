@@ -28,17 +28,6 @@ HEADERS = {
     "authorization": f"bearer {JWT_TOKEN}"
 }
 
-# 짧은 타임아웃 빠른 응답
-TIMEOUT_SECONDS = 8
-
-
-# 요청 제한 상태 저장
-RATE_LIMIT = {
-    "limit": 100,
-    "remaining": 100,
-    "reset": time.time() + 60
-}
-
 def organize_characters_by_server(char_list):
     organized = {}
     for c in char_list:
@@ -75,10 +64,6 @@ def fallback():
         match_notice = re.match(r"^(\.공지|공지|\.ㄱㅈ|ㄱㅈ)$", user_input)
         if match_notice:
             url = "https://developer-lostark.game.onstove.com/news/notices"
-            headers = {
-                "accept": "application/json",
-                "authorization": f"bearer {JWT_TOKEN}"
-            }
         
             notice_types = ["공지", "점검", "상점", "이벤트"]
             all_notices = []
@@ -86,7 +71,7 @@ def fallback():
         
             for notice_type in notice_types:
                 try:
-                    resp = requests.get(url, headers=headers, params={"type": notice_type}, timeout=5)
+                    resp = requests.get(url, headers=HEADERS, params={"type": notice_type}, timeout=5)
                     resp.raise_for_status()
                     notices = resp.json()
                     for n in notices:
@@ -181,12 +166,9 @@ def fallback():
                 response_text = "◕_◕💧\n캐릭터 이름을 입력해주세요.\nex) .원정대 캐릭터명"
             else:
                 url = f"https://developer-lostark.game.onstove.com/characters/{expedition_char_name}/siblings"
-                headers = {
-                    "accept": "application/json",
-                    "authorization": f"bearer {JWT_TOKEN}"
-                }
+
                 try:
-                    resp = requests.get(url, headers=headers, timeout=5)
+                    resp = requests.get(url, headers=HEADERS, timeout=5)
                     resp.raise_for_status()
                     data = resp.json()
         
@@ -215,15 +197,11 @@ def fallback():
         match_event = re.match(r"^(\.이벤트|이벤트|\.ㅇㅂㅌ|ㅇㅂㅌ)$", user_input)
         if match_event:
             url = "https://developer-lostark.game.onstove.com/news/events"
-            headers = {
-                "accept": "application/json",
-                "authorization": f"bearer {JWT_TOKEN}"
-            }
         
             try:
                 from datetime import datetime, timezone, timedelta
                 
-                resp = requests.get(url, headers=headers, timeout=5)
+                resp = requests.get(url, headers=HEADERS, timeout=5)
                 resp.raise_for_status()  # HTTP 오류 시 예외 발생
         
                 events = resp.json()
@@ -655,22 +633,6 @@ def match_info_to_text(data):
     return result_text.strip()
 
 
-def update_rate_limit(headers):
-    """응답 헤더에서 요청 제한 정보 업데이트"""
-    if "X-RateLimit-Limit" in headers:
-        RATE_LIMIT["limit"] = int(headers.get("X-RateLimit-Limit"))
-    if "X-RateLimit-Remaining" in headers:
-        RATE_LIMIT["remaining"] = int(headers.get("X-RateLimit-Remaining"))
-    if "X-RateLimit-Reset" in headers:
-        RATE_LIMIT["reset"] = int(headers.get("X-RateLimit-Reset"))
-
-def check_rate_limit():
-    """요청 제한 확인, 필요 시 대기"""
-    now = time.time()
-    if RATE_LIMIT["remaining"] <= 0:
-        wait_time = RATE_LIMIT["reset"] - now
-        if wait_time > 0:
-            time.sleep(wait_time)
 
 # Armories 엔드포인트 매핑
 VALID_ENDPOINTS = [
@@ -1369,6 +1331,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
