@@ -385,6 +385,33 @@ def fallback():
                 # 로펙(LOPEC) 바로가기 URL
                 lopec_url = f"https://lopec.kr/mobile/search/search.html?headerCharacterName={info_char_name}"
                 
+                def make_preview_with_more(text, max_lines=6):
+                    """
+                    text: 전체 텍스트
+                    max_lines: 보여줄 최대 줄 수
+                    """
+                    lines = text.split("\n")
+                    if len(lines) > max_lines:
+                        preview_text = "\n".join(lines[:max_lines]) + "\n▼ 더보기​​​​​​​​​​​​​"
+                    else:
+                        preview_text = text
+                    return preview_text
+                
+                # 사용 예시
+                full_text = """❙ 루페온떡락님의 장비 정보
+고대 무기 +21 [+40]: 92
+고대 투구 +19 [+40]: 92
+고대 상의 +20 [+40]: 93
+고대 하의 +20 [+40]: 95
+고대 장갑 +20 [+40]: 100
+고대 어깨 +20 [+40]: 97
+• 아이템 레벨: 1,730.00
+• 평균 품질: 94.83
+추가 상세 정보..."""
+                
+                preview_text = make_preview_with_more(full_text, max_lines=6)
+            
+
                 
                 if data:
                     # 데이터가 있을 때만 텍스트 + 이미지 + 버튼
@@ -410,7 +437,7 @@ def fallback():
                         },
                         {
                             "simpleText": {
-                                "text": "캐릭터 정보",
+                                "text": preview_text,
                                 "extra": {}
                             }
                         }
@@ -1341,6 +1368,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
