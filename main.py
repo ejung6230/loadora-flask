@@ -225,7 +225,7 @@ def fallback():
                     response_text = "❙ 이벤트 정보\n\n"
                     cards = []
                     
-                    for ev in events[:10]:
+                    for ev in events:
                         title = ev.get("Title", "")
                         thumbnail = ev.get("Thumbnail", "")
                         link = ev.get("Link", "")
@@ -276,13 +276,17 @@ def fallback():
                         }
                         cards.append(card)
                     
-                    # 캐러셀 카드로 여러 개 삽입
-                    items = [{
-                        "carousel": {
-                            "type": "basicCard",
-                            "items": cards
+                    cards_per_page = 10
+                    # cards: 모든 이벤트 카드 리스트를 10개씩 나눠서 삽입
+                    for i in range(0, len(cards), cards_per_page):
+                        chunk = cards[i:i + cards_per_page]  # 10개씩 분할
+                        carousel = {
+                            "carousel": {
+                                "type": "basicCard",
+                                "items": chunk
+                            }
                         }
-                    }]
+                        items.append(carousel)
         
             except requests.exceptions.HTTPError as e:
                 if resp.status_code == 503:
@@ -1142,6 +1146,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
