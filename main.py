@@ -347,10 +347,12 @@ def fallback():
                         all_data.extend(server_data)
         
             current_data = filter_active_reports(all_data)
+
+            is_on_sale = get_remaining_time_text() === "현재 시각은 판매 구간이 아닙니다."
         
             # 떠상 요약 텍스트 생성
             response_text = "◕ᴗ◕🌸\n전체 서버 떠상 정보를 알려드릴게요.\n\n"
-            response_text += format_reports_by_region(current_data)
+            response_text += format_reports_by_region(current_data, is_on_sale)
             response_text += f"\n\n{get_remaining_time_text()}"
         
             if len(response_text) <= 400:
@@ -1188,7 +1190,7 @@ def filter_active_reports(api_data):
 # 예외 아이템 ID: 항상 포함
 EXCEPTION_ITEMS = {"192"}  # 문자열로 itemId 넣기
 
-def format_reports_by_region(current_data):
+def format_reports_by_region(current_data, is_on_sale):
     """
     서버별 떠돌이 상인 요약 텍스트 생성
     - type 1, type 2 아이템만 포함
@@ -1199,8 +1201,6 @@ def format_reports_by_region(current_data):
     - 서버별 아이템 없으면 "없음"
     """
     from collections import defaultdict
-
-    logger.info("떠상 데이터: %s", current_data)
     
     # itemId -> grade, type, name
     item_grade = {item["id"]: item["grade"] for r in LIST_MAP for item in r["items"]}
@@ -1224,6 +1224,13 @@ def format_reports_by_region(current_data):
 
     lines = []
     for server in SERVER_MAP.values():
+        # 서버 기록
+        records = [r for r in current_data if r["serverName"] == server]
+        
+        if not records and not is_on_sale:
+            lines.append(f"❙ {server}: 제보 데이터가 없음")
+            continue
+        
         type2_count = len(server_dict_type2.get(server, []))
         type2_items = [f"전설호감도 {type2_count}개"] if type2_count else []
 
@@ -1234,6 +1241,7 @@ def format_reports_by_region(current_data):
             all_items = ["없음"]
 
         lines.append(f"❙ {server}: {', '.join(all_items)}")
+            
 
     return "\n".join(lines)
 
@@ -1301,10 +1309,12 @@ def korlark_summary():
                     report["startTime"] = entry.get("startTime", "")
                     report["endTime"] = entry.get("endTime", "")
                 all_data.append(entry)
+
+        is_on_sale = get_remaining_time_text() === "현재 시각은 판매 구간이 아닙니다."
         
         current_data = filter_active_reports(all_data)
         summary_text = "◕ᴗ◕🌸\n전체 서버 떠상 정보를 알려드릴게요.\n\n"
-        summary_text += format_reports_by_region(current_data)
+        summary_text += format_reports_by_region(current_data, is_on_sale)
         summary_text += f"\n\n{get_remaining_time_text()}"
 
         if request.method == "POST":
@@ -1352,6 +1362,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
