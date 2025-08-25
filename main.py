@@ -99,7 +99,7 @@ def fallback():
                         break
                     continue
                 except Exception:
-                    continue  # 실패한 타입은 무시
+                    raise # 실패한 타입부터 무시하고 작업 종료
         
             if not server_down and all_notices:  # ✅ 서버 점검이 아닐 때만 공지 정리
                 # 날짜 기준 최신순 정렬
@@ -1361,6 +1361,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
