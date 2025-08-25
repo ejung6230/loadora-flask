@@ -467,7 +467,7 @@ def match_info_to_text(data):
             return "잘못된 JSON 형식입니다."
     
     if not isinstance(data, dict) not in data:
-        return 데이터가 없습니다."
+        return "데이터가 없습니다."
 
     # 아크 그리드
     arkgrid_data = data['ArkGrid']
@@ -1278,6 +1278,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
