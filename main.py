@@ -178,6 +178,7 @@ def fallback():
                 }]
 
         
+
         # ---------- 2. 모험섬 일정 관련 패턴 ----------
         match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)$", user_input)
         if match_adventure_island:
@@ -186,6 +187,7 @@ def fallback():
             data = fetch_calendar()
             today = NOW_KST.date()
         
+            # 모험섬 항목 필터링
             adventure_islands = [item for item in data if item.get("CategoryName") == "모험 섬"]
             cards = []
             all_today_times = []
@@ -194,30 +196,32 @@ def fallback():
                 name = island.get("ContentsName")
                 times = island.get("StartTimes", [])
                 icon = island.get("ContentsIcon")
-                
+        
+                # RewardItems 안전 처리
                 reward_items = []
                 for ri in island.get("RewardItems", []):
-                    items_list = ri.get("Items", [])
-                    # Name이 있는 아이템만 추가
-                    reward_items.extend([item for item in items_list if item.get("Name")])
-                
-                items_text = ", ".join([item["Name"] for item in reward_items]) \
-                             if reward_items else "없음"
+                    if isinstance(ri, dict):
+                        items_list = ri.get("Items", [])
+                        reward_items.extend([item for item in items_list if item.get("Name")])
         
+                items_text = ", ".join([item["Name"] for item in reward_items]) if reward_items else "없음"
+        
+                # 오늘 일정만 필터링
                 today_times = [t for t in times if datetime.fromisoformat(t).date() == today]
         
                 if today_times:
-                    # 시간만 HH 형식으로 변환 후 "시" 붙이기
+                    # 시간만 HH시 형식으로 변환
                     time_strings = [f"{datetime.fromisoformat(t).hour}시" for t in today_times]
                     all_today_times.extend(time_strings)
+                    
                     cards.append({
                         "title": name,
                         "imageUrl": icon,
                         "link": {"web": island.get("Link", "")},
-                        "description": f"{items_text}\n시간: {', '.join([datetime.fromisoformat(t).strftime('%H:%M') for t in today_times])}"
+                        "description": f"{items_text}\n시간: {', '.join(time_strings)}"
                     })
-
-            # 요일 한글 매핑 변수
+        
+            # 요일 한글 매핑
             weekday_ko = {
                 'Monday':'월',
                 'Tuesday':'화',
@@ -227,9 +231,11 @@ def fallback():
                 'Saturday':'토',
                 'Sunday':'일'
             }
-            time_text = ", ".join([datetime.fromisoformat(t).strftime("%H:%M") for t in all_today_times]) if all_today_times else "일정 없음"
+        
+            # HH시 형식 그대로 사용
+            time_text = ", ".join(all_today_times) if all_today_times else "일정 없음"
             header_title = f"모험섬({weekday_ko[today.strftime('%A')]}): {time_text}"
-
+        
             items = [
                 {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 모험섬 정보를 알려드릴게요.", "extra": {}}},
                 {
@@ -242,6 +248,7 @@ def fallback():
                     }
                 }
             ]
+
 
 
 
@@ -1487,6 +1494,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
