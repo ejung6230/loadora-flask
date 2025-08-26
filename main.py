@@ -194,7 +194,7 @@ def fallback():
                 name = island.get("ContentsName")
                 times = island.get("StartTimes", [])
                 icon = island.get("ContentsIcon")
-                reward_items = island.get("RewardItems", {}).get("Items", [])
+                reward_items = island.get("RewardItems", []).get("Items", [])
     
                 items_text = ", ".join([item.get("Name") for item in reward_items]) if reward_items else "획득 가능 아이템 없음"
                 today_times = [t for t in times if datetime.fromisoformat(t).date() == today]
@@ -1467,6 +1467,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
