@@ -174,7 +174,7 @@ def fallback():
         
                     organized_chars = organize_characters_by_server(data)
                     if organized_chars:
-                        expedition_text = f"◕ᴗ◕🌸\n❛{expedition_char_name}❜ 님의 원정대 정보\n\n"
+                        expedition_text = f"◕ᴗ◕🌸\n❛{expedition_char_name}❜ 님의 원정대 정보를 알려드릴게요.\n\n"
                         for server, chars in organized_chars.items():
                             chars.sort(key=lambda x: x['ItemAvgLevel'], reverse=True)
                             expedition_text += f"[{server} 서버]\n"
@@ -1391,6 +1391,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
