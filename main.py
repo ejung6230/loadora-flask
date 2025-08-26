@@ -202,7 +202,7 @@ def fallback():
                 ]
 
                 if selected_island_items:
-                    result = f"◕ᴗ◕🌸\n❛{selected_island}❜의 정보를 알려드릴게요.\n\n"
+                    result = f"◕ᴗ◕🌸\n❛{selected_island}❜ 정보를 알려드릴게요.\n\n"
             
                     for island in selected_island_items:
                         result += f"❚ 아이템 목록\n"
