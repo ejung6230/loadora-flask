@@ -187,17 +187,44 @@ def fallback():
         match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)(.*)$", user_input)
         if match_adventure_island:
             island_content = match_adventure_island.group(1).strip()
+
+            # 전체 캘린더 데이터
+            data = fetch_calendar()
+            
             if match_adventure_island.group(2):
                 selected_island = match_adventure_island.group(2).strip()
-                result = f"◕ᴗ◕🌸\n{selected_island}의 아이템 목록이에요.\n\n"
-                result += "아이템정보~"
-                items = [
-                    {"simpleText": {"text": result, "extra": {}}},
+
+                # CategoryName이 "모험 섬"이고, ContentsName이 selected_island인 모든 아이템
+                selected_island_items = [
+                    item for item in data
+                    if item.get("CategoryName") == "모험 섬"
+                    and item.get("ContentsName") == selected_island
                 ]
+
+                if selected_island_items:
+                    result = f"◕ᴗ◕🌸\n{selected_island}의 아이템 목록이에요.\n\n"
+                
+                    for island in selected_island_items:
+                        result += f"■ {island.get('ContentsName')} ({island.get('Location', '')})\n"
+                        for reward_group in island.get("RewardItems", []):
+                            for reward in reward_group.get("Items", []):
+                                grade = reward.get("Grade", "")
+                                name = reward.get("Name", "")
+                                result += f"- [{grade}] {name}\n"
+                        result += "\n"
+                
+                    items = [
+                        {"simpleText": {"text": result, "extra": {}}},
+                    ]
+                else:
+                    items = [
+                        {"simpleText": {"text": f"◕_◕💧\n{selected_island}의 정보를 조회할 수 없어요.", "extra": {}}},
+                    ]
+    
             else:
                 selected_island = None  # 접두사만 입력한 경우 전체 표시
     
-                data = fetch_calendar()
+                
                 today = NOW_KST.date()  # 현재 한국 시간 (naive)
                 
                 # 오늘 진행하는 모험섬만 필터링
@@ -1614,6 +1641,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
