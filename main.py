@@ -28,6 +28,8 @@ HEADERS = {
     "authorization": f"bearer {JWT_TOKEN}"
 }
 
+# 현재 한국 시간 (naive)
+NOW_KST = datetime.now()  # 이미 dt_obj와 같은 naive datetime 기준
 
 
 def fetch_calendar():
@@ -138,13 +140,10 @@ def fallback():
                         formatted_time = dt_obj.strftime("%Y-%m-%d %H:%M")
                     except Exception:
                         formatted_time = date_time
-
-                    # 현재 한국 시간 (naive)
-                    now_kst = datetime.now()  # 이미 dt_obj와 같은 naive datetime 기준
                 
                     # 🔥 NEW 여부 체크 (24시간 이내)
                     new_label = ""
-                    if dt_obj and (now_kst - dt_obj) <= timedelta(hours=24):
+                    if dt_obj and (NOW_KST - dt_obj) <= timedelta(hours=24):
                         new_label = "🆕 "
         
                     card = {
@@ -184,8 +183,7 @@ def fallback():
 
             def format_adventure_islands_today(data):
                 result = "🌴 오늘 모험섬 일정 🌴\n\n"
-                KST = timezone(timedelta(hours=9))
-                today = datetime.now(KST).date()
+                today = NOW_KST.date()  # naive datetime 기준
             
                 for content in data:
                     if content.get("CategoryName") == "모험 섬":
@@ -194,17 +192,18 @@ def fallback():
                         min_ilvl = content.get("MinItemLevel")
                         times = content.get("StartTimes", [])
             
-                        # 오늘 일정만 필터링
-                        today_times = [t for t in times if datetime.fromisoformat(t).astimezone(KST).date() == today]
+                        # 오늘 일정만 필터링 (naive 기준)
+                        today_times = [t for t in times if datetime.fromisoformat(t).date() == today]
                         if today_times:
                             result += f"📌 {name} ({location}, 최소 아이템 레벨 {min_ilvl})\n"
                             result += "⏰ 오늘 시간:\n"
                             for t in today_times:
-                                time_only = datetime.fromisoformat(t).astimezone(KST).strftime("%H:%M")
+                                time_only = datetime.fromisoformat(t).strftime("%H:%M")
                                 result += f"- {time_only}\n"
                             result += "\n"
             
                 return result if result != "🌴 오늘 모험섬 일정 🌴\n\n" else "오늘 진행되는 모험섬 일정이 없습니다."
+
 
             formatted_text = format_adventure_islands_today(data)
             
@@ -283,9 +282,6 @@ def fallback():
                         end_date = ev.get("EndDate", "")
                         
                         formatted_time = f"{start_date} ~ {end_date}"
-
-                        # 현재 시간
-                        now_kst = datetime.now()
                     
                         try:
                             start_obj = datetime.fromisoformat(start_date)
@@ -293,7 +289,7 @@ def fallback():
                             formatted_time = f"{start_obj.strftime('%Y-%m-%d %H:%M')} ~ {end_obj.strftime('%Y-%m-%d %H:%M')}"
 
                             # D-day 계산
-                            delta = (end_obj.date() - now_kst.date()).days
+                            delta = (end_obj.date() - NOW_KST.date()).days
                             if delta > 0:
                                 dday_str = f"D-{delta}"
                             elif delta == 0:
@@ -307,7 +303,7 @@ def fallback():
                     
                         # 🔥 NEW 여부 체크 (24시간 이내)
                         new_label = ""
-                        if start_obj and timedelta(0) <= (now_kst - start_obj) <= timedelta(hours=24):
+                        if start_obj and timedelta(0) <= (NOW_KST - start_obj) <= timedelta(hours=24):
                             new_label = "🆕 "
                     
                         card = {
@@ -1455,6 +1451,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
