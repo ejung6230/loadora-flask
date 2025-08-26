@@ -233,7 +233,7 @@ def fallback():
             }
         
             # HH시 형식 그대로 사용
-            time_text = ", ".join(all_today_times) if all_today_times else "일정 없음"
+            time_text = ", ".join(sorted(set(all_today_times), key=all_today_times.index)) if all_today_times else "일정 없음"
             header_title = f"모험섬({weekday_ko[today.strftime('%A')]})"
 
             card_footer = {
@@ -1495,6 +1495,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
