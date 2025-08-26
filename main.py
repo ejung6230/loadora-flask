@@ -199,149 +199,149 @@ def fallback():
             
             cards = []
             all_today_times = []
+                        
+            for island in adventure_islands:
+                name = island.get("ContentsName")
+                times = island.get("StartTimes", [])
+                icon = island.get("ContentsIcon")
             
-for island in adventure_islands:
-    name = island.get("ContentsName")
-    times = island.get("StartTimes", [])
-    icon = island.get("ContentsIcon")
-
-    # RewardItems 안전 처리
-    reward_items = []
-    for ri in island.get("RewardItems", []):
-        if isinstance(ri, dict):
-            items_list = ri.get("Items", [])
-            reward_items.extend([item["Name"] for item in items_list if item.get("Name")])
-
-            # ---------------- items_text 정제: 특정 키워드 그룹화 ----------------
-            if reward_items:
-                # 그룹화할 키워드: 공백 포함도 OK
-                # "조회 기준 단어, 포함여부" : "최종 변경할 이름"
-                group_keywords = {
-                    "카드 팩": "카드팩",
-                    "실링": "실링",
-                    "섬의 마음": "섬의마음",
-                    "비밀지도": "비밀지도",
-                    "모험물": "모험물",
-                    "탈것": "탈것",
-                    "크림스네일의 동전": "해적주화",
-                    "해적 주화": "해적 주화",
-                    "대양의 주화": "대양의주화",
-                    "설치물": "설치물",
-                    "변신": "변신",
-                    "영혼의 잎사귀": "경험치카드",
-                    "경험치 카드": "경험치카드",
-                    "골드": "골드",
-                    "선원지원서": "선원지원서",
-                    "수호석 조각": "강화재료",
-                    "파괴석 조각": "강화재료",
-                    "숨결": "강화재료",
-                    "감정표현": "감정표현",
-                    "돛문양": "돛문양",
-                    "물약": "물약",
-                    "모코콩 아일랜드 주화": "모코콩주화",
-                    "버즐링 아일랜드 레이스 코인": "버즐링코인",
-                    "명예의 파편": "명예의파편",
-                    "운명의 파편": "운명의파편",
-                    "각인서": "각인서",
-                    "보석": "보석",
-                    "미술품": "미술품",
-                    "젬": "젬"
-                }
-        
-                grouped = defaultdict(int)
-                other_items = []
-        
-                for item in reward_items:
-                    matched = False
-                    item_clean = item.replace(" ", "")  # 공백 제거
-                    for keyword, group_name in group_keywords.items():
-                        keyword_clean = keyword.replace(" ", "")
-                        if keyword_clean in item_clean:
-                            grouped[group_name] += 1
-                            matched = True
-                            break
-                    if not matched:
-                        other_items.append(item)
-        
-                # 그룹화된 아이템 + 나머지 합쳐서 문자열 생성
-                items_text = ", ".join([f"{name} {cnt}개" for name, cnt in grouped.items()] + other_items)
-            else:
-                items_text = "없음"
-        
-            # 오늘 일정만 ISO 문자열로 수집
-            today_times = [t for t in times if datetime.fromisoformat(t).date() == today]
-        
-            # 중복 제거하면서 all_today_times에 추가
-            for t in today_times:
-                if t not in all_today_times:
-                    all_today_times.append(t)
-        
-            cards.append({
-                "title": name,
-                "imageUrl": icon,
-                "link": {"web": island.get("Link", "")},
-                "description": f"{items_text}"
-            })
+                # RewardItems 안전 처리
+                reward_items = []
+                for ri in island.get("RewardItems", []):
+                    if isinstance(ri, dict):
+                        items_list = ri.get("Items", [])
+                        reward_items.extend([item["Name"] for item in items_list if item.get("Name")])
             
-            # 오늘 일정 시간 정렬
-            all_today_times = sorted(all_today_times)
-            
-            # 요일 한글 매핑
-            weekday_ko = {
-                'Monday':'월요일',
-                'Tuesday':'화요일',
-                'Wednesday':'수요일',
-                'Thursday':'목요일',
-                'Friday':'금요일',
-                'Saturday':'토요일',
-                'Sunday':'일요일'
-            }
-        
-            # HH시 형식
-            time_strings = [f"{datetime.fromisoformat(t).hour}시" for t in all_today_times]
-            time_text = ", ".join(time_strings) if time_strings else "일정 없음"
-            
-            header_title = f"모험섬({weekday_ko[today.strftime('%A')]})"
-            
-            # 남은 시간 계산
-            future_times = [datetime.fromisoformat(t) for t in all_today_times if datetime.fromisoformat(t) > NOW_KST]
-            
-            if future_times:
-                next_time = min(future_times)  # 가장 가까운 시작 시간
-                remaining = next_time - NOW_KST
-                total_seconds = int(remaining.total_seconds())
-                hours, remainder = divmod(total_seconds, 3600)
-                minutes = remainder // 60
-                remaining_text = f"{next_time.hour:02d}시까지 {hours}시간 {minutes}분 남았습니다."
-            else:
-                remaining_text = "오늘 남은 일정이 없습니다."
-            
-            card_footer = {
-                "title": f"⏰ {remaining_text}",
-                "link": {"web": ""},
-                "description": f"모험섬 시간: {time_text}"
-            }
-            cards.append(card_footer)
-            
-            if adventure_islands:
-                # 모험섬 데이터가 있을 때만
-                items = [
-                    {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 모험섬 정보를 알려드릴게요.", "extra": {}}},
-                    {
-                        "listCard": {
-                            "header": {"title": header_title},
-                            "items": cards,
-                            "buttons": [{"label": "공유하기", "highlight": False, "action": "share"}],
-                            "lock": False,
-                            "forwardable": False
+                        # ---------------- items_text 정제: 특정 키워드 그룹화 ----------------
+                        if reward_items:
+                            # 그룹화할 키워드: 공백 포함도 OK
+                            # "조회 기준 단어, 포함여부" : "최종 변경할 이름"
+                            group_keywords = {
+                                "카드 팩": "카드팩",
+                                "실링": "실링",
+                                "섬의 마음": "섬의마음",
+                                "비밀지도": "비밀지도",
+                                "모험물": "모험물",
+                                "탈것": "탈것",
+                                "크림스네일의 동전": "해적주화",
+                                "해적 주화": "해적 주화",
+                                "대양의 주화": "대양의주화",
+                                "설치물": "설치물",
+                                "변신": "변신",
+                                "영혼의 잎사귀": "경험치카드",
+                                "경험치 카드": "경험치카드",
+                                "골드": "골드",
+                                "선원지원서": "선원지원서",
+                                "수호석 조각": "강화재료",
+                                "파괴석 조각": "강화재료",
+                                "숨결": "강화재료",
+                                "감정표현": "감정표현",
+                                "돛문양": "돛문양",
+                                "물약": "물약",
+                                "모코콩 아일랜드 주화": "모코콩주화",
+                                "버즐링 아일랜드 레이스 코인": "버즐링코인",
+                                "명예의 파편": "명예의파편",
+                                "운명의 파편": "운명의파편",
+                                "각인서": "각인서",
+                                "보석": "보석",
+                                "미술품": "미술품",
+                                "젬": "젬"
+                            }
+                    
+                            grouped = defaultdict(int)
+                            other_items = []
+                    
+                            for item in reward_items:
+                                matched = False
+                                item_clean = item.replace(" ", "")  # 공백 제거
+                                for keyword, group_name in group_keywords.items():
+                                    keyword_clean = keyword.replace(" ", "")
+                                    if keyword_clean in item_clean:
+                                        grouped[group_name] += 1
+                                        matched = True
+                                        break
+                                if not matched:
+                                    other_items.append(item)
+                    
+                            # 그룹화된 아이템 + 나머지 합쳐서 문자열 생성
+                            items_text = ", ".join([f"{name} {cnt}개" for name, cnt in grouped.items()] + other_items)
+                        else:
+                            items_text = "없음"
+                    
+                        # 오늘 일정만 ISO 문자열로 수집
+                        today_times = [t for t in times if datetime.fromisoformat(t).date() == today]
+                    
+                        # 중복 제거하면서 all_today_times에 추가
+                        for t in today_times:
+                            if t not in all_today_times:
+                                all_today_times.append(t)
+                    
+                        cards.append({
+                            "title": name,
+                            "imageUrl": icon,
+                            "link": {"web": island.get("Link", "")},
+                            "description": f"{items_text}"
+                        })
+                        
+                        # 오늘 일정 시간 정렬
+                        all_today_times = sorted(all_today_times)
+                        
+                        # 요일 한글 매핑
+                        weekday_ko = {
+                            'Monday':'월요일',
+                            'Tuesday':'화요일',
+                            'Wednesday':'수요일',
+                            'Thursday':'목요일',
+                            'Friday':'금요일',
+                            'Saturday':'토요일',
+                            'Sunday':'일요일'
                         }
-                    }
-                ]
-            else:
-                # 데이터 없으면 텍스트 카드만
-                items = [
-                    {"simpleText": {"text": "◕_◕💧\n오늘은 모험섬이 없어요.", "extra": {}}}
-                ]
+                    
+                        # HH시 형식
+                        time_strings = [f"{datetime.fromisoformat(t).hour}시" for t in all_today_times]
+                        time_text = ", ".join(time_strings) if time_strings else "일정 없음"
+                        
+                        header_title = f"모험섬({weekday_ko[today.strftime('%A')]})"
+                        
+                        # 남은 시간 계산
+                        future_times = [datetime.fromisoformat(t) for t in all_today_times if datetime.fromisoformat(t) > NOW_KST]
+                        
+                        if future_times:
+                            next_time = min(future_times)  # 가장 가까운 시작 시간
+                            remaining = next_time - NOW_KST
+                            total_seconds = int(remaining.total_seconds())
+                            hours, remainder = divmod(total_seconds, 3600)
+                            minutes = remainder // 60
+                            remaining_text = f"{next_time.hour:02d}시까지 {hours}시간 {minutes}분 남았습니다."
+                        else:
+                            remaining_text = "오늘 남은 일정이 없습니다."
+                        
+                        card_footer = {
+                            "title": f"⏰ {remaining_text}",
+                            "link": {"web": ""},
+                            "description": f"모험섬 시간: {time_text}"
+                        }
+                        cards.append(card_footer)
+                        
+                        if adventure_islands:
+                            # 모험섬 데이터가 있을 때만
+                            items = [
+                                {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 모험섬 정보를 알려드릴게요.", "extra": {}}},
+                                {
+                                    "listCard": {
+                                        "header": {"title": header_title},
+                                        "items": cards,
+                                        "buttons": [{"label": "공유하기", "highlight": False, "action": "share"}],
+                                        "lock": False,
+                                        "forwardable": False
+                                    }
+                                }
+                            ]
+                        else:
+                            # 데이터 없으면 텍스트 카드만
+                            items = [
+                                {"simpleText": {"text": "◕_◕💧\n오늘은 모험섬이 없어요.", "extra": {}}}
+                            ]
 
         # ---------- 3. 캘린더 or 일정 관련 패턴 ----------
         match_calendar = re.match(r"^(\.캘린더|캘린더|\.ㅋㄹㄷ|ㅋㄹㄷ|\.일정|일정|\.ㅇㅈ|ㅇㅈ)$", user_input)
@@ -1599,6 +1599,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
