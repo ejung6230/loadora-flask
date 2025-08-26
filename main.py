@@ -62,6 +62,7 @@ def organize_characters_by_server(char_list):
 
 @app.route("/fallback", methods=["POST"])
 def fallback():
+    from datetime import datetime, timezone, timedelta
     # 특수문자 참고 ❘ ❙ ❚ ❛ ❜
     try:
         json_data = request.get_json()
@@ -112,8 +113,6 @@ def fallback():
                     raise # 실패한 타입부터 무시하고 작업 종료
         
             if not server_down and all_notices:  # ✅ 서버 점검이 아닐 때만 공지 정리
-                # 날짜 기준 최신순 정렬
-                from datetime import datetime, timezone, timedelta
                 def parse_date(date_str):
                     try:
                         dt_obj = datetime.fromisoformat(date_str.replace("Z", ""))
@@ -176,8 +175,6 @@ def fallback():
         # ---------- 2. 모험섬 일정 관련 패턴 ----------
         match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)$", user_input)
         if match_adventure_island:
-            from datetime import datetime, timezone, timedelta
-            
             island_content = match_adventure_island.group(1).strip()
             data = fetch_calendar()
             today = NOW_KST.date()
@@ -278,8 +275,6 @@ def fallback():
             url = "https://developer-lostark.game.onstove.com/news/events"
         
             try:
-                from datetime import datetime, timezone, timedelta
-                
                 resp = requests.get(url, headers=HEADERS, timeout=5)
                 resp.raise_for_status()  # HTTP 오류 시 예외 발생
         
@@ -1467,6 +1462,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
