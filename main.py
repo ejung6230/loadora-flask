@@ -318,32 +318,32 @@ def fallback():
                         else:
                             remaining_text = "오늘 남은 일정이 없습니다."
                         
-                        card_footer = {
-                            "title": f"⏰ {remaining_text}",
-                            "link": {"web": ""},
-                            "description": f"모험섬 시간: {time_text}"
-                        }
-                        cards.append(card_footer)
-                        
-                        if adventure_islands:
-                            # 모험섬 데이터가 있을 때만
-                            items = [
-                                {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 모험섬 정보를 알려드릴게요.", "extra": {}}},
-                                {
-                                    "listCard": {
-                                        "header": {"title": header_title},
-                                        "items": cards,
-                                        "buttons": [{"label": "공유하기", "highlight": False, "action": "share"}],
-                                        "lock": False,
-                                        "forwardable": False
-                                    }
+                    card_footer = {
+                        "title": f"⏰ {remaining_text}",
+                        "link": {"web": ""},
+                        "description": f"모험섬 시간: {time_text}"
+                    }
+                    cards.append(card_footer)
+                    
+                    if adventure_islands:
+                        # 모험섬 데이터가 있을 때만
+                        items = [
+                            {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 모험섬 정보를 알려드릴게요.", "extra": {}}},
+                            {
+                                "listCard": {
+                                    "header": {"title": header_title},
+                                    "items": cards,
+                                    "buttons": [{"label": "공유하기", "highlight": False, "action": "share"}],
+                                    "lock": False,
+                                    "forwardable": False
                                 }
-                            ]
-                        else:
-                            # 데이터 없으면 텍스트 카드만
-                            items = [
-                                {"simpleText": {"text": "◕_◕💧\n오늘은 모험섬이 없어요.", "extra": {}}}
-                            ]
+                            }
+                        ]
+                    else:
+                        # 데이터 없으면 텍스트 카드만
+                        items = [
+                            {"simpleText": {"text": "◕_◕💧\n오늘은 모험섬이 없어요.", "extra": {}}}
+                        ]
 
         # ---------- 3. 캘린더 or 일정 관련 패턴 ----------
         match_calendar = re.match(r"^(\.캘린더|캘린더|\.ㅋㄹㄷ|ㅋㄹㄷ|\.일정|일정|\.ㅇㅈ|ㅇㅈ)$", user_input)
@@ -1601,6 +1601,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
