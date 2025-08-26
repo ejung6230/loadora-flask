@@ -185,32 +185,22 @@ def fallback():
             
             data = fetch_calendar()
             today = NOW_KST.date()
-    
+        
             adventure_islands = [item for item in data if item.get("CategoryName") == "모험 섬"]
             cards = []
             all_today_times = []
-    
+        
             for island in adventure_islands:
                 name = island.get("ContentsName")
                 times = island.get("StartTimes", [])
                 icon = island.get("ContentsIcon")
-            
-                reward_items_data = island.get("RewardItems", {})
-                if isinstance(reward_items_data, dict):
-                    reward_items = reward_items_data.get("Items", [])
-                else:
-                    reward_items = []
-            
+                
+                # RewardItems가 리스트이므로 바로 사용
+                reward_items = island.get("RewardItems", [])
                 items_text = ", ".join([item.get("Name") for item in reward_items]) if reward_items else "획득 가능 아이템 없음"
-            
-                today_times = []
-                for t in times:
-                    try:
-                        if datetime.fromisoformat(t).date() == today:
-                            today_times.append(t)
-                    except Exception:
-                        continue
-            
+        
+                today_times = [t for t in times if datetime.fromisoformat(t).date() == today]
+        
                 if today_times:
                     all_today_times.extend(today_times)
                     cards.append({
@@ -219,9 +209,9 @@ def fallback():
                         "link": {"web": island.get("Link", "")},
                         "description": f"{items_text}\n시간: {', '.join([datetime.fromisoformat(t).strftime('%H:%M') for t in today_times])}"
                     })
-    
+        
             time_text = ", ".join([datetime.fromisoformat(t).strftime("%H:%M") for t in all_today_times]) if all_today_times else "일정 없음"
-    
+        
             items = [
                 {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 모험섬 정보를 알려드릴게요.", "extra": {}}},
                 {
@@ -1479,6 +1469,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
