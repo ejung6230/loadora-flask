@@ -630,119 +630,72 @@ def fallback():
 
         
         # ---------- 카카오 챗봇 응답 포맷 ----------
-
-
-        response = {
-            "version": "2.0",
-            "template": {
-                "outputs": [
-                    {
-                        "simpleText": {
-                            "text": "질문이 뭘까요"
-                        }
-                    },
-                    {
-                        "carousel": {
-                            "type": "basicCard",
-                            "items": [
-                                {
-                                    "title": "1",
-                                    "description": "111",
-                                    "buttons": [
-                                        {"action": "message", "label": "선택", "messageText": "1번 선택"}
-                                    ]
-                                },
-                                {
-                                    "title": "2",
-                                    "description": "222",
-                                    "buttons": [
-                                        {"action": "message", "label": "선택", "messageText": "2번 선택"}
-                                    ]
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        "simpleText": {
-                            "text": "📅 기간: 2025.09.02(화) 17:47까지\n\n설명"
-                        }
-                    }
-                ],
-                "quickReplies": [
-                    {
-                        "label": "힌트 보기",
-                        "action": "message",
-                        "messageText": "힌트 보여줘"
-                    }
-                ]
-            }
-        }
         
-        # if not response_text and not items:
-        #     # ❌ 응답이 없으면 textCard + 사용 방법 GO 버튼
-        #     response = {
-        #         "version": "2.0",
-        #         "template": {
-        #             "outputs": [
-        #                 {
-        #                     "textCard": {
-        #                         "description": "◕_◕💧\n유효한 명령어를 입력해주세요.",
-        #                         "buttons": [
-        #                             {
-        #                               "label": "사용 방법 GO",
-        #                               "highlight": True,
-        #                               "action": "webLink",
-        #                               "webLinkUrl": "http://pf.kakao.com/_tLVen/110482315"
-        #                             }
-        #                         ],
-        #                         "lock": False,
-        #                         "forwardable": False
-        #                     }
-        #                 }
-        #             ],
-        #             "quickReplies": []
-        #         }
-        #     }
-        # elif items:
-        #     response = {
-        #         "version": "2.0",
-        #         "template": {
-        #             "outputs": items,
-        #             "quickReplies": []
-        #         }
-        #     }
-        # else:
-        #     if use_share_button:
-        #         # ✅ 응답이 있으면 공유 버튼 있는 textCard
-        #         response = {
-        #             "version": "2.0",
-        #             "template": {
-        #                 "outputs": [
-        #                     {
-        #                         "textCard": {
-        #                             "description": response_text,
-        #                             "buttons": [
-        #                                 {"label": "공유하기", "highlight": False, "action": "share"}
-        #                             ],
-        #                             "lock": False,
-        #                             "forwardable": False
-        #                         }
-        #                     }
-        #                 ],
-        #                 "quickReplies": []
-        #             }
-        #         }
-        #     else:
-        #         # ✅ 응답이 있으면 simpleText
-        #         response = {
-        #             "version": "2.0",
-        #             "template": {
-        #                 "outputs": [
-        #                     {"simpleText": {"text": response_text}}
-        #                 ],
-        #                 "quickReplies": []
-        #             }
-        #         }
+        if not response_text and not items:
+            # ❌ 응답이 없으면 textCard + 사용 방법 GO 버튼
+            response = {
+                "version": "2.0",
+                "template": {
+                    "outputs": [
+                        {
+                            "textCard": {
+                                "description": "◕_◕💧\n유효한 명령어를 입력해주세요.",
+                                "buttons": [
+                                    {
+                                      "label": "사용 방법 GO",
+                                      "highlight": True,
+                                      "action": "webLink",
+                                      "webLinkUrl": "http://pf.kakao.com/_tLVen/110482315"
+                                    }
+                                ],
+                                "lock": False,
+                                "forwardable": False
+                            }
+                        }
+                    ],
+                    "quickReplies": []
+                }
+            }
+        elif items:
+            response = {
+                "version": "2.0",
+                "template": {
+                    "outputs": items,
+                    "quickReplies": []
+                }
+            }
+        else:
+            if use_share_button:
+                # ✅ 응답이 있으면 공유 버튼 있는 textCard
+                response = {
+                    "version": "2.0",
+                    "template": {
+                        "outputs": [
+                            {
+                                "textCard": {
+                                    "description": response_text,
+                                    "buttons": [
+                                        {"label": "공유하기", "highlight": False, "action": "share"}
+                                    ],
+                                    "lock": False,
+                                    "forwardable": False
+                                }
+                            }
+                        ],
+                        "quickReplies": []
+                    }
+                }
+            else:
+                # ✅ 응답이 있으면 simpleText
+                response = {
+                    "version": "2.0",
+                    "template": {
+                        "outputs": [
+                            {"simpleText": {"text": response_text}}
+                        ],
+                        "quickReplies": []
+                    }
+                }
 
         return jsonify(response)
     except Exception as e:
