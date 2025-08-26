@@ -177,8 +177,6 @@ def fallback():
                     }
                 }]
 
-        
-
         # ---------- 2. 모험섬 일정 관련 패턴 ----------
         match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)$", user_input)
         if match_adventure_island:
@@ -191,6 +189,9 @@ def fallback():
             adventure_islands = [item for item in data if item.get("CategoryName") == "모험 섬"]
             cards = []
             all_today_times = []
+        
+            # 현재 시간 (KST)
+            now = datetime.now(timezone(timedelta(hours=9)))
         
             for island in adventure_islands:
                 name = island.get("ContentsName")
@@ -232,12 +233,23 @@ def fallback():
                 'Sunday':'일요일'
             }
         
-            # HH시 형식 그대로 사용
+            # HH시 형식, 중복 제거
             time_text = ", ".join(sorted(set(all_today_times), key=all_today_times.index)) if all_today_times else "일정 없음"
             header_title = f"모험섬({weekday_ko[today.strftime('%A')]})"
-
+        
+            # ---------- 남은 시간 계산 ----------
+            future_times = [datetime.fromisoformat(t) for t in today_times if datetime.fromisoformat(t) > now]
+            if future_times:
+                next_time = min(future_times)  # 가장 가까운 시작 시간
+                remaining = next_time - now
+                hours, remainder = divmod(remaining.seconds, 3600)
+                minutes = remainder // 60
+                remaining_text = f"{hours}시간 {minutes}분 남았습니다."
+            else:
+                remaining_text = "오늘 일정 없음"
+        
             card_footer = {
-                "title": "⏰시간",
+                "title": f"⏰ 남은 시간: {remaining_text}",
                 "link": {"web": ""},
                 "description": f"{time_text}"
             }
@@ -1495,6 +1507,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
