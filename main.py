@@ -258,8 +258,7 @@ def fallback():
                 total_seconds = int(remaining.total_seconds())
                 hours, remainder = divmod(total_seconds, 3600)
                 minutes = remainder // 60
-                # remaining_text = f"{next_time.hour:02d}시까지 {hours}시간 {minutes}분 남았습니다."
-                remaining_text = f"가까운{next_time}, 현재{NOW_KST}"
+                remaining_text = f"{next_time.hour:02d}시까지 {hours}시간 {minutes}분 남았습니다."
             else:
                 remaining_text = "오늘 남은 일정이 없습니다."
             
@@ -1544,6 +1543,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
