@@ -181,7 +181,14 @@ def fallback():
             response_text = "◕ᴗ◕🌸\n모험섬 정보를 알려드릴게요.\n\n"
             response_text += f"[모험섬 명령어]\n내용: {island_content}"
 
-        # ---------- 3. 원정대 관련 패턴 ----------
+        # ---------- 3. 캘린더 or 일정 관련 패턴 ----------
+        match_calendar = re.match(r"^(\.캘린더|캘린더|\.ㅋㄹㄷ|ㅋㄹㄷ|\.일정|일정|\.ㅇㅈ|ㅇㅈ)$", user_input)
+        if match_calendar:
+            calendar_command = match_calendar.group(1).strip()  # 변수 이름 수정
+            response_text = "◕ᴗ◕🌸\n컨텐츠 일정 정보를 알려드릴게요.\n\n"
+            response_text += f"[컨텐츠 일정 명령어]\n내용: {calendar_command}"
+
+        # ---------- 4. 원정대 관련 패턴 ----------
         match_expedition = re.match(r"^(\.원정대|원정대|\.ㅇㅈㄷ|ㅇㅈㄷ)\s*(.*)$", user_input)
         if match_expedition:
             expedition_char_name = match_expedition.group(2).strip()
@@ -216,7 +223,7 @@ def fallback():
     
 
 
-        # ---------- 4. 이벤트 정보 관련 패턴 ----------
+        # ---------- 5. 이벤트 정보 관련 패턴 ----------
         match_event = re.match(r"^(\.이벤트|이벤트|\.ㅇㅂㅌ|ㅇㅂㅌ)$", user_input)
         if match_event:
             url = "https://developer-lostark.game.onstove.com/news/events"
@@ -317,7 +324,7 @@ def fallback():
                 items = []
         
         
-        # ---------- 5. 전체 서버 떠상 관련 패턴 ----------
+        # ---------- 6. 전체 서버 떠상 관련 패턴 ----------
         match_merchant = re.match(r"^(\.떠상|떠상|\.ㄸㅅ|ㄸㅅ|떠돌이상인)$", user_input)
         if match_merchant:
             server_ids = list(SERVER_MAP.keys())
@@ -365,7 +372,7 @@ def fallback():
             if len(response_text) <= 400:
                 use_share_button = True
                 
-        # ---------- 6. 주급 관련 패턴 ----------
+        # ---------- 7. 주급 관련 패턴 ----------
         match_weekly = re.match(r"^(\.주급|주급|\.ㅈㄱ|ㅈㄱ)\s*(.*)$", user_input)
         if match_weekly:
             weekly_text = match_weekly.group(2).strip()
@@ -376,7 +383,7 @@ def fallback():
                 response_text += f"[주급 명령어]\n내용: {weekly_text}"
 
 
-        # ---------- 7. 클리어골드 관련 패턴 ----------
+        # ---------- 8. 클리어골드 관련 패턴 ----------
         match_cleargold = re.match(r"^(\.클골|클골|\.ㅋㄱ|ㅋㄱ|\.클리어골드|클리어골드|\.ㅋㄹㅇㄱㄷ|ㅋㄹㅇㄱㄷ)\s*(.*)$", user_input)
         if match_cleargold:
             dungeon_name = match_cleargold.group(2).strip()
@@ -389,7 +396,7 @@ def fallback():
                 response_text = "◕ᴗ◕🌸\n던전 클골 정보를 알려드릴게요.\n\n"
                 response_text += f"[던전 명령어]\n내용: {dungeon_name}"
                 
-        # ---------- 8. 특정 캐릭터 정보 관련 패턴 ----------
+        # ---------- 9. 특정 캐릭터 정보 관련 패턴 ----------
         match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ)\s*(.*)$", user_input)
         if match_info:
             info_char_name = match_info.group(2).strip()
@@ -1414,6 +1421,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
