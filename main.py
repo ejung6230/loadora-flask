@@ -218,7 +218,8 @@ def fallback():
                             # 그룹화할 키워드: 공백 포함도 OK
                             # "조회 기준 단어, 포함여부" : "최종 변경할 이름"
                             group_keywords = {
-                                "카드 팩": "카드팩",
+                                "카드 팩": "카드",
+                                "카드": "카드",
                                 "실링": "실링",
                                 "섬의 마음": "섬의마음",
                                 "비밀지도": "비밀지도",
@@ -265,7 +266,7 @@ def fallback():
                                     other_items.append(item)
                     
                             # 그룹화된 아이템 + 나머지 합쳐서 문자열 생성
-                            items_text = ", ".join([f"{name} {cnt}개" for name, cnt in grouped.items()] + other_items)
+                            items_text = ", ".join([f"{name}" for name, cnt in grouped.items()] + other_items)
                         else:
                             items_text = "없음"
                     
@@ -1600,6 +1601,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
