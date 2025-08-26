@@ -216,9 +216,8 @@ def fallback():
                                 display_name = f"{name}[{grade}]" if grade else name
                                 items_set.add(display_name)
                         
-                        # 가나다순 정렬
-                        for item in sorted(items_set):
-                            result += f"- {item}\n"
+                        # 중복 제거 + 가나다순 정렬 후 join
+                        result += "\n".join(sorted(items_set))
                 
                     items = [
                         {"simpleText": {"text": result, "extra": {}}},
