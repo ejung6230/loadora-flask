@@ -29,7 +29,8 @@ HEADERS = {
 }
 
 # 현재 한국 시간 (naive)
-NOW_KST = datetime.now()  # 이미 dt_obj와 같은 naive datetime 기준
+NOW_KST = datetime.utcnow() + timedelta(hours=9)
+
 
 def fetch_calendar():
     url = "https://developer-lostark.game.onstove.com/gamecontents/calendar"
@@ -260,7 +261,7 @@ def fallback():
                 # remaining_text = f"{next_time.hour:02d}시까지 {hours}시간 {minutes}분 남았습니다."
                 remaining_text = f"가까운{next_time}, 현재{NOW_KST}"
             else:
-                remaining_text = "오늘 일정 없음"
+                remaining_text = "오늘 남은 일정이 없습니다."
             
             card_footer = {
                 "title": f"⏰ {remaining_text}",
@@ -1543,6 +1544,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
