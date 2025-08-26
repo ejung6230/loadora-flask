@@ -202,23 +202,23 @@ def fallback():
                 ]
 
                 if selected_island_items:
-                    result = f"◕ᴗ◕🌸\n{selected_island}의 아이템 목록이에요.\n\n"
+                    result = f"◕ᴗ◕🌸\n❛{selected_island}❜의 정보를 알려드릴게요.\n\n"
                 
                     for island in selected_island_items:
-                        result += f"■ {island.get('ContentsName')} ({island.get('Location', '')})\n"
+                        result += f"❚ 아이템 정보
                         for reward_group in island.get("RewardItems", []):
                             for reward in reward_group.get("Items", []):
                                 grade = reward.get("Grade", "")
                                 name = reward.get("Name", "")
-                                result += f"- [{grade}] {name}\n"
-                        result += "\n"
+                                result += f"- {name}"
+                        
                 
                     items = [
                         {"simpleText": {"text": result, "extra": {}}},
                     ]
                 else:
                     items = [
-                        {"simpleText": {"text": f"◕_◕💧\n{selected_island}의 정보를 조회할 수 없어요.", "extra": {}}},
+                        {"simpleText": {"text": f"◕_◕💧\n❛{selected_island}❜ 정보를 조회할 수 없어요. 모험섬 이름을 정확하게 입력해주세요.", "extra": {}}},
                     ]
     
             else:
@@ -368,7 +368,7 @@ def fallback():
                 if adventure_islands:
                     # 모험섬 데이터가 있을 때만
                     items = [
-                        {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 모험섬 정보를 알려드릴게요.\n* 상세 아이템을 보려면 리스트를 클릭하세요.", "extra": {}}},
+                        {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 모험섬 정보를 알려드릴게요.\n*상세 정보를 보려면 클릭하세요.", "extra": {}}},
                         {
                             "listCard": {
                                 "header": {"title": header_title},
