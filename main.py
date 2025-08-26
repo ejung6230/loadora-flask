@@ -223,18 +223,25 @@ def fallback():
         
             # 요일 한글 매핑
             weekday_ko = {
-                'Monday':'월',
-                'Tuesday':'화',
-                'Wednesday':'수',
-                'Thursday':'목',
-                'Friday':'금',
-                'Saturday':'토',
-                'Sunday':'일'
+                'Monday':'월요일',
+                'Tuesday':'화요일',
+                'Wednesday':'수요일',
+                'Thursday':'목요일',
+                'Friday':'금요일',
+                'Saturday':'토요일',
+                'Sunday':'일요일'
             }
         
             # HH시 형식 그대로 사용
             time_text = ", ".join(all_today_times) if all_today_times else "일정 없음"
-            header_title = f"모험섬({weekday_ko[today.strftime('%A')]}): {time_text}"
+            header_title = f"모험섬({weekday_ko[today.strftime('%A')]})"
+
+            card_footer = {
+                "title": "⏰시간",
+                "link": {"web": ""},
+                "description": f"{time_text}"
+            }
+            cards.append(card_footer)
         
             items = [
                 {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 모험섬 정보를 알려드릴게요.", "extra": {}}},
@@ -248,12 +255,6 @@ def fallback():
                     }
                 }
             ]
-
-
-
-
-
-
 
         # ---------- 3. 캘린더 or 일정 관련 패턴 ----------
         match_calendar = re.match(r"^(\.캘린더|캘린더|\.ㅋㄹㄷ|ㅋㄹㄷ|\.일정|일정|\.ㅇㅈ|ㅇㅈ)$", user_input)
@@ -1494,6 +1495,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
