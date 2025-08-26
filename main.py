@@ -31,16 +31,21 @@ HEADERS = {
 # 현재 한국 시간 (naive)
 NOW_KST = datetime.now()  # 이미 dt_obj와 같은 naive datetime 기준
 
-
 def fetch_calendar():
+    url = "https://developer-lostark.game.onstove.com/gamecontents/calendar"
     try:
-        url = "https://developer-lostark.game.onstove.com/gamecontents/calendar"
         response = requests.get(url, headers=HEADERS, timeout=5)
         response.raise_for_status()  # HTTP 오류 발생 시 예외 발생
         return response.json()
-    except Exception as e:
-        # 예외는 호출자에게 전달
-        raise e
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 503:
+            raise Exception("서비스 점검 중입니다. 잠시 후 다시 시도해주세요.") from e
+        else:
+            raise Exception(f"이벤트 정보를 불러올 수 없습니다. (오류 코드: {e.response.status_code})") from e
+    except requests.exceptions.RequestException as e:
+        # 연결 시간 초과, DNS 오류 등
+        raise Exception(f"서버와 통신 중 오류가 발생했습니다. ({e})") from e
+
 
 @app.route('/calendar', methods=['GET'])
 def get_calendar():
@@ -52,6 +57,7 @@ def get_calendar():
             "error": True,
             "message": str(e)
         }), 500
+        
 
 def organize_characters_by_server(char_list):
     organized = {}
@@ -176,33 +182,34 @@ def fallback():
         match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)$", user_input)
         if match_adventure_island:
             island_content = match_adventure_island.group(1).strip()
+            
             data = fetch_calendar()
             today = NOW_KST.date()
-            
+    
             adventure_islands = [item for item in data if item.get("CategoryName") == "모험 섬"]
             cards = []
-            
+            all_today_times = []
+    
             for island in adventure_islands:
                 name = island.get("ContentsName")
-                min_ilvl = island.get("MinItemLevel")
                 times = island.get("StartTimes", [])
                 icon = island.get("ContentsIcon")
                 reward_items = island.get("RewardItems", {}).get("Items", [])
-            
+    
                 items_text = ", ".join([item.get("Name") for item in reward_items]) if reward_items else "획득 가능 아이템 없음"
-                
                 today_times = [t for t in times if datetime.fromisoformat(t).date() == today]
-                
+    
                 if today_times:
+                    all_today_times.extend(today_times)
                     cards.append({
                         "title": name,
                         "imageUrl": icon,
                         "link": {"web": island.get("Link", "")},
-                        "description": items_text
+                        "description": f"{items_text}\n시간: {', '.join([datetime.fromisoformat(t).strftime('%H:%M') for t in today_times])}"
                     })
-            
-            time_text = ", ".join([datetime.fromisoformat(t).strftime("%H:%M") for t in today_times]) if today_times else "일정 없음"
-            
+    
+            time_text = ", ".join([datetime.fromisoformat(t).strftime("%H:%M") for t in all_today_times]) if all_today_times else "일정 없음"
+    
             items = [
                 {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 모험섬 정보를 알려드릴게요.", "extra": {}}},
                 {
@@ -215,6 +222,7 @@ def fallback():
                     }
                 }
             ]
+
 
 
 
@@ -1459,6 +1467,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
