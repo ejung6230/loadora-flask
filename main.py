@@ -257,7 +257,7 @@ def fallback():
                 total_seconds = int(remaining.total_seconds())
                 hours, remainder = divmod(total_seconds, 3600)
                 minutes = remainder // 60
-                remaining_text = f"{next_time.hour:02d}까지 {hours}시간 {minutes}분 남았습니다."
+                remaining_text = f"{next_time.hour:02d}시까지 {hours}시간 {minutes}분 남았습니다."
             else:
                 remaining_text = "오늘 일정 없음"
             
@@ -287,7 +287,6 @@ def fallback():
                 items = [
                     {"simpleText": {"text": "◕_◕💧\n오늘은 모험섬이 없어요.", "extra": {}}}
                 ]
-
 
         # ---------- 3. 캘린더 or 일정 관련 패턴 ----------
         match_calendar = re.match(r"^(\.캘린더|캘린더|\.ㅋㄹㄷ|ㅋㄹㄷ|\.일정|일정|\.ㅇㅈ|ㅇㅈ)$", user_input)
@@ -1543,6 +1542,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
