@@ -203,8 +203,15 @@ def fallback():
 
                 if selected_island_items:
                     result = f"◕ᴗ◕🌸\n❛{selected_island}❜ 정보를 알려드릴게요.\n\n"
+                    
             
                     for island in selected_island_items:
+                        
+                        
+                         min_item_level = island.get("MinItemLevel", [])
+                        
+                        result += f"❚ 최소 입장 레벨: {min_item_level}\n"
+                        
                         result += f"❚ 아이템 목록\n"
                         items_set = set()  # 중복 제거용 집합
                         
