@@ -260,7 +260,7 @@ def fallback():
             card_footer = {
                 "title": f"⏰ {remaining_text}",
                 "link": {"web": ""},
-                "description": f"{time_text}"
+                "description": f"모험섬 시간: {time_text}"
             }
             cards.append(card_footer)
         
@@ -1531,6 +1531,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
