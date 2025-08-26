@@ -194,7 +194,6 @@ def fallback():
                 items = [
                     {"simpleText": {"text": result, "extra": {}}},
                 ]
-                
             else:
                 selected_island = None  # 접두사만 입력한 경우 전체 표시
     
@@ -291,7 +290,7 @@ def fallback():
                             cards.append({
                                 "title": name,
                                 "imageUrl": icon,
-                                "messageText": ".모험섬 {name}",
+                                "messageText": f".모험섬 {name}",
                                 "link": {"web": island.get("Link", "")},
                                 "description": f"{items_text}"
                             })
@@ -1613,6 +1612,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
