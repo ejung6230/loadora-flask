@@ -211,15 +211,16 @@ def fallback():
                 today_times = [t for t in times if datetime.fromisoformat(t).date() == today]
         
                 if today_times:
-                    # 시간만 HH시 형식으로 변환
-                    time_strings = [f"{datetime.fromisoformat(t).hour}시" for t in today_times]
-                    all_today_times.extend(time_strings)
+                    # 중복 제거하면서 all_today_times에 ISO 문자열 그대로 추가
+                    for t in today_times:
+                        if t not in all_today_times:
+                            all_today_times.append(t)
                     
                     cards.append({
                         "title": name,
                         "imageUrl": icon,
                         "link": {"web": island.get("Link", "")},
-                        "description": f"{items_text}\n시간: {', '.join(time_strings)}"
+                        "description": f"{items_text}"
                     })
         
             # 요일 한글 매핑
@@ -232,13 +233,15 @@ def fallback():
                 'Saturday':'토요일',
                 'Sunday':'일요일'
             }
-        
-            # HH시 형식, 중복 제거
-            time_text = ", ".join(sorted(set(all_today_times), key=all_today_times.index)) if all_today_times else "일정 없음"
+
+            # HH시 형식
+            time_strings = [f"{datetime.fromisoformat(t).hour}시" for t in all_today_times]
+            time_text = ", ".join(time_strings) if time_strings else "일정 없음"
+            
             header_title = f"모험섬({weekday_ko[today.strftime('%A')]})"
         
             # 남은 시간 계산
-            future_times = [datetime.fromisoformat(t) for t in today_times if datetime.fromisoformat(t) > NOW_KST]
+            future_times = [datetime.fromisoformat(t) for t in all_today_times if datetime.fromisoformat(t) > NOW_KST]
             
             if future_times:
                 next_time = min(future_times)  # 가장 가까운 시작 시간
@@ -1509,6 +1512,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
