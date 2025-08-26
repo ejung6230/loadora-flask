@@ -208,7 +208,7 @@ def fallback():
                     for island in selected_island_items:
                         
                         
-                         min_item_level = island.get("MinItemLevel", [])
+                         min_item_level = island.get("MinItemLevel", "")
                         
                         result += f"❚ 최소 입장 레벨: {min_item_level}\n"
                         
