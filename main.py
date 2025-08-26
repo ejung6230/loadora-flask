@@ -215,9 +215,10 @@ def fallback():
                                 # 등급과 이름을 같이 문자열로 저장하면 출력용으로 바로 사용 가능
                                 display_name = f"{name}[{grade}]" if grade else name
                                 items_set.add(display_name)
-                        
-                        # 중복 제거 + 가나다순 정렬 후 join
-                        result += "\n".join(sorted(items_set))
+                    
+                        # 중복 제거 + 가나다순 정렬 후, 각 항목 앞에 "- " 붙이기
+                        sorted_items = sorted(items_set)
+                        result += "\n".join(f"- {item}" for item in sorted_items)
                 
                     items = [
                         {"simpleText": {"text": result, "extra": {}}},
