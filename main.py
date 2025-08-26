@@ -182,22 +182,27 @@ def fallback():
             # 공식 api에서 데이터 받아오기
             data = fetch_calendar()
 
-            def format_adventure_islands(data):
-                result = "🌴 모험섬 일정 🌴\n\n"
+            def format_today_adventure_islands(data):
+                # 한국 시간 기준
+                KST = timezone(timedelta(hours=9))
+                today = datetime.now(KST).date()
+                result = []
+            
                 for content in data:
-                    if content.get("CategoryName") == "모험 섬":
-                        name = content.get("ContentsName")
-                        location = content.get("Location")
-                        min_ilvl = content.get("MinItemLevel")
-                        times = content.get("StartTimes", [])
-                        result += f"📌 {name} ({location}, 최소 아이템 레벨 {min_ilvl})\n"
-                        result += "⏰ 시작 시간:\n"
-                        for t in times:
-                            result += f"- {t}\n"
-                        result += "\n"
+                    start_times = content.get("StartTimes", [])
+                    # 오늘 일정만 필터링
+                    today_times = [t for t in start_times if datetime.fromisoformat(t).astimezone(KST).date() == today]
+                    if today_times:
+                        result.append({
+                            "CategoryName": content.get("CategoryName"),
+                            "ContentsName": content.get("ContentsName"),
+                            "Location": content.get("Location"),
+                            "MinItemLevel": content.get("MinItemLevel"),
+                            "StartTimes": today_times
+                        })
                 return result
 
-            formatted_text = format_adventure_islands(data)
+            formatted_text = format_today_adventure_islands(data)
             
             response_text = "◕ᴗ◕🌸\n모험섬 정보를 알려드릴게요.\n\n"
             response_text += f"[모험섬 명령어]\n내용: {formatted_text}"
@@ -1446,6 +1451,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
