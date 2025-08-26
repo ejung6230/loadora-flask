@@ -28,6 +28,29 @@ HEADERS = {
     "authorization": f"bearer {JWT_TOKEN}"
 }
 
+
+
+@app.route('/calendar', methods=['GET'])
+def get_calendar():
+    url = "https://developer-lostark.game.onstove.com/gamecontents/calendar"
+    
+    try:
+        # 요청 시 타임아웃 5초 설정
+        response = requests.get(url, headers=HEADERS, timeout=5)
+        
+        if response.status_code == 200:
+            return jsonify(response.json())
+        else:
+            return jsonify({
+                "error": True,
+                "status_code": response.status_code,
+                "message": response.text
+            }), response.status_code
+
+    except Exception as e:
+        # 모든 예외 처리 후 다시 raise
+        raise e
+
 def organize_characters_by_server(char_list):
     organized = {}
     for c in char_list:
@@ -1391,6 +1414,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
