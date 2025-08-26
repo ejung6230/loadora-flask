@@ -179,38 +179,35 @@ def fallback():
             data = fetch_calendar()
             today = NOW_KST.date()
             
-            result = "🌴 오늘 모험섬 일정 🌴\n\n"
-            cards = []
-        
             adventure_islands = [item for item in data if item.get("CategoryName") == "모험 섬"]
+            cards = []
             
             for island in adventure_islands:
                 name = island.get("ContentsName")
                 min_ilvl = island.get("MinItemLevel")
                 times = island.get("StartTimes", [])
                 icon = island.get("ContentsIcon")
+                reward_items = island.get("RewardItems", {}).get("Items", [])
+            
+                items_text = ", ".join([item.get("Name") for item in reward_items]) if reward_items else "획득 가능 아이템 없음"
                 
                 today_times = [t for t in times if datetime.fromisoformat(t).date() == today]
                 
                 if today_times:
-                    result += f"📌 {name} (최소 아이템 레벨 {min_ilvl})\n⏰ 오늘 시간:\n"
-                    for t in today_times:
-                        time_only = datetime.fromisoformat(t).strftime("%H:%M")
-                        result += f"- {time_only}\n"
-                    result += "\n"
-                    
                     cards.append({
                         "title": name,
                         "imageUrl": icon,
                         "link": {"web": island.get("Link", "")},
-                        "description": f"최소 아이템 레벨 {min_ilvl}"
+                        "description": items_text
                     })
-        
+            
+            time_text = ", ".join([datetime.fromisoformat(t).strftime("%H:%M") for t in today_times]) if today_times else "일정 없음"
+            
             items = [
                 {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 모험섬 정보를 알려드릴게요.", "extra": {}}},
                 {
                     "listCard": {
-                        "header": {"title": "모험섬"},
+                        "header": {"title": f"{today.strftime('%A')} 모험섬: {time_text}"},
                         "items": cards,
                         "buttons": [{"label": "공유하기", "highlight": False, "action": "share"}],
                         "lock": False,
@@ -1462,6 +1459,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
