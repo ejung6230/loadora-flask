@@ -9,6 +9,7 @@ import time
 import re
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from collections import defaultdict
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -1599,6 +1600,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
