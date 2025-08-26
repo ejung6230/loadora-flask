@@ -203,12 +203,13 @@ def fallback():
                 
                 items_text = ", ".join([item["Name"] for item in reward_items]) \
                              if reward_items else "없음"
-
         
                 today_times = [t for t in times if datetime.fromisoformat(t).date() == today]
         
                 if today_times:
-                    all_today_times.extend(today_times)
+                    # 시간만 HH 형식으로 변환 후 "시" 붙이기
+                    time_strings = [f"{datetime.fromisoformat(t).hour}시" for t in today_times]
+                    all_today_times.extend(time_strings)
                     cards.append({
                         "title": name,
                         "imageUrl": icon,
@@ -217,12 +218,16 @@ def fallback():
                     })
         
             time_text = ", ".join([datetime.fromisoformat(t).strftime("%H:%M") for t in all_today_times]) if all_today_times else "일정 없음"
-        
+
+            header_title = f"모험섬({{
+                'Monday':'월','Tuesday':'화','Wednesday':'수','Thursday':'목','Friday':'금','Saturday':'토','Sunday':'일'
+            }[today.strftime('%A')]}): {time_text}"
+
             items = [
                 {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 모험섬 정보를 알려드릴게요.", "extra": {}}},
                 {
                     "listCard": {
-                        "header": {"title": f"{today.strftime('%A')} 모험섬: {time_text}"},
+                        "header": {"title": header_title},
                         "items": cards,
                         "buttons": [{"label": "공유하기", "highlight": False, "action": "share"}],
                         "lock": False,
@@ -1475,6 +1480,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
