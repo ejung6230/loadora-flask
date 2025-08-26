@@ -187,46 +187,50 @@ def fallback():
             island_content = match_adventure_island.group(1).strip()
             
             data = fetch_calendar()
-            today = NOW_KST.date()
-        
-            # 모험섬 항목 필터링
-            adventure_islands = [item for item in data if item.get("CategoryName") == "모험 섬"]
+            today = NOW_KST.date()  # 현재 한국 시간 (naive)
+            
+            # 오늘 진행하는 모험섬만 필터링
+            adventure_islands = [
+                item for item in data
+                if item.get("CategoryName") == "모험 섬"
+                and any(datetime.fromisoformat(t).date() == today for t in item.get("StartTimes", []))
+            ]
+            
             cards = []
             all_today_times = []
-        
-            # 현재 시간 (KST)
-            now = datetime.now(timezone(timedelta(hours=9)))
-        
+            
             for island in adventure_islands:
                 name = island.get("ContentsName")
                 times = island.get("StartTimes", [])
                 icon = island.get("ContentsIcon")
-        
+            
                 # RewardItems 안전 처리
                 reward_items = []
                 for ri in island.get("RewardItems", []):
                     if isinstance(ri, dict):
                         items_list = ri.get("Items", [])
                         reward_items.extend([item for item in items_list if item.get("Name")])
-        
+            
                 items_text = ", ".join([item["Name"] for item in reward_items]) if reward_items else "없음"
-        
-                # 오늘 일정만 필터링
+            
+                # 오늘 일정만 ISO 문자열로 수집
                 today_times = [t for t in times if datetime.fromisoformat(t).date() == today]
-        
-                if today_times:
-                    # 중복 제거하면서 all_today_times에 ISO 문자열 그대로 추가
-                    for t in today_times:
-                        if t not in all_today_times:
-                            all_today_times.append(t)
-                    
-                    cards.append({
-                        "title": name,
-                        "imageUrl": icon,
-                        "link": {"web": island.get("Link", "")},
-                        "description": f"{items_text}"
-                    })
-        
+            
+                # 중복 제거하면서 all_today_times에 추가
+                for t in today_times:
+                    if t not in all_today_times:
+                        all_today_times.append(t)
+            
+                cards.append({
+                    "title": name,
+                    "imageUrl": icon,
+                    "link": {"web": island.get("Link", "")},
+                    "description": f"{items_text}"
+                })
+            
+            # 오늘 일정 시간 정렬
+            all_today_times = sorted(all_today_times)
+            
             # 요일 한글 매핑
             weekday_ko = {
                 'Monday':'월요일',
@@ -237,13 +241,13 @@ def fallback():
                 'Saturday':'토요일',
                 'Sunday':'일요일'
             }
-
+        
             # HH시 형식
             time_strings = [f"{datetime.fromisoformat(t).hour}시" for t in all_today_times]
             time_text = ", ".join(time_strings) if time_strings else "일정 없음"
             
             header_title = f"모험섬({weekday_ko[today.strftime('%A')]})"
-        
+            
             # 남은 시간 계산
             future_times = [datetime.fromisoformat(t) for t in all_today_times if datetime.fromisoformat(t) > NOW_KST]
             
@@ -256,26 +260,34 @@ def fallback():
                 remaining_text = f"{next_time.hour:02d}까지 {hours}시간 {minutes}분 남았습니다."
             else:
                 remaining_text = "오늘 일정 없음"
-        
+            
             card_footer = {
                 "title": f"⏰ {remaining_text}",
                 "link": {"web": ""},
                 "description": f"모험섬 시간: {time_text}"
             }
             cards.append(card_footer)
-        
-            items = [
-                {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 모험섬 정보를 알려드릴게요.", "extra": {}}},
-                {
-                    "listCard": {
-                        "header": {"title": header_title},
-                        "items": cards,
-                        "buttons": [{"label": "공유하기", "highlight": False, "action": "share"}],
-                        "lock": False,
-                        "forwardable": False
+            
+            if adventure_islands:
+                # 모험섬 데이터가 있을 때만
+                items = [
+                    {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 모험섬 정보를 알려드릴게요.", "extra": {}}},
+                    {
+                        "listCard": {
+                            "header": {"title": header_title},
+                            "items": cards,
+                            "buttons": [{"label": "공유하기", "highlight": False, "action": "share"}],
+                            "lock": False,
+                            "forwardable": False
+                        }
                     }
-                }
-            ]
+                ]
+            else:
+                # 데이터 없으면 텍스트 카드만
+                items = [
+                    {"simpleText": {"text": "◕_◕💧\n오늘은 모험섬이 없어요.", "extra": {}}}
+                ]
+
 
         # ---------- 3. 캘린더 or 일정 관련 패턴 ----------
         match_calendar = re.match(r"^(\.캘린더|캘린더|\.ㅋㄹㄷ|ㅋㄹㄷ|\.일정|일정|\.ㅇㅈ|ㅇㅈ)$", user_input)
@@ -1531,6 +1543,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
