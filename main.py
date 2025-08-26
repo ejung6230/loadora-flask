@@ -371,8 +371,10 @@ def fallback():
 
                             # D-day 계산
                             delta = (end_obj.date() - NOW_KST.date()).days
-                            if delta > 0:
+                            if delta > 8:
                                 dday_str = f"D-{delta}"
+                            elif delta > 0:
+                                dday_str = f"D-{delta} ⏰임박"
                             elif delta == 0:
                                 dday_str = "D-Day"
                             else:
@@ -1543,6 +1545,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
