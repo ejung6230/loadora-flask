@@ -213,7 +213,7 @@ def fallback():
                                 grade = reward.get("Grade", "")
                                 name = reward.get("Name", "")
                                 # 등급과 이름을 같이 문자열로 저장하면 출력용으로 바로 사용 가능
-                                display_name = f"[{grade}] {name}" if grade else name
+                                display_name = f"{name}[{grade}]" if grade else name
                                 items_set.add(display_name)
                         
                         # 가나다순 정렬
