@@ -70,6 +70,8 @@ def organize_characters_by_server(char_list):
 def fallback():
     from datetime import datetime, timezone, timedelta
     # 특수문자 참고 ❘ ❙ ❚ ❛ ❜
+    server_down = False  # 서버 점검 여부 플래그
+    
     try:
         json_data = request.get_json()
         user_input = json_data.get("userRequest", {}).get("utterance", "").strip()
@@ -99,7 +101,6 @@ def fallback():
         
             notice_types = ["공지", "점검", "상점", "이벤트"]
             all_notices = []
-            server_down = False  # 서버 점검 여부 플래그
         
             for notice_type in notice_types:
                 try:
@@ -110,13 +111,16 @@ def fallback():
                         n["Type"] = notice_type
                         all_notices.append(n)
                 except requests.exceptions.HTTPError as e:
-                    if resp.status_code == 503:
+                    if e.response is not None and e.response.status_code == 503:
+                        # 서버 점검 처리
                         items = inspection_item
                         server_down = True
-                        break
-                    continue
-                except Exception:
-                    raise # 실패한 타입부터 무시하고 작업 종료
+                    else:
+                        # 그 외 HTTP 오류
+                        raise
+                except Exception as e:
+                    # 기타 예외
+                    raise
         
             if not server_down and all_notices:  # ✅ 서버 점검이 아닐 때만 공지 정리
                 def parse_date(date_str):
@@ -310,12 +314,16 @@ def fallback():
         
                         response_text = expedition_text.strip()
                 except requests.exceptions.HTTPError as e:
-                    if resp.status_code == 503:
+                    if e.response is not None and e.response.status_code == 503:
+                        # 서버 점검 처리
                         items = inspection_item
+                        server_down = True
                     else:
-                        response_text = f"원정대 정보를 불러올 수 없습니다. (오류 코드: {resp.status_code})"
+                        # 그 외 HTTP 오류
+                        raise
                 except Exception as e:
-                    response_text = "⚠️ 서버와의 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
+                    # 기타 예외
+                    raise
     
 
 
@@ -403,16 +411,17 @@ def fallback():
                         
                         items.append(carousel)
 
-        
             except requests.exceptions.HTTPError as e:
-                if resp.status_code == 503:
-                    response_text = "서비스 점검 중입니다. 잠시 후 다시 시도해주세요."
+                if e.response is not None and e.response.status_code == 503:
+                    # 서버 점검 처리
+                    items = inspection_item
+                    server_down = True
                 else:
-                    response_text = f"이벤트 정보를 불러올 수 없습니다. (오류 코드: {resp.status_code})"
-                items = []
+                    # 그 외 HTTP 오류
+                    raise
             except Exception as e:
-                response_text = f"⚠️ 이벤트 정보를 가져오는 중 오류가 발생했습니다. ({e})"
-                items = []
+                # 기타 예외
+                raise
         
         
         # ---------- 6. 전체 서버 떠상 관련 패턴 ----------
@@ -441,9 +450,17 @@ def fallback():
                             report["endTime"] = entry.get("endTime", "")
                     return server_data
             
+                except requests.exceptions.HTTPError as e:
+                    if e.response is not None and e.response.status_code == 503:
+                        # 서버 점검 처리
+                        items = inspection_item
+                        server_down = True
+                    else:
+                        # 그 외 HTTP 오류
+                        raise
                 except Exception as e:
-                    logger.error(f"[ERROR] 서버({server_id}) 처리 실패: {e}")
-                    return []  # 실패 시 빈 리스트 반환
+                    # 기타 예외
+                    raise
             
             # 병렬 처리 (스레드풀)
             with ThreadPoolExecutor(max_workers=10) as executor:
@@ -674,7 +691,11 @@ def fallback():
         logger.exception("예외 발생: %s", e)
         
         # 2️⃣ 챗봇용 메시지 생성
-        response_text = f"◕_◕💧\n에러가 발생했습니다: {str(e)}"
+        if server_down:
+            response_text = f"⚠️ \n서비스 점검 중입니다. 잠시 후 다시 시도해주세요."
+        else: 
+            response_text = f"◕_◕💧\n에러가 발생했습니다: {str(e)}"
+        
         response = {
             "version": "2.0",
             "template": {
@@ -1512,6 +1533,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
