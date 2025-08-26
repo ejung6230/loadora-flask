@@ -172,7 +172,7 @@ def fallback():
                     }
                 }]
 
-            # ---------- 모험섬 일정 ----------
+            # ---------- 2. 모험섬 일정 관련 패턴 ----------
             match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)$", user_input)
             if match_adventure_island:
                 island_content = match_adventure_island.group(1).strip()
@@ -1464,6 +1464,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
