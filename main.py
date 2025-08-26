@@ -205,12 +205,12 @@ def fallback():
                     result = f"◕ᴗ◕🌸\n❛{selected_island}❜의 정보를 알려드릴게요.\n\n"
                 
                     for island in selected_island_items:
-                        result += f"❚ 아이템 목록"
+                        result += f"❚ 아이템 목록\n"
                         for reward_group in island.get("RewardItems", []):
                             for reward in reward_group.get("Items", []):
                                 grade = reward.get("Grade", "")
                                 name = reward.get("Name", "")
-                                result += f"- {name}"
+                                result += f"- {name}\n"
                         
                 
                     items = [
