@@ -184,9 +184,19 @@ def fallback():
                 }]
 
         # ---------- 2. 모험섬 일정 관련 패턴 ----------
-        match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)$", user_input)
+        match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)(.*)$", user_input)
         if match_adventure_island:
             island_content = match_adventure_island.group(1).strip()
+
+            if user_input.startswith((".모험섬", "모험섬", "ㅁㅎㅅ")):
+                # 접두사 추출
+                for prefix in (".모험섬", "모험섬", "ㅁㅎㅅ"):
+                    if user_input.startswith(prefix):
+                        selected_island = user_input[len(prefix):].strip()
+                        break
+            
+                if not selected_island:
+                    selected_island = None  # 전체 모험섬 표시
             
             data = fetch_calendar()
             today = NOW_KST.date()  # 현재 한국 시간 (naive)
@@ -1603,6 +1613,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
