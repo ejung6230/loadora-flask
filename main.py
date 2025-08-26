@@ -216,12 +216,19 @@ def fallback():
                         "link": {"web": island.get("Link", "")},
                         "description": f"{items_text}\n시간: {', '.join([datetime.fromisoformat(t).strftime('%H:%M') for t in today_times])}"
                     })
-        
-            time_text = ", ".join([datetime.fromisoformat(t).strftime("%H:%M") for t in all_today_times]) if all_today_times else "일정 없음"
 
-            header_title = f"모험섬({{
-                'Monday':'월','Tuesday':'화','Wednesday':'수','Thursday':'목','Friday':'금','Saturday':'토','Sunday':'일'
-            }[today.strftime('%A')]}): {time_text}"
+            # 요일 한글 매핑 변수
+            weekday_ko = {
+                'Monday':'월',
+                'Tuesday':'화',
+                'Wednesday':'수',
+                'Thursday':'목',
+                'Friday':'금',
+                'Saturday':'토',
+                'Sunday':'일'
+            }
+            time_text = ", ".join([datetime.fromisoformat(t).strftime("%H:%M") for t in all_today_times]) if all_today_times else "일정 없음"
+            header_title = f"모험섬({weekday_ko[today.strftime('%A')]}): {time_text}"
 
             items = [
                 {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 모험섬 정보를 알려드릴게요.", "extra": {}}},
@@ -1480,6 +1487,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
