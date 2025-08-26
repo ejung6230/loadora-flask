@@ -178,13 +178,38 @@ def fallback():
         match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)$", user_input)
         if match_adventure_island:
             island_content = match_adventure_island.group(1).strip()
+
+            # 공식 api에서 데이터 받아오기
+            data = fetch_calendar()
+
+            def format_adventure_islands(data):
+                result = "🌴 모험섬 일정 🌴\n\n"
+                for content in data:
+                    if content.get("CategoryName") == "모험 섬":
+                        name = content.get("ContentsName")
+                        location = content.get("Location")
+                        min_ilvl = content.get("MinItemLevel")
+                        times = content.get("StartTimes", [])
+                        result += f"📌 {name} ({location}, 최소 아이템 레벨 {min_ilvl})\n"
+                        result += "⏰ 시작 시간:\n"
+                        for t in times:
+                            result += f"- {t}\n"
+                        result += "\n"
+                return result
+
+            formatted_text = format_adventure_islands(data)
+            
             response_text = "◕ᴗ◕🌸\n모험섬 정보를 알려드릴게요.\n\n"
-            response_text += f"[모험섬 명령어]\n내용: {island_content}"
+            response_text += f"[모험섬 명령어]\n내용: {formatted_text}"
 
         # ---------- 3. 캘린더 or 일정 관련 패턴 ----------
         match_calendar = re.match(r"^(\.캘린더|캘린더|\.ㅋㄹㄷ|ㅋㄹㄷ|\.일정|일정|\.ㅇㅈ|ㅇㅈ)$", user_input)
         if match_calendar:
             calendar_command = match_calendar.group(1).strip()  # 변수 이름 수정
+
+            # 공식 api에서 데이터 받아오기
+            data = fetch_calendar()
+            
             response_text = "◕ᴗ◕🌸\n컨텐츠 일정 정보를 알려드릴게요.\n\n"
             response_text += f"[컨텐츠 일정 명령어]\n내용: {calendar_command}"
 
@@ -1421,6 +1446,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
