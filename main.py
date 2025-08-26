@@ -189,7 +189,7 @@ def fallback():
             island_content = match_adventure_island.group(1).strip()
             if match_adventure_island.group(2):
                 selected_island = match_adventure_island.group(2).strip()
-                result = f"◕ᴗ◕🌸\n{selected_island}의 아이템을 알려드릴게요.\n\n"
+                result = f"◕ᴗ◕🌸\n{selected_island}의 아이템 목록이에요.\n\n"
                 result += "아이템정보~"
                 items = [
                     {"simpleText": {"text": result, "extra": {}}},
@@ -341,7 +341,7 @@ def fallback():
                 if adventure_islands:
                     # 모험섬 데이터가 있을 때만
                     items = [
-                        {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 모험섬 정보를 알려드릴게요.", "extra": {}}},
+                        {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 모험섬 정보를 알려드릴게요.\n* 상세 아이템을 보려면 리스트를 클릭하세요.", "extra": {}}},
                         {
                             "listCard": {
                                 "header": {"title": header_title},
@@ -1614,6 +1614,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
