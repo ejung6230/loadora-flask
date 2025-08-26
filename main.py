@@ -195,7 +195,7 @@ def fallback():
                         # 오늘 일정만 필터링 (naive 기준)
                         today_times = [t for t in times if datetime.fromisoformat(t).date() == today]
                         if today_times:
-                            result += f"📌 {name} ({location}, 최소 아이템 레벨 {min_ilvl})\n"
+                            result += f"📌 {name} (최소 아이템 레벨 {min_ilvl})\n"
                             result += "⏰ 오늘 시간:\n"
                             for t in today_times:
                                 time_only = datetime.fromisoformat(t).strftime("%H:%M")
@@ -1451,6 +1451,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
