@@ -182,6 +182,8 @@ def fallback():
             data = fetch_calendar()
 
             def format_adventure_islands_today(data):
+                from datetime import datetime, timezone, timedelta
+                
                 result = "🌴 오늘 모험섬 일정 🌴\n\n"
                 today = NOW_KST.date()  # naive datetime 기준
             
@@ -1451,6 +1453,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
