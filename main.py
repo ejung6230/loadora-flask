@@ -172,45 +172,56 @@ def fallback():
                     }
                 }]
 
-            
-        # ---------- 2. 모험섬 관련 패턴 ----------
-        match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)$", user_input)
-        if match_adventure_island:
-            island_content = match_adventure_island.group(1).strip()
-
-            # 공식 api에서 데이터 받아오기
-            data = fetch_calendar()
-
-            def format_adventure_islands_today(data):
-                from datetime import datetime, timezone, timedelta
+            # ---------- 모험섬 일정 ----------
+            match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)$", user_input)
+            if match_adventure_island:
+                island_content = match_adventure_island.group(1).strip()
+                data = fetch_calendar()
+                today = NOW_KST.date()
                 
                 result = "🌴 오늘 모험섬 일정 🌴\n\n"
-                today = NOW_KST.date()  # naive datetime 기준
+                cards = []
             
-                for content in data:
-                    if content.get("CategoryName") == "모험 섬":
-                        name = content.get("ContentsName")
-                        location = content.get("Location")
-                        min_ilvl = content.get("MinItemLevel")
-                        times = content.get("StartTimes", [])
+                adventure_islands = [item for item in data if item.get("CategoryName") == "모험 섬"]
+                
+                for island in adventure_islands:
+                    name = island.get("ContentsName")
+                    min_ilvl = island.get("MinItemLevel")
+                    times = island.get("StartTimes", [])
+                    icon = island.get("ContentsIcon")
+                    
+                    today_times = [t for t in times if datetime.fromisoformat(t).date() == today]
+                    
+                    if today_times:
+                        result += f"📌 {name} (최소 아이템 레벨 {min_ilvl})\n⏰ 오늘 시간:\n"
+                        for t in today_times:
+                            time_only = datetime.fromisoformat(t).strftime("%H:%M")
+                            result += f"- {time_only}\n"
+                        result += "\n"
+                        
+                        cards.append({
+                            "title": name,
+                            "imageUrl": icon,
+                            "link": {"web": island.get("Link", "")},
+                            "description": f"최소 아이템 레벨 {min_ilvl}"
+                        })
             
-                        # 오늘 일정만 필터링 (naive 기준)
-                        today_times = [t for t in times if datetime.fromisoformat(t).date() == today]
-                        if today_times:
-                            result += f"📌 {name} (최소 아이템 레벨 {min_ilvl})\n"
-                            result += "⏰ 오늘 시간:\n"
-                            for t in today_times:
-                                time_only = datetime.fromisoformat(t).strftime("%H:%M")
-                                result += f"- {time_only}\n"
-                            result += "\n"
-            
-                return result if result != "🌴 오늘 모험섬 일정 🌴\n\n" else "오늘 진행되는 모험섬 일정이 없습니다."
+                items = [
+                    {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 모험섬 정보를 알려드릴게요.", "extra": {}}},
+                    {
+                        "listCard": {
+                            "header": {"title": "모험섬"},
+                            "items": cards,
+                            "buttons": [{"label": "공유하기", "highlight": False, "action": "share"}],
+                            "lock": False,
+                            "forwardable": False
+                        }
+                    }
+                ]
 
 
-            formatted_text = format_adventure_islands_today(data)
-            
-            response_text = "◕ᴗ◕🌸\n모험섬 정보를 알려드릴게요.\n\n"
-            response_text += f"[모험섬 명령어]\n내용: {formatted_text}"
+
+
 
         # ---------- 3. 캘린더 or 일정 관련 패턴 ----------
         match_calendar = re.match(r"^(\.캘린더|캘린더|\.ㅋㄹㄷ|ㅋㄹㄷ|\.일정|일정|\.ㅇㅈ|ㅇㅈ)$", user_input)
@@ -1453,6 +1464,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
