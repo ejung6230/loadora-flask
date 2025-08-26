@@ -203,15 +203,19 @@ def fallback():
 
                 if selected_island_items:
                     result = f"◕ᴗ◕🌸\n❛{selected_island}❜의 정보를 알려드릴게요.\n\n"
-                
-                    for island in selected_island_items:
-                        result += f"❚ 아이템 목록\n"
-                        for reward_group in island.get("RewardItems", []):
-                            for reward in reward_group.get("Items", []):
-                                grade = reward.get("Grade", "")
-                                name = reward.get("Name", "")
-                                result += f"- {name}\n"
-                        
+                for island in selected_island_items:
+                    result += f"❚ 아이템 목록\n"
+                    seen_items = set()  # 중복 확인용 집합
+                    for reward_group in island.get("RewardItems", []):
+                        for reward in reward_group.get("Items", []):
+                            grade = reward.get("Grade", "")
+                            name = reward.get("Name", "")
+                            if name not in seen_items:
+                                seen_items.add(name)
+                                if grade:
+                                    result += f"- [{grade}] {name}\n"
+                                else:
+                                    result += f"- {name}\n"
                 
                     items = [
                         {"simpleText": {"text": result, "extra": {}}},
