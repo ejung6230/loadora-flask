@@ -230,10 +230,10 @@ def fallback():
                                 "대양의 주화": "대양주화",
                                 "설치물": "설치물",
                                 "변신": "변신",
-                                "영혼의 잎사귀": "경험치카드",
-                                "경험치 카드": "경험치카드",
+                                "영혼의 잎사귀": "경카",
+                                "경험치 카드": "경카",
                                 "골드": "골드",
-                                "선원지원서": "선원지원서",
+                                "선원지원서": "선원",
                                 "수호석 조각": "3티재료",
                                 "파괴석 조각": "3티재료",
                                 "숨결": "4티재료",
@@ -266,7 +266,7 @@ def fallback():
                                     other_items.append(item)
                     
                             # 그룹화된 아이템 + 나머지 합쳐서 문자열 생성
-                            items_text = ", ".join([f"{name}" for name, cnt in grouped.items()] + other_items)
+                            items_text = "/".join([f"{name}" for name, cnt in grouped.items()] + other_items)
                         else:
                             items_text = "없음"
                     
@@ -1601,6 +1601,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
