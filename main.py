@@ -206,11 +206,20 @@ def fallback():
                     
             
                     for island in selected_island_items:
-                        
-                        
                         min_item_level = island.get("MinItemLevel", "없음")
-                        
+                        contents_icon = island.get("ContentsIcon", "")
+                        start_times = island.get("StartTimes", [])
+
                         result += f"❚ 최소 입장 레벨: {min_item_level}\n"
+                        
+                        # 입장 시간 목록
+                        times_set = set(start_times)  # 중복 제거
+                        sorted_times = sorted(times_set)  # 정렬
+                        if sorted_times:
+                            result += "❚ 모험섬 입장 시간\n"
+                            result += "\n".join(f"- {time}" for time in sorted_times) + "\n"
+                        else:
+                            result += "❚ 모험섬 입장 시간: 없음\n"
                         
                         result += f"❚ 아이템 목록\n"
                         items_set = set()  # 중복 제거용 집합
@@ -219,7 +228,7 @@ def fallback():
                             for reward in reward_group.get("Items", []):
                                 grade = reward.get("Grade", "")
                                 name = reward.get("Name", "")
-                                # 등급과 이름을 같이 문자열로 저장하면 출력용으로 바로 사용 가능
+                                
                                 display_name = f"{name}[{grade}]" if grade else name
                                 items_set.add(display_name)
                     
@@ -228,6 +237,7 @@ def fallback():
                         result += "\n".join(f"- {item}" for item in sorted_items)
                 
                     items = [
+                        {"simpleImage": {"imageUrl": contents_icon, "altText": f"{selected_island}"}},
                         {"simpleText": {"text": result, "extra": {}}},
                     ]
                 else:
@@ -1656,6 +1666,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
