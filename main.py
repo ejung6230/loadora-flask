@@ -15,6 +15,9 @@ from collections import defaultdict
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# 정보 출력
+# logger.info("남은 시간 목록: %s", future_times)
+
 app = Flask(__name__)
 CORS(app)  # 모든 도메인 허용
 
@@ -385,6 +388,8 @@ def fallback():
                             
                             # 남은 시간 계산
                             future_times = [datetime.fromisoformat(t) for t in all_today_times if datetime.fromisoformat(t) > NOW_KST]
+
+                            logger.info("남은 시간 목록: %s", future_times)
                             
                             if future_times:
                                 next_time = min(future_times)  # 가장 가까운 시작 시간
@@ -395,7 +400,9 @@ def fallback():
                                 remaining_text = f"{next_time.hour:02d}시까지 {hours}시간 {minutes}분 남았습니다."
                             else:
                                 remaining_text = "오늘 남은 일정이 없습니다."
-    
+
+                
+                
                 card_footer = {
                     "title": f"⏰ {remaining_text}",
                     "link": {"web": ""},
@@ -1679,6 +1686,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
