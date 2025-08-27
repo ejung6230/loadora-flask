@@ -221,10 +221,11 @@ def fallback():
                         contents_icon = island.get("ContentsIcon", "")
                         
                         result += f"❚ 최소 입장 레벨: {min_item_level}\n"
+                        result += "\n"
                     
                         # ---------- 입장 시간 처리 ----------
                         date_dict = defaultdict(list)
-                    
+                        result += "❚ 모험섬 입장 시간\n"
                         for t in start_times:
                             dt = datetime.fromisoformat(t)
                             weekday = WEEKDAY_KO[dt.strftime("%A")]  # 영어 요일 → 한글 요일
@@ -233,13 +234,14 @@ def fallback():
                             date_dict[date_key].append(hour_str)
                     
                         if date_dict:
-                            result += "❚ 모험섬 입장 시간\n"
+                            
                             for date_key in sorted(date_dict.keys()):
                                 hours = sorted(set(date_dict[date_key]), key=lambda x: int(x.replace("시", "")))
                                 result += f"- {date_key} : {', '.join(hours)}\n"
                         else:
-                            result += "❚ 모험섬 입장 시간: 없음\n"
-                    
+                            result += "- 없음\n"
+                        result += "\n"
+                        
                         # ---------- 아이템 목록 처리 ----------
                         result += f"❚ 아이템 목록\n"
                         items_set = set()
@@ -252,9 +254,9 @@ def fallback():
                         
                         sorted_items = sorted(items_set)
                         if sorted_items:
-                            result += "\n".join(f"- {item}" for item in sorted_items) + "\n"
+                            result += "\n".join(f"- {item}" for item in sorted_items)
                         else:
-                            result += "- 없음\n"
+                            result += "- 없음"
             
                 
                     items = [
@@ -1676,6 +1678,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
