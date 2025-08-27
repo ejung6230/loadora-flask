@@ -34,13 +34,13 @@ NOW_KST = datetime.utcnow() + timedelta(hours=9)
 
 # 요일 한글 매핑
 WEEKDAY_KO = {
-    'Monday':'월요일',
-    'Tuesday':'화요일',
-    'Wednesday':'수요일',
-    'Thursday':'목요일',
-    'Friday':'금요일',
-    'Saturday':'토요일',
-    'Sunday':'일요일'
+    'Monday':'월',
+    'Tuesday':'화',
+    'Wednesday':'수',
+    'Thursday':'목',
+    'Friday':'금',
+    'Saturday':'토',
+    'Sunday':'일'
 }
 
 def fetch_calendar():
@@ -1676,6 +1676,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
