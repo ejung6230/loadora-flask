@@ -32,6 +32,16 @@ HEADERS = {
 # 현재 한국 시간 (naive)
 NOW_KST = datetime.utcnow() + timedelta(hours=9)
 
+# 요일 한글 매핑
+WEEKDAY_KO = {
+    'Monday':'월요일',
+    'Tuesday':'화요일',
+    'Wednesday':'수요일',
+    'Thursday':'목요일',
+    'Friday':'금요일',
+    'Saturday':'토요일',
+    'Sunday':'일요일'
+}
 
 def fetch_calendar():
     url = "https://developer-lostark.game.onstove.com/gamecontents/calendar"
@@ -203,38 +213,47 @@ def fallback():
 
                 if selected_island_items:
                     result = f"◕ᴗ◕🌸\n❛{selected_island}❜ 정보를 알려드릴게요.\n\n"
-                    
-            
+
                     for island in selected_island_items:
                         min_item_level = island.get("MinItemLevel", "없음")
-                        contents_icon = island.get("ContentsIcon", "")
                         start_times = island.get("StartTimes", [])
-
-                        result += f"❚ 최소 입장 레벨: {min_item_level}\n"
                         
-                        # 입장 시간 목록
-                        times_set = set(start_times)  # 중복 제거
-                        sorted_times = sorted(times_set)  # 정렬
-                        if sorted_times:
+                        result += f"❚ 최소 입장 레벨: {min_item_level}\n"
+                    
+                        # ---------- 입장 시간 처리 ----------
+                        date_dict = defaultdict(list)
+                    
+                        for t in start_times:
+                            dt = datetime.fromisoformat(t)
+                            weekday = WEEKDAY_KO[dt.strftime("%A")]  # 영어 요일 → 한글 요일
+                            date_key = dt.strftime(f"%Y년 %m월 %d일") + f"({weekday})"
+                            hour_str = dt.strftime("%H시")
+                            date_dict[date_key].append(hour_str)
+                    
+                        if date_dict:
                             result += "❚ 모험섬 입장 시간\n"
-                            result += "\n".join(f"- {time}" for time in sorted_times) + "\n"
+                            for date_key in sorted(date_dict.keys()):
+                                hours = sorted(set(date_dict[date_key]), key=lambda x: int(x.replace("시", "")))
+                                result += f"- {date_key} : {', '.join(hours)}\n"
                         else:
                             result += "❚ 모험섬 입장 시간: 없음\n"
-                        
+                    
+                        # ---------- 아이템 목록 처리 ----------
                         result += f"❚ 아이템 목록\n"
-                        items_set = set()  # 중복 제거용 집합
-                        
+                        items_set = set()
                         for reward_group in island.get("RewardItems", []):
                             for reward in reward_group.get("Items", []):
                                 grade = reward.get("Grade", "")
                                 name = reward.get("Name", "")
-                                
                                 display_name = f"{name}[{grade}]" if grade else name
                                 items_set.add(display_name)
-                    
-                        # 중복 제거 + 가나다순 정렬 후, 각 항목 앞에 "- " 붙이기
+                        
                         sorted_items = sorted(items_set)
-                        result += "\n".join(f"- {item}" for item in sorted_items)
+                        if sorted_items:
+                            result += "\n".join(f"- {item}" for item in sorted_items) + "\n"
+                        else:
+                            result += "- 없음\n"
+            
                 
                     items = [
                         {"simpleImage": {"imageUrl": contents_icon, "altText": f"{selected_island}"}},
@@ -352,23 +371,12 @@ def fallback():
                             
                             # 오늘 일정 시간 정렬
                             all_today_times = sorted(all_today_times)
-                            
-                            # 요일 한글 매핑
-                            weekday_ko = {
-                                'Monday':'월요일',
-                                'Tuesday':'화요일',
-                                'Wednesday':'수요일',
-                                'Thursday':'목요일',
-                                'Friday':'금요일',
-                                'Saturday':'토요일',
-                                'Sunday':'일요일'
-                            }
                         
                             # HH시 형식
                             time_strings = [f"{datetime.fromisoformat(t).hour}시" for t in all_today_times]
                             time_text = ", ".join(time_strings) if time_strings else "일정 없음"
                             
-                            header_title = f"모험섬({weekday_ko[today.strftime('%A')]})"
+                            header_title = f"모험섬({WEEKDAY_KO[today.strftime('%A')]})"
                             
                             # 남은 시간 계산
                             future_times = [datetime.fromisoformat(t) for t in all_today_times if datetime.fromisoformat(t) > NOW_KST]
@@ -1666,6 +1674,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
