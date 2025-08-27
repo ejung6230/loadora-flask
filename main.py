@@ -196,7 +196,55 @@ def fallback():
                     }
                 }]
 
-        # ---------- 2. 모험섬 일정 관련 패턴 ----------
+        # ---------- 2. 카게 관련 패턴 ----------
+        match_chaos_gate = re.match(r"^(\.카오스게이트|카오스게이트|\.카게|카게|\.ㅋㅇㅅㄱㅇㅌ|ㅋㅇㅅㄱㅇㅌ|\.ㅋㄱ|ㅋㄱ)(.*)$", user_input)
+        if match_chaos_gate:
+            chaos_gate_command = match_chaos_gate.group(1).strip()
+        
+            # 전체 캘린더 데이터
+            data = fetch_calendar()
+            
+            today = NOW_KST.date()  # 현재 한국 시간 (naive)
+            
+            # 오늘 진행하는 카오스게이트만 필터링
+            chaos_gates = [
+                item for item in data
+                if item.get("CategoryName") == "카오스게이트"
+                and any(datetime.fromisoformat(t).date() == today for t in item.get("StartTimes", []))
+            ]
+            
+            cards = []
+            all_today_times = []
+            remaining_text = ""
+            result = f"◕ᴗ◕🌸\n오늘의 카오스게이트 정보를 알려드릴게요.\n"
+            result += f"―――――――――――――――――――\n\n"
+            
+            for gate in chaos_gates:
+                name = gate.get("ContentsName")
+                times = gate.get("StartTimes", [])
+                icon = gate.get("ContentsIcon", "")
+                location = gate.get("Location", [])
+                min_item_level = gate.get("MinItemLevel", [])
+
+                # RewardItems 안전 처리
+                reward_items = []
+                for ri in gate.get("RewardItems", []):
+                    if isinstance(ri, dict):
+                        items_list = ri.get("Items", [])
+                        reward_items.extend([item["Name"] for item in items_list if item.get("Name")])
+
+            if chaos_gates:
+                # 카오스게이트 데이터가 있을 때만
+                items = [
+                    {"simpleText": {"text": result, "extra": {}}},
+                ]
+            else:
+                # 데이터 없으면 텍스트 카드만
+                items = [
+                    {"simpleText": {"text": "◕_◕💧\n오늘은 카오스게이트가 없어요.\n💡전체 정보를 보려면 클릭하세요.", "extra": {}}}
+                ]
+
+        # ---------- 3. 모험섬 일정 관련 패턴 ----------
         match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)(.*)$", user_input)
         if match_adventure_island:
             island_content = match_adventure_island.group(1).strip()
@@ -1688,6 +1736,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
