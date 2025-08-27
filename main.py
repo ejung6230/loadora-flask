@@ -213,10 +213,12 @@ def fallback():
 
                 if selected_island_items:
                     result = f"◕ᴗ◕🌸\n❛{selected_island}❜ 정보를 알려드릴게요.\n\n"
+                    contents_icon = ""
 
                     for island in selected_island_items:
                         min_item_level = island.get("MinItemLevel", "없음")
                         start_times = island.get("StartTimes", [])
+                        contents_icon = island.get("ContentsIcon", "")
                         
                         result += f"❚ 최소 입장 레벨: {min_item_level}\n"
                     
@@ -1674,6 +1676,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
