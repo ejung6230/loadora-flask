@@ -84,6 +84,8 @@ def organize_characters_by_server(char_list):
 @app.route("/fallback", methods=["POST"])
 def fallback():
     from datetime import datetime, timezone, timedelta
+    from collections import defaultdict
+    
     # 특수문자 참고 ❘ ❙ ❚ ❛ ❜
     server_down = False  # 서버 점검 여부 플래그
     
@@ -1760,6 +1762,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
