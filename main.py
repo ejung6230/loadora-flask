@@ -250,6 +250,7 @@ def fallback():
                 
                 cards = []
                 all_today_times = []
+                remaining_text = ""
                             
                 for island in adventure_islands:
                     name = island.get("ContentsName")
@@ -372,12 +373,12 @@ def fallback():
                             else:
                                 remaining_text = "오늘 남은 일정이 없습니다."
     
-                    card_footer = {
-                        "title": f"⏰ {remaining_text}",
-                        "link": {"web": ""},
-                        "description": f"모험섬 시간: {time_text}"
-                    }
-                    cards.append(card_footer)
+                card_footer = {
+                    "title": f"⏰ {remaining_text}",
+                    "link": {"web": ""},
+                    "description": f"모험섬 시간: {time_text}"
+                }
+                cards.append(card_footer)
                 
                 if adventure_islands:
                     # 모험섬 데이터가 있을 때만
@@ -1655,6 +1656,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
