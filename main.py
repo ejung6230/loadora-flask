@@ -212,7 +212,8 @@ def fallback():
                 ]
 
                 if selected_island_items:
-                    result = f"◕ᴗ◕🌸\n❛{selected_island}❜ 정보를 알려드릴게요.\n\n"
+                    result = f"◕ᴗ◕🌸\n❛{selected_island}❜ 정보를 알려드릴게요.\n"
+                    result = f"━━━━━━━━━━━━━━━━\n\n"
                     contents_icon = ""
 
                     for island in selected_island_items:
@@ -1678,6 +1679,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
