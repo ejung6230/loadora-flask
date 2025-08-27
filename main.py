@@ -390,6 +390,8 @@ def fallback():
                             future_times = [datetime.fromisoformat(t) for t in all_today_times if datetime.fromisoformat(t) > NOW_KST]
 
                             logger.info("남은 시간 목록: %s", future_times)
+                            logger.info("현재 시간: %s", NOW_KST)
+                            logger.info("모든 시간: %s", all_today_times)
                             
                             if future_times:
                                 next_time = min(future_times)  # 가장 가까운 시작 시간
@@ -1686,6 +1688,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
