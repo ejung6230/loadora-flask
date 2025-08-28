@@ -241,43 +241,38 @@ def fallback():
                 
                 # ---------- 입장 시간 정리 ----------
                 from collections import defaultdict
-                date_dict = defaultdict(list)
+        
+                # 날짜별 시간 합치기 (07시~23시, 다음날 00~05시)
+                date_hours = defaultdict(list)
                 for gate in chaos_gates:
                     for t in gate.get("StartTimes", []):
                         dt = datetime.fromisoformat(t)
-                        dt_hour = dt.hour
-                        weekday = WEEKDAY_KO[dt.strftime("%A")]
-                        date_key = dt.strftime(f"%Y년 %m월 %d일") + f"({weekday})"
-                        date_dict[date_key].append(dt_hour)
+                        date = dt.date()
+                        hour = dt.hour
+                        # 00~05시는 전날의 "다음날 00시~05시"로 표시되므로 전날 key로 묶음
+                        if 0 <= hour <= 5:
+                            date -= timedelta(days=1)
+                        date_hours[date].append(hour)
                 
                 result += "❚ 카오스게이트 입장 시간\n"
-
-                def compress_hours(hours_list):
-                    """
-                    하루 단위 07시~다음날 05시 기준으로 압축해서,
-                    한 날짜 라인에 당일~다음날 범위를 표시
-                    """
-                    hours_set = set(hours_list)
-                    display_parts = []
-                
-                    # 당일 07시~23시
-                    day_hours = sorted(h for h in hours_set if 7 <= h <= 23)
-                    if day_hours:
-                        display_parts.append(f"{day_hours[0]:02d}시~{day_hours[-1]:02d}시")
-                
-                    # 다음날 00시~05시
-                    night_hours = sorted(h for h in hours_set if 0 <= h <= 5)
-                    if night_hours:
-                        display_parts.append(f"다음날 {night_hours[0]:02d}시~{night_hours[-1]:02d}시")
-                
-                    return ", ".join(display_parts)
-
         
-                for date_key in sorted(date_dict.keys()):
-                    hours = date_dict[date_key]
-                    result += f"- {date_key} : {compress_hours(hours)}\n"
-                result += "\n"
+                for date_key in sorted(date_hours.keys()):
+                    hours = date_hours[date_key]
+        
+                    # 당일 07~23시
+                    day_hours = sorted(h for h in hours if 7 <= h <= 23)
+                    day_part = f"{day_hours[0]:02d}시~{day_hours[-1]:02d}시" if day_hours else ""
+        
+                    # 다음날 00~05시
+                    night_hours = sorted(h for h in hours if 0 <= h <= 5)
+                    night_part = f"다음날 {night_hours[0]:02d}시~{night_hours[-1]:02d}시" if night_hours else ""
+        
+                    display = ", ".join(part for part in [day_part, night_part] if part)
+        
+                    weekday = WEEKDAY_KO[date_key.strftime("%A")]
+                    result += f"- {date_key.strftime('%Y년 %m월 %d일')}({weekday}) : {display}\n"
                 
+                result += "\n"
                 items = [{"simpleText": {"text": result, "extra": {}}}]
             else:
                 items = [
@@ -288,6 +283,7 @@ def fallback():
                         }
                     }
                 ]
+
 
 
 
@@ -1783,6 +1779,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
