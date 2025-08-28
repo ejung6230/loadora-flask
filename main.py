@@ -211,110 +211,203 @@ def fallback():
         
         if match_chaos_gate:
             chaos_gate_command = match_chaos_gate.group(1).strip()
-        
-            # ---------- 전체 캘린더 데이터 ----------
+
+            # 전체 캘린더 데이터
             data = fetch_calendar()
-            today = NOW_KST.date()
-        
+
+            # CategoryName이 "카오스게이트"인 모든 아이템
             chaos_gates = [
                 item for item in data
                 if item.get("CategoryName") == "카오스게이트"
-                and any(datetime.fromisoformat(t).date() == today for t in item.get("StartTimes", []))
             ]
-        
-            logger.info("카게 목록: %s", chaos_gates)
-        
-            result = "◕ᴗ◕🌸\n오늘의 카오스게이트 정보를 알려드릴게요.\n"
-            result += "――――――――――――――\n\n"
-        
-            if chaos_gates:
-                # ---------- 최소 입장 레벨 ----------
-                all_levels = set()
-                for gate in chaos_gates:
-                    for ri in gate.get("RewardItems", []):
-                        if isinstance(ri, dict):
-                            item_level = ri.get("ItemLevel")
-                            if item_level:
-                                all_levels.add(item_level)
-        
-                if all_levels:
-                    result += f"❚ 최소 입장 레벨: {', '.join(map(str, sorted(all_levels)))}\n\n"
-        
-                # ---------- 입장 시간 정리 ----------
-                date_hours = defaultdict(list)
-                for gate in chaos_gates:
-                    for t in gate.get("StartTimes", []):
-                        dt = datetime.fromisoformat(t)
-                        date = dt.date()
-                        hour = dt.hour
-                        if 0 <= hour <= 5:  # 다음날 오전 시간은 전날 key로
-                            date -= timedelta(days=1)
-                        date_hours[date].append(hour)
-        
-                result += "❚ 카오스게이트 입장 시간\n"
-        
-                # 전체 일정용 범위 계산
-                overall_day_hours = []
-                overall_night_hours = []
-        
-                for date_key in sorted(date_hours.keys()):
-                    hours = date_hours[date_key]
-                    day_hours = sorted(h for h in hours if 7 <= h <= 23)
-                    night_hours = sorted(h for h in hours if 0 <= h <= 5)
-        
-                    if day_hours:
-                        overall_day_hours.extend(day_hours)
-                        day_part = f"{day_hours[0]:02d}시~{day_hours[-1]:02d}시"
-                    else:
-                        day_part = ""
-                    if night_hours:
-                        overall_night_hours.extend(night_hours)
-                        night_part = f"다음날 {night_hours[0]:02d}시~{night_hours[-1]:02d}시"
-                    else:
-                        night_part = ""
-        
-                    display = ", ".join(part for part in [day_part, night_part] if part)
-                    weekday = WEEKDAY_KO[date_key.strftime("%A")]
-                    result += f"- {date_key.strftime('%Y년 %m월 %d일')}({weekday}) : {display}\n"
-        
-                # ---------- 남은 시간 계산 ----------
-                now = NOW_KST
-                remaining_time = None
-                next_hour_display = None
-                for date_key in sorted(date_hours.keys()):
-                    for h in sorted(date_hours[date_key]):
-                        dt_check = datetime.combine(date_key, datetime.min.time()) + timedelta(hours=h)
-                        if dt_check > now:
-                            remaining_time = dt_check - now
-                            next_hour_display = h
+            
+            if match_chaos_gate.group(2):
+                text_chaos_gate = match_chaos_gate.group(2).strip()
+
+                result = f"◕ᴗ◕🌸\n전체 카오스게이트 정보를 알려드릴게요.\n"
+                result += "――――――――――――――\n\n"
+
+                if text_chaos_gate in ["전체", "ㅈㅊ"]:
+                    # ---------- 최소 입장 레벨 ----------
+                    all_levels = set()
+                    for gate in chaos_gates:
+                        for ri in gate.get("RewardItems", []):
+                            if isinstance(ri, dict):
+                                item_level = ri.get("ItemLevel")
+                                if item_level:
+                                    all_levels.add(item_level)
+            
+                    if all_levels:
+                        result += f"❚ 최소 입장 레벨: {', '.join(map(str, sorted(all_levels)))}\n\n"
+            
+                    # ---------- 입장 시간 정리 ----------
+                    date_hours = defaultdict(list)
+                    for gate in chaos_gates:
+                        for t in gate.get("StartTimes", []):
+                            dt = datetime.fromisoformat(t)
+                            date = dt.date()
+                            hour = dt.hour
+                            if 0 <= hour <= 5:  # 다음날 오전 시간은 전날 key로
+                                date -= timedelta(days=1)
+                            date_hours[date].append(hour)
+            
+                    result += "❚ 카오스게이트 입장 시간\n"
+            
+                    # 전체 일정용 범위 계산
+                    overall_day_hours = []
+                    overall_night_hours = []
+            
+                    for date_key in sorted(date_hours.keys()):
+                        hours = date_hours[date_key]
+                        day_hours = sorted(h for h in hours if 7 <= h <= 23)
+                        night_hours = sorted(h for h in hours if 0 <= h <= 5)
+            
+                        if day_hours:
+                            overall_day_hours.extend(day_hours)
+                            day_part = f"{day_hours[0]:02d}시~{day_hours[-1]:02d}시"
+                        else:
+                            day_part = ""
+                        if night_hours:
+                            overall_night_hours.extend(night_hours)
+                            night_part = f"다음날 {night_hours[0]:02d}시~{night_hours[-1]:02d}시"
+                        else:
+                            night_part = ""
+            
+                        display = ", ".join(part for part in [day_part, night_part] if part)
+                        weekday = WEEKDAY_KO[date_key.strftime("%A")]
+                        result += f"- {date_key.strftime('%Y년 %m월 %d일')}({weekday}) : {display}\n"
+            
+                    # ---------- 남은 시간 계산 ----------
+                    now = NOW_KST
+                    remaining_time = None
+                    next_hour_display = None
+                    for date_key in sorted(date_hours.keys()):
+                        for h in sorted(date_hours[date_key]):
+                            dt_check = datetime.combine(date_key, datetime.min.time()) + timedelta(hours=h)
+                            if dt_check > now:
+                                remaining_time = dt_check - now
+                                next_hour_display = h
+                                break
+                        if remaining_time:
                             break
+            
                     if remaining_time:
-                        break
-        
-                if remaining_time:
-                    hours_left, remainder = divmod(int(remaining_time.total_seconds()), 3600)
-                    minutes_left = remainder // 60
-                    result += f"⏰ {next_hour_display}시까지 {hours_left}시간 {minutes_left}분 남았습니다.\n"
-        
-                # ---------- 전체 일정 표시 (범위 형태) ----------
-                overall = []
-                if overall_day_hours:
-                    overall.append(f"{min(overall_day_hours):02d}시~{max(overall_day_hours):02d}시")
-                if overall_night_hours:
-                    overall.append(f"다음날 {min(overall_night_hours):02d}시~{max(overall_night_hours):02d}시")
-                if overall:
-                    result += f"일정: {', '.join(overall)}\n"
-        
-                items = [{"simpleText": {"text": result, "extra": {}}}]
+                        hours_left, remainder = divmod(int(remaining_time.total_seconds()), 3600)
+                        minutes_left = remainder // 60
+                        result += f"\n⏰ {next_hour_display}시까지 {hours_left}시간 {minutes_left}분 남았습니다.\n"
+            
+                    # ---------- 전체 일정 표시 (범위 형태) ----------
+                    overall = []
+                    if overall_day_hours:
+                        overall.append(f"{min(overall_day_hours):02d}시~{max(overall_day_hours):02d}시")
+                    if overall_night_hours:
+                        overall.append(f"다음날 {min(overall_night_hours):02d}시~{max(overall_night_hours):02d}시")
+                    if overall:
+                        result += f"일정: {', '.join(overall)}\n"
+            
+                    items = [{"simpleText": {"text": result, "extra": {}}}]
+                    
+                else:
+                    items = [
+                        {"simpleText": {"text": f"◕_◕💧\n정보를 조회할 수 없어요. '.카게 전체'를 정확하게 입력해주세요.", "extra": {}}},
+                    ]
             else:
-                items = [
-                    {
-                        "simpleText": {
-                            "text": "◕_◕💧\n오늘은 카오스게이트가 없어요.\n💡전체 정보를 보려면 클릭하세요.",
-                            "extra": {}
+                # 오늘 카게 정보
+                today = NOW_KST.date()
+            
+                logger.info("카게 목록: %s", chaos_gates)
+            
+                result = "◕ᴗ◕🌸\n오늘의 카오스게이트 정보를 알려드릴게요.\n"
+                result += "――――――――――――――\n\n"
+            
+                if chaos_gates:
+                    # ---------- 최소 입장 레벨 ----------
+                    all_levels = set()
+                    for gate in chaos_gates:
+                        for ri in gate.get("RewardItems", []):
+                            if isinstance(ri, dict):
+                                item_level = ri.get("ItemLevel")
+                                if item_level:
+                                    all_levels.add(item_level)
+            
+                    if all_levels:
+                        result += f"❚ 최소 입장 레벨: {', '.join(map(str, sorted(all_levels)))}\n\n"
+            
+                    # ---------- 입장 시간 정리 ----------
+                    date_hours = defaultdict(list)
+                    for gate in chaos_gates:
+                        for t in gate.get("StartTimes", []):
+                            dt = datetime.fromisoformat(t)
+                            date = dt.date()
+                            hour = dt.hour
+                            if 0 <= hour <= 5:  # 다음날 오전 시간은 전날 key로
+                                date -= timedelta(days=1)
+                            date_hours[date].append(hour)
+            
+                    result += "❚ 카오스게이트 입장 시간\n"
+            
+                    # 전체 일정용 범위 계산
+                    overall_day_hours = []
+                    overall_night_hours = []
+            
+                    for date_key in sorted(date_hours.keys()):
+                        hours = date_hours[date_key]
+                        day_hours = sorted(h for h in hours if 7 <= h <= 23)
+                        night_hours = sorted(h for h in hours if 0 <= h <= 5)
+            
+                        if day_hours:
+                            overall_day_hours.extend(day_hours)
+                            day_part = f"{day_hours[0]:02d}시~{day_hours[-1]:02d}시"
+                        else:
+                            day_part = ""
+                        if night_hours:
+                            overall_night_hours.extend(night_hours)
+                            night_part = f"다음날 {night_hours[0]:02d}시~{night_hours[-1]:02d}시"
+                        else:
+                            night_part = ""
+            
+                        display = ", ".join(part for part in [day_part, night_part] if part)
+                        weekday = WEEKDAY_KO[date_key.strftime("%A")]
+                        result += f"- {date_key.strftime('%Y년 %m월 %d일')}({weekday}) : {display}\n"
+            
+                    # ---------- 남은 시간 계산 ----------
+                    now = NOW_KST
+                    remaining_time = None
+                    next_hour_display = None
+                    for date_key in sorted(date_hours.keys()):
+                        for h in sorted(date_hours[date_key]):
+                            dt_check = datetime.combine(date_key, datetime.min.time()) + timedelta(hours=h)
+                            if dt_check > now:
+                                remaining_time = dt_check - now
+                                next_hour_display = h
+                                break
+                        if remaining_time:
+                            break
+            
+                    if remaining_time:
+                        hours_left, remainder = divmod(int(remaining_time.total_seconds()), 3600)
+                        minutes_left = remainder // 60
+                        result += f"\n⏰ {next_hour_display}시까지 {hours_left}시간 {minutes_left}분 남았습니다.\n"
+            
+                    # ---------- 전체 일정 표시 (범위 형태) ----------
+                    overall = []
+                    if overall_day_hours:
+                        overall.append(f"{min(overall_day_hours):02d}시~{max(overall_day_hours):02d}시")
+                    if overall_night_hours:
+                        overall.append(f"다음날 {min(overall_night_hours):02d}시~{max(overall_night_hours):02d}시")
+                    if overall:
+                        result += f"일정: {', '.join(overall)}\n"
+            
+                    items = [{"simpleText": {"text": result, "extra": {}}}]
+                else:
+                    items = [
+                        {
+                            "simpleText": {
+                                "text": "◕_◕💧\n오늘은 카오스게이트가 없어요.\n💡전체 정보를 보려면 클릭하세요.",
+                                "extra": {}
+                            }
                         }
-                    }
-                ]
+                    ]
 
 
         # ---------- 3. 모험섬 일정 관련 패턴 ----------
@@ -1809,6 +1902,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
