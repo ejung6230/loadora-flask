@@ -214,9 +214,8 @@ def fallback():
         
             # 전체 캘린더 데이터
             data = fetch_calendar()
-            today = NOW_KST.date()
+            today = NOW_KST.date()  # 한국시간 기준 (naive)
         
-            # 오늘 진행하는 카오스게이트 필터링
             chaos_gates = [
                 item for item in data
                 if item.get("CategoryName") == "카오스게이트"
@@ -241,82 +240,64 @@ def fallback():
                     result += f"❚ 최소 입장 레벨: {', '.join(map(str, sorted(all_levels)))}\n\n"
         
                 # ---------- 입장 시간 정리 ----------
-                date_dict = defaultdict(list)
+                from collections import defaultdict
+        
+                date_hours = defaultdict(list)
                 for gate in chaos_gates:
                     for t in gate.get("StartTimes", []):
                         dt = datetime.fromisoformat(t)
-                        dt_hour = dt.hour
-                        weekday = WEEKDAY_KO[dt.strftime("%A")]
-                        date_key = dt.strftime(f"%Y년 %m월 %d일") + f"({weekday})"
-                        date_dict[date_key].append(dt_hour)
+                        date = dt.date()
+                        hour = dt.hour
+                        # 00~05시는 전날의 "다음날 00시~05시"로 표시
+                        if 0 <= hour <= 5:
+                            date -= timedelta(days=1)
+                        date_hours[date].append(hour)
         
                 result += "❚ 카오스게이트 입장 시간\n"
         
-                def compress_hours(hours_list):
-                    """
-                    하루 단위 07시~다음날 05시 기준으로 압축해서,
-                    한 날짜 라인에 당일~다음날 범위를 표시
-                    """
-                    hours_set = set(hours_list)
-                    display_parts = []
+                for date_key in sorted(date_hours.keys()):
+                    hours = date_hours[date_key]
         
-                    # 당일 07시~23시
-                    day_hours = sorted(h for h in hours_set if 7 <= h <= 23)
-                    if day_hours:
-                        display_parts.append(f"{day_hours[0]:02d}시~{day_hours[-1]:02d}시")
+                    # 당일 07~23시
+                    day_hours = sorted(h for h in hours if 7 <= h <= 23)
+                    day_part = f"{day_hours[0]:02d}시~{day_hours[-1]:02d}시" if day_hours else ""
         
-                    # 다음날 00시~05시
-                    night_hours = sorted(h for h in hours_set if 0 <= h <= 5)
-                    if night_hours:
-                        display_parts.append(f"다음날 {night_hours[0]:02d}시~{night_hours[-1]:02d}시")
+                    # 다음날 00~05시
+                    night_hours = sorted(h for h in hours if 0 <= h <= 5)
+                    night_part = f"다음날 {night_hours[0]:02d}시~{night_hours[-1]:02d}시" if night_hours else ""
         
-                    return ", ".join(display_parts)
+                    display = ", ".join(part for part in [day_part, night_part] if part)
         
-                for date_key in sorted(date_dict.keys()):
-                    hours = date_dict[date_key]
-                    result += f"- {date_key} : {compress_hours(hours)}\n"
+                    weekday = WEEKDAY_KO[date_key.strftime("%A")]
+                    result += f"- {date_key.strftime('%Y년 %m월 %d일')}({weekday}) : {display}\n"
+        
+                    # ---------- 남은 시간 계산 ----------
+                    now = NOW_KST
+                    upcoming_hours = sorted(h for h in hours if h >= now.hour)
+                    if upcoming_hours:
+                        next_hour = upcoming_hours[0]
+                        next_dt = datetime.combine(date_key, datetime.min.time()) + timedelta(hours=next_hour)
+                        remaining = next_dt - now
+                        hours_left, remainder = divmod(int(remaining.total_seconds()), 3600)
+                        minutes_left = remainder // 60
+                        result += f"⏰ {next_hour}시까지 {hours_left}시간 {minutes_left}분 남았습니다.\n"
+        
+                    # 전체 일정 표시
+                    all_times = sorted(hours)
+                    time_list = ", ".join(f"{h:02d}시" for h in all_times)
+                    result += f"일정: {time_list}\n"
+        
                 result += "\n"
-        
-                # ---------- 오늘 입장 시간 + 다음 입장까지 남은 시간 ----------
-                today_hours = []
-                for gate in chaos_gates:
-                    for t in gate.get("StartTimes", []):
-                        dt = datetime.fromisoformat(t)
-                        if dt.date() == today:
-                            today_hours.append(dt.hour)
-                today_hours = sorted(set(today_hours))
-        
-                # 다음 입장 시간 계산
-                next_time = None
-                for hour in today_hours:
-                    target_dt = datetime.combine(today, datetime.min.time()) + timedelta(hours=hour)
-                    if target_dt > NOW_KST:
-                        next_time = target_dt
-                        break
-        
-                if next_time:
-                    delta = next_time - NOW_KST
-                    hours_left = delta.seconds // 3600
-                    minutes_left = (delta.seconds % 3600) // 60
-                    result += f"⏰ {next_time.strftime('%H')}시까지 {hours_left}시간 {minutes_left}분 남았습니다.\n"
-        
-                if today_hours:
-                    hours_text = ", ".join(f"{h:02d}시" for h in today_hours)
-                    result += f"일정: {hours_text}\n"
-        
                 items = [{"simpleText": {"text": result, "extra": {}}}]
             else:
                 items = [
                     {
                         "simpleText": {
-                            "text": "◕_◕💧\n오늘은 카오스게이트가 없어요.\n💡전체 정보를 보려면 클릭하세요.", 
+                            "text": "◕_◕💧\n오늘은 카오스게이트가 없어요.\n💡전체 정보를 보려면 클릭하세요.",
                             "extra": {}
                         }
                     }
                 ]
-
-
-
 
         # ---------- 3. 모험섬 일정 관련 패턴 ----------
         match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)(.*)$", user_input)
@@ -1810,6 +1791,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
