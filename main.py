@@ -205,7 +205,7 @@ def fallback():
 
         # ---------- 2. 카게 관련 패턴 ----------
         match_chaos_gate = re.match(
-            r"^(\.카오스게이트|카오스게이트|\.카게|카게|\.ㅋㅇㅅㄱㅇㅌ|ㅋㅇㅅㄱㅇㅌ|\.ㅋㄱ|ㅋㄱ)(.*)$", 
+            r"^(\.카오스게이트|카오스게이트|\.카게|카게|\.ㅋㅇㅅㄱㅇㅌ|ㅋㅇㅅㄱㅇㅌ|\.ㅋㄱ|ㅋㄱ)(.*)$",
             user_input
         )
         
@@ -248,7 +248,7 @@ def fallback():
                         dt = datetime.fromisoformat(t)
                         date = dt.date()
                         hour = dt.hour
-                        # 00~05시는 전날의 "다음날 00시~05시"로 표시
+                        # 00~05시는 전날 key로 묶음
                         if 0 <= hour <= 5:
                             date -= timedelta(days=1)
                         date_hours[date].append(hour)
@@ -258,36 +258,42 @@ def fallback():
                 for date_key in sorted(date_hours.keys()):
                     hours = date_hours[date_key]
         
-                    # 당일 07~23시
+                    # 낮과 다음날 시간 구분
                     day_hours = sorted(h for h in hours if 7 <= h <= 23)
-                    day_part = f"{day_hours[0]:02d}시~{day_hours[-1]:02d}시" if day_hours else ""
-        
-                    # 다음날 00~05시
                     night_hours = sorted(h for h in hours if 0 <= h <= 5)
+                    day_part = f"{day_hours[0]:02d}시~{day_hours[-1]:02d}시" if day_hours else ""
                     night_part = f"다음날 {night_hours[0]:02d}시~{night_hours[-1]:02d}시" if night_hours else ""
-        
                     display = ", ".join(part for part in [day_part, night_part] if part)
         
                     weekday = WEEKDAY_KO[date_key.strftime("%A")]
                     result += f"- {date_key.strftime('%Y년 %m월 %d일')}({weekday}) : {display}\n"
         
-                    # ---------- 남은 시간 계산 ----------
-                    now = NOW_KST
-                    upcoming_hours = sorted(h for h in hours if h >= now.hour)
-                    if upcoming_hours:
-                        next_hour = upcoming_hours[0]
-                        next_dt = datetime.combine(date_key, datetime.min.time()) + timedelta(hours=next_hour)
-                        remaining = next_dt - now
-                        hours_left, remainder = divmod(int(remaining.total_seconds()), 3600)
-                        minutes_left = remainder // 60
-                        result += f"⏰ {next_hour}시까지 {hours_left}시간 {minutes_left}분 남았습니다.\n"
+                # ---------- 남은 시간 계산 ----------
+                now = NOW_KST
+                remaining_time = None
+                next_hour_display = None
+                for date_key in sorted(date_hours.keys()):
+                    for h in sorted(date_hours[date_key]):
+                        dt_check = datetime.combine(date_key, datetime.min.time()) + timedelta(hours=h)
+                        if dt_check > now:
+                            remaining_time = dt_check - now
+                            next_hour_display = h
+                            break
+                    if remaining_time:
+                        break
         
-                    # 전체 일정 표시
-                    all_times = sorted(hours)
-                    time_list = ", ".join(f"{h:02d}시" for h in all_times)
-                    result += f"일정: {time_list}\n"
+                if remaining_time:
+                    hours_left, remainder = divmod(int(remaining_time.total_seconds()), 3600)
+                    minutes_left = remainder // 60
+                    result += f"⏰ {next_hour_display}시까지 {hours_left}시간 {minutes_left}분 남았습니다.\n"
         
-                result += "\n"
+                # ---------- 전체 일정 표시 ----------
+                all_times_list = []
+                for date_key in sorted(date_hours.keys()):
+                    all_times_list.extend(date_hours[date_key])
+                time_list = ", ".join(f"{h:02d}시" for h in sorted(all_times_list))
+                result += f"일정: {time_list}\n"
+        
                 items = [{"simpleText": {"text": result, "extra": {}}}]
             else:
                 items = [
@@ -298,6 +304,7 @@ def fallback():
                         }
                     }
                 ]
+
 
         # ---------- 3. 모험섬 일정 관련 패턴 ----------
         match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)(.*)$", user_input)
@@ -1791,6 +1798,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
