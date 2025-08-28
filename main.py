@@ -211,52 +211,50 @@ def fallback():
         
         if match_chaos_gate:
             chaos_gate_command = match_chaos_gate.group(1).strip()
-        
+            
             # 전체 캘린더 데이터
             data = fetch_calendar()
             today = NOW_KST.date()  # 한국시간 기준 (naive)
-        
-            # 오늘 진행하는 카오스게이트만 필터링
+            
             chaos_gates = [
                 item for item in data
                 if item.get("CategoryName") == "카오스게이트"
                 and any(datetime.fromisoformat(t).date() == today for t in item.get("StartTimes", []))
             ]
+            logger.info("카게 목록: %s", chaos_gates)
             
             result = "◕ᴗ◕🌸\n오늘의 카오스게이트 정보를 알려드릴게요.\n"
             result += "――――――――――――――\n\n"
-        
+            
             if chaos_gates:
-                # 전체 최소 입장 레벨 수집 (중복 제거)
-                all_levels = {gate.get("MinItemLevel") for gate in chaos_gates if gate.get("MinItemLevel")}
-                result += f"❚ 최소 입장 레벨: {', '.join(map(str, sorted(all_levels)))}\n\n"
+                # ---------- 최소 입장 레벨 ----------
+                all_levels = set()
+                for gate in chaos_gates:
+                    for ri in gate.get("RewardItems", []):
+                        if isinstance(ri, dict):
+                            item_level = ri.get("ItemLevel")
+                            if item_level:
+                                all_levels.add(item_level)
         
+                if all_levels:
+                    result += f"❚ 최소 입장 레벨: {', '.join(map(str, sorted(all_levels)))}\n\n"
+                
                 # ---------- 입장 시간 정리 ----------
+                from collections import defaultdict
                 date_dict = defaultdict(list)
                 for gate in chaos_gates:
                     for t in gate.get("StartTimes", []):
                         dt = datetime.fromisoformat(t)
-                        hour = dt.hour
-                        minute = dt.minute
+                        dt_hour = dt.hour
+                        weekday = WEEKDAY_KO[dt.strftime("%A")]
+                        date_key = dt.strftime(f"%Y년 %m월 %d일") + f"({weekday})"
+                        date_dict[date_key].append(dt_hour)
+                
+                result += "❚ 카오스게이트 입장 시간\n"
         
-                        # 분이 있으면 다음 시간으로 올림
-                        if minute > 0:
-                            hour += 1
-                            if hour == 24:
-                                hour = 0
-                                dt += timedelta(days=1)
-        
-                        # 하루 기준 06시~다음날 05시
-                        if hour < 6:
-                            date_key = (dt - timedelta(days=1)).strftime("%Y년 %m월 %d일")
-                        else:
-                            date_key = dt.strftime("%Y년 %m월 %d일")
-                        
-                        date_dict[date_key].append(hour)
-        
-                # 시간 범위 압축 함수
                 def compress_hours(hours_list):
-                    hours = sorted(set(hours_list))
+                    # 07시~다음날 05시 기준 정렬
+                    hours = sorted(set(hours_list), key=lambda x: (x+17)%24)
                     ranges = []
                     start = hours[0]
                     end = start
@@ -264,10 +262,12 @@ def fallback():
                         if h is not None and h == (end + 1) % 24:
                             end = h
                         else:
-                            # 다음날 표시 여부
+                            # 범위 표시
                             if start <= end:
-                                if start < 6:  # 0~5시는 다음날
+                                if start < 6:
                                     ranges.append(f"다음날 {start:02d}시~{end:02d}시")
+                                elif end < 6:
+                                    ranges.append(f"{start:02d}시~다음날 {end:02d}시")
                                 else:
                                     ranges.append(f"{start:02d}시~{end:02d}시")
                             else:
@@ -276,14 +276,11 @@ def fallback():
                                 start = end = h
                     return ", ".join(ranges)
         
-                # 정리해서 출력
-                result += "❚ 카오스게이트 입장 시간\n"
                 for date_key in sorted(date_dict.keys()):
-                    dt_obj = datetime.strptime(date_key, "%Y년 %m월 %d일")
-                    weekday = WEEKDAY_KO[dt_obj.strftime("%A")]
-                    result += f"- {date_key}({weekday}) : {compress_hours(date_dict[date_key])}\n"
+                    hours = date_dict[date_key]
+                    result += f"- {date_key} : {compress_hours(hours)}\n"
                 result += "\n"
-        
+                
                 items = [{"simpleText": {"text": result, "extra": {}}}]
             else:
                 items = [
@@ -1789,6 +1786,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
