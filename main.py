@@ -247,23 +247,33 @@ def fallback():
                         dt = datetime.fromisoformat(t)
                         date = dt.date()
                         hour = dt.hour
-                        # 00~05시는 전날 key로 묶음
-                        if 0 <= hour <= 5:
+                        if 0 <= hour <= 5:  # 다음날 오전 시간은 전날 key로
                             date -= timedelta(days=1)
                         date_hours[date].append(hour)
         
                 result += "❚ 카오스게이트 입장 시간\n"
         
+                # 전체 일정용 범위 계산
+                overall_day_hours = []
+                overall_night_hours = []
+        
                 for date_key in sorted(date_hours.keys()):
                     hours = date_hours[date_key]
-        
-                    # 낮과 다음날 시간 구분
                     day_hours = sorted(h for h in hours if 7 <= h <= 23)
                     night_hours = sorted(h for h in hours if 0 <= h <= 5)
-                    day_part = f"{day_hours[0]:02d}시~{day_hours[-1]:02d}시" if day_hours else ""
-                    night_part = f"다음날 {night_hours[0]:02d}시~{night_hours[-1]:02d}시" if night_hours else ""
-                    display = ", ".join(part for part in [day_part, night_part] if part)
         
+                    if day_hours:
+                        overall_day_hours.extend(day_hours)
+                        day_part = f"{day_hours[0]:02d}시~{day_hours[-1]:02d}시"
+                    else:
+                        day_part = ""
+                    if night_hours:
+                        overall_night_hours.extend(night_hours)
+                        night_part = f"다음날 {night_hours[0]:02d}시~{night_hours[-1]:02d}시"
+                    else:
+                        night_part = ""
+        
+                    display = ", ".join(part for part in [day_part, night_part] if part)
                     weekday = WEEKDAY_KO[date_key.strftime("%A")]
                     result += f"- {date_key.strftime('%Y년 %m월 %d일')}({weekday}) : {display}\n"
         
@@ -286,12 +296,14 @@ def fallback():
                     minutes_left = remainder // 60
                     result += f"⏰ {next_hour_display}시까지 {hours_left}시간 {minutes_left}분 남았습니다.\n"
         
-                # ---------- 전체 일정 표시 (중복 제거) ----------
-                all_times_set = set()
-                for date_key in sorted(date_hours.keys()):
-                    all_times_set.update(date_hours[date_key])
-                time_list = ", ".join(f"{h:02d}시" for h in sorted(all_times_set))
-                result += f"일정: {time_list}\n"
+                # ---------- 전체 일정 표시 (범위 형태) ----------
+                overall = []
+                if overall_day_hours:
+                    overall.append(f"{min(overall_day_hours):02d}시~{max(overall_day_hours):02d}시")
+                if overall_night_hours:
+                    overall.append(f"다음날 {min(overall_night_hours):02d}시~{max(overall_night_hours):02d}시")
+                if overall:
+                    result += f"일정: {', '.join(overall)}\n"
         
                 items = [{"simpleText": {"text": result, "extra": {}}}]
             else:
@@ -1797,6 +1809,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
