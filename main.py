@@ -248,21 +248,37 @@ def fallback():
                             hour += 1
                             if hour == 24:
                                 hour = 0
-                                dt += timedelta(days=1)  # 날짜 넘어감
+                                dt += timedelta(days=1)
         
-                        # 하루 기준 06시~다음날 04시
+                        # 하루 기준 06시~다음날 05시
                         if hour < 6:
                             date_key = (dt - timedelta(days=1)).strftime("%Y년 %m월 %d일")
                         else:
                             date_key = dt.strftime("%Y년 %m월 %d일")
         
-                        hour_str = f"{hour}시"
-                        date_dict[date_key].append(hour_str)
+                        date_dict[date_key].append(hour)
+        
+                # 시간 범위 압축 함수
+                def compress_hours(hours_list):
+                    hours = sorted(set(hours_list))
+                    start = hours[0]
+                    end = start
+                    ranges = []
+                    for h in hours[1:] + [None]:  # 마지막 처리용
+                        if h is not None and h == (end + 1) % 24:
+                            end = h
+                        else:
+                            if start <= end:
+                                ranges.append(f"{start:02d}시~{end:02d}시")
+                            else:  # 다음날로 넘어가는 경우
+                                ranges.append(f"{start:02d}시~다음날 {end:02d}시")
+                            if h is not None:
+                                start = end = h
+                    return ", ".join(ranges)
         
                 # 정리해서 출력
                 for date_key in sorted(date_dict.keys()):
-                    hours = sorted(set(date_dict[date_key]), key=lambda x: int(x.replace("시", "")))
-                    result += f"- {date_key} : {', '.join(hours)}\n"
+                    result += f"- {date_key} : {compress_hours(date_dict[date_key])}\n"
                 result += "\n"
         
                 items = [{"simpleText": {"text": result, "extra": {}}}]
@@ -1770,6 +1786,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
