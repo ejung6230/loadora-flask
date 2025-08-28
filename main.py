@@ -253,27 +253,22 @@ def fallback():
                 result += "❚ 카오스게이트 입장 시간\n"
         
                 def compress_hours(hours_list):
-                    # 07시~다음날 05시 기준 정렬
-                    hours = sorted(set(hours_list), key=lambda x: (x+17)%24)
+                    """
+                    07시~다음날 05시 기준으로 범위 압축
+                    """
+                    hours_set = set(hours_list)
                     ranges = []
-                    start = hours[0]
-                    end = start
-                    for h in hours[1:] + [None]:
-                        if h is not None and h == (end + 1) % 24:
-                            end = h
-                        else:
-                            # 범위 표시
-                            if start <= end:
-                                if start < 6:
-                                    ranges.append(f"다음날 {start:02d}시~{end:02d}시")
-                                elif end < 6:
-                                    ranges.append(f"{start:02d}시~다음날 {end:02d}시")
-                                else:
-                                    ranges.append(f"{start:02d}시~{end:02d}시")
-                            else:
-                                ranges.append(f"{start:02d}시~다음날 {end:02d}시")
-                            if h is not None:
-                                start = end = h
+                
+                    # 당일 07시~23시
+                    day_hours = sorted(h for h in hours_set if 7 <= h <= 23)
+                    if day_hours:
+                        ranges.append(f"{day_hours[0]:02d}시~{day_hours[-1]:02d}시")
+                
+                    # 다음날 00시~05시
+                    night_hours = sorted(h for h in hours_set if 0 <= h <= 5)
+                    if night_hours:
+                        ranges.append(f"다음날 {night_hours[0]:02d}시~{night_hours[-1]:02d}시")
+                
                     return ", ".join(ranges)
         
                 for date_key in sorted(date_dict.keys()):
@@ -1786,6 +1781,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
