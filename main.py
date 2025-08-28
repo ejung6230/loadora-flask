@@ -228,7 +228,7 @@ def fallback():
             
             for gate in chaos_gates:
                 name = gate.get("ContentsName", "이름 없음")
-                times = gate.get("StartTimes", [])
+                start_times = gate.get("StartTimes", [])
                 icon = gate.get("ContentsIcon", "")
                 location = gate.get("Location", "")
                 min_item_level = gate.get("MinItemLevel", "정보 없음")
@@ -1767,6 +1767,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
