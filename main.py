@@ -210,13 +210,11 @@ def fallback():
         )
         if match_chaos_gate:
             chaos_gate_command = match_chaos_gate.group(1).strip()
-        
+            
             # 전체 캘린더 데이터
             data = fetch_calendar()
+            today = NOW_KST.date()
             
-            today = NOW_KST.date()  # 현재 한국 시간 (naive)
-            
-            # 오늘 진행하는 카오스게이트만 필터링
             chaos_gates = [
                 item for item in data
                 if item.get("CategoryName") == "카오스게이트"
@@ -225,55 +223,36 @@ def fallback():
             
             result = f"◕ᴗ◕🌸\n오늘의 카오스게이트 정보를 알려드릴게요.\n"
             result += "――――――――――――――\n\n"
-            
-            for gate in chaos_gates:
-                name = gate.get("ContentsName", "이름 없음")
-                start_times = gate.get("StartTimes", [])
-                icon = gate.get("ContentsIcon", "")
-                location = gate.get("Location", "")
-                min_item_level = gate.get("MinItemLevel", "정보 없음")
-                
-                result += f"❚ 최소 입장 레벨: {min_item_level}\n\n"
-        
-                # ---------- 입장 시간 처리 ----------
-                from collections import defaultdict
-                date_dict = defaultdict(list)
-                result += "❚ 카오스게이트 입장 시간\n"
-                for t in start_times:
-                    dt = datetime.fromisoformat(t)
-                    weekday = WEEKDAY_KO[dt.strftime("%A")]  # 영어 요일 → 한글 요일
-                    date_key = dt.strftime(f"%Y년 %m월 %d일") + f"({weekday})"
-                    hour_str = dt.strftime("%H시")
-                    date_dict[date_key].append(hour_str)
-        
-                if date_dict:
-                    for date_key in sorted(date_dict.keys()):
-                        hours = sorted(set(date_dict[date_key]), key=lambda x: int(x.replace("시", "")))
-                        result += f"- {date_key} : {', '.join(hours)}\n"
-                else:
-                    result += "- 없음\n"
-                result += "\n"
-        
-                # RewardItems 안전 처리
-                reward_items = []
-                for ri in gate.get("RewardItems", []):
-                    if isinstance(ri, dict):
-                        items_list = ri.get("Items", [])
-                        reward_items.extend([item.get("Name") for item in items_list if item.get("Name")])
         
             if chaos_gates:
-                # 카오스게이트 데이터가 있을 때만
+                # 최소 입장 레벨 (보통 다 동일하니 첫 번째 기준)
+                min_item_level = chaos_gates[0].get("MinItemLevel", "정보 없음")
+                result += f"❚ 최소 입장 레벨: {min_item_level}\n\n"
+                result += "❚ 카오스게이트 입장 시간\n"
+        
+                from collections import defaultdict
+                date_dict = defaultdict(list)
+        
+                for gate in chaos_gates:
+                    for t in gate.get("StartTimes", []):
+                        dt = datetime.fromisoformat(t)
+                        weekday = WEEKDAY_KO[dt.strftime("%A")]
+                        date_key = dt.strftime(f"%Y년 %m월 %d일") + f"({weekday})"
+                        hour_str = dt.strftime("%H시")
+                        date_dict[date_key].append(hour_str)
+        
+                for date_key in sorted(date_dict.keys()):
+                    hours = sorted(set(date_dict[date_key]), key=lambda x: int(x.replace("시", "")))
+                    result += f"- {date_key} : {', '.join(hours)}\n"
+        
                 items = [{"simpleText": {"text": result, "extra": {}}}]
             else:
-                # 데이터 없으면 텍스트 카드만
-                items = [
-                    {
-                        "simpleText": {
-                            "text": "◕_◕💧\n오늘은 카오스게이트가 없어요.\n💡전체 정보를 보려면 클릭하세요.", 
-                            "extra": {}
-                        }
+                items = [{
+                    "simpleText": {
+                        "text": "◕_◕💧\n오늘은 카오스게이트가 없어요.\n💡전체 정보를 보려면 클릭하세요.",
+                        "extra": {}
                     }
-                ]
+                }]
 
         # ---------- 3. 모험섬 일정 관련 패턴 ----------
         match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)(.*)$", user_input)
@@ -1767,6 +1746,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
