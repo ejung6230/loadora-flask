@@ -221,6 +221,7 @@ def fallback():
                 if item.get("CategoryName") == "카오스게이트"
                 and any(datetime.fromisoformat(t).date() == today for t in item.get("StartTimes", []))
             ]
+            logger.info("카게 목록: %s", chaos_gates)
             
             result = "◕ᴗ◕🌸\n오늘의 카오스게이트 정보를 알려드릴게요.\n"
             result += "――――――――――――――\n\n"
@@ -1751,6 +1752,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
