@@ -222,8 +222,7 @@ def fallback():
                 if item.get("CategoryName") == "카오스게이트"
                 and any(datetime.fromisoformat(t).date() == today for t in item.get("StartTimes", []))
             ]
-            logger.info("카게 목록: %s", chaos_gates)
-        
+            
             result = "◕ᴗ◕🌸\n오늘의 카오스게이트 정보를 알려드릴게요.\n"
             result += "――――――――――――――\n\n"
         
@@ -233,10 +232,7 @@ def fallback():
                 result += f"❚ 최소 입장 레벨: {', '.join(map(str, sorted(all_levels)))}\n\n"
         
                 # ---------- 입장 시간 정리 ----------
-                from collections import defaultdict
                 date_dict = defaultdict(list)
-                result += "❚ 카오스게이트 입장 시간\n"
-        
                 for gate in chaos_gates:
                     for t in gate.get("StartTimes", []):
                         dt = datetime.fromisoformat(t)
@@ -255,7 +251,7 @@ def fallback():
                             date_key = (dt - timedelta(days=1)).strftime("%Y년 %m월 %d일")
                         else:
                             date_key = dt.strftime("%Y년 %m월 %d일")
-        
+                        
                         date_dict[date_key].append(hour)
         
                 # 시간 범위 압축 함수
@@ -264,27 +260,28 @@ def fallback():
                     ranges = []
                     start = hours[0]
                     end = start
-                
                     for h in hours[1:] + [None]:
                         if h is not None and h == (end + 1) % 24:
                             end = h
                         else:
-                            # 다음날 표시 여부 결정
+                            # 다음날 표시 여부
                             if start <= end:
-                                if start >= 0 and start < 6:  # 0~5시는 다음날
+                                if start < 6:  # 0~5시는 다음날
                                     ranges.append(f"다음날 {start:02d}시~{end:02d}시")
                                 else:
                                     ranges.append(f"{start:02d}시~{end:02d}시")
-                            else:  # 23->0처럼 넘어가는 경우
+                            else:
                                 ranges.append(f"{start:02d}시~다음날 {end:02d}시")
                             if h is not None:
                                 start = end = h
                     return ", ".join(ranges)
-
         
                 # 정리해서 출력
+                result += "❚ 카오스게이트 입장 시간\n"
                 for date_key in sorted(date_dict.keys()):
-                    result += f"- {date_key} : {compress_hours(date_dict[date_key])}\n"
+                    dt_obj = datetime.strptime(date_key, "%Y년 %m월 %d일")
+                    weekday = WEEKDAY_KO[dt_obj.strftime("%A")]
+                    result += f"- {date_key}({weekday}) : {compress_hours(date_dict[date_key])}\n"
                 result += "\n"
         
                 items = [{"simpleText": {"text": result, "extra": {}}}]
@@ -1792,6 +1789,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
