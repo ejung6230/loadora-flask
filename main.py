@@ -212,15 +212,16 @@ def fallback():
         if match_chaos_gate:
             chaos_gate_command = match_chaos_gate.group(1).strip()
         
-            # 전체 캘린더 데이터
+            # ---------- 전체 캘린더 데이터 ----------
             data = fetch_calendar()
-            today = NOW_KST.date()  # 한국시간 기준 (naive)
+            today = NOW_KST.date()
         
             chaos_gates = [
                 item for item in data
                 if item.get("CategoryName") == "카오스게이트"
                 and any(datetime.fromisoformat(t).date() == today for t in item.get("StartTimes", []))
             ]
+        
             logger.info("카게 목록: %s", chaos_gates)
         
             result = "◕ᴗ◕🌸\n오늘의 카오스게이트 정보를 알려드릴게요.\n"
@@ -240,8 +241,6 @@ def fallback():
                     result += f"❚ 최소 입장 레벨: {', '.join(map(str, sorted(all_levels)))}\n\n"
         
                 # ---------- 입장 시간 정리 ----------
-                from collections import defaultdict
-        
                 date_hours = defaultdict(list)
                 for gate in chaos_gates:
                     for t in gate.get("StartTimes", []):
@@ -287,11 +286,11 @@ def fallback():
                     minutes_left = remainder // 60
                     result += f"⏰ {next_hour_display}시까지 {hours_left}시간 {minutes_left}분 남았습니다.\n"
         
-                # ---------- 전체 일정 표시 ----------
-                all_times_list = []
+                # ---------- 전체 일정 표시 (중복 제거) ----------
+                all_times_set = set()
                 for date_key in sorted(date_hours.keys()):
-                    all_times_list.extend(date_hours[date_key])
-                time_list = ", ".join(f"{h:02d}시" for h in sorted(all_times_list))
+                    all_times_set.update(date_hours[date_key])
+                time_list = ", ".join(f"{h:02d}시" for h in sorted(all_times_set))
                 result += f"일정: {time_list}\n"
         
                 items = [{"simpleText": {"text": result, "extra": {}}}]
@@ -1798,6 +1797,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
