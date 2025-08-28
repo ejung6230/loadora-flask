@@ -251,25 +251,27 @@ def fallback():
                         date_dict[date_key].append(dt_hour)
                 
                 result += "❚ 카오스게이트 입장 시간\n"
-        
+
                 def compress_hours(hours_list):
                     """
-                    07시~다음날 05시 기준으로 범위 압축
+                    하루 단위 07시~다음날 05시 기준으로 압축해서,
+                    한 날짜 라인에 당일~다음날 범위를 표시
                     """
                     hours_set = set(hours_list)
-                    ranges = []
+                    display_parts = []
                 
                     # 당일 07시~23시
                     day_hours = sorted(h for h in hours_set if 7 <= h <= 23)
                     if day_hours:
-                        ranges.append(f"{day_hours[0]:02d}시~{day_hours[-1]:02d}시")
+                        display_parts.append(f"{day_hours[0]:02d}시~{day_hours[-1]:02d}시")
                 
                     # 다음날 00시~05시
                     night_hours = sorted(h for h in hours_set if 0 <= h <= 5)
                     if night_hours:
-                        ranges.append(f"다음날 {night_hours[0]:02d}시~{night_hours[-1]:02d}시")
+                        display_parts.append(f"다음날 {night_hours[0]:02d}시~{night_hours[-1]:02d}시")
                 
-                    return ", ".join(ranges)
+                    return ", ".join(display_parts)
+
         
                 for date_key in sorted(date_dict.keys()):
                     hours = date_dict[date_key]
@@ -1781,6 +1783,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
