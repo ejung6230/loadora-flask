@@ -261,20 +261,26 @@ def fallback():
                 # 시간 범위 압축 함수
                 def compress_hours(hours_list):
                     hours = sorted(set(hours_list))
+                    ranges = []
                     start = hours[0]
                     end = start
-                    ranges = []
-                    for h in hours[1:] + [None]:  # 마지막 처리용
+                
+                    for h in hours[1:] + [None]:
                         if h is not None and h == (end + 1) % 24:
                             end = h
                         else:
+                            # 다음날 표시 여부 결정
                             if start <= end:
-                                ranges.append(f"{start:02d}시~{end:02d}시")
-                            else:  # 다음날로 넘어가는 경우
+                                if start >= 0 and start < 6:  # 0~5시는 다음날
+                                    ranges.append(f"다음날 {start:02d}시~{end:02d}시")
+                                else:
+                                    ranges.append(f"{start:02d}시~{end:02d}시")
+                            else:  # 23->0처럼 넘어가는 경우
                                 ranges.append(f"{start:02d}시~다음날 {end:02d}시")
                             if h is not None:
                                 start = end = h
                     return ", ".join(ranges)
+
         
                 # 정리해서 출력
                 for date_key in sorted(date_dict.keys()):
@@ -1786,6 +1792,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
