@@ -227,9 +227,17 @@ def fallback():
             result += "――――――――――――――\n\n"
             
             if chaos_gates:
-                # 전체 최소 입장 레벨 수집 (중복 제거)
-                all_levels = {gate.get("MinItemLevel") for gate in chaos_gates if gate.get("MinItemLevel")}
-                result += f"❚ 최소 입장 레벨: {', '.join(map(str, sorted(all_levels)))}\n\n"
+                # ✅ RewardItems[].ItemLevel 기준으로 전체 최소 입장 레벨 수집 (중복 제거)
+                all_levels = set()
+                for gate in chaos_gates:
+                    for ri in gate.get("RewardItems", []):
+                        if isinstance(ri, dict):
+                            item_level = ri.get("ItemLevel")
+                            if item_level:
+                                all_levels.add(item_level)
+
+                if all_levels:
+                    result += f"❚ 최소 입장 레벨: {', '.join(map(str, sorted(all_levels)))}\n\n"
             
                 # ---------- 입장 시간 정리 ----------
                 from collections import defaultdict
@@ -259,6 +267,7 @@ def fallback():
                         }
                     }
                 ]
+
 
         # ---------- 3. 모험섬 일정 관련 패턴 ----------
         match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)(.*)$", user_input)
@@ -1752,6 +1761,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
