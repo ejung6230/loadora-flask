@@ -208,82 +208,56 @@ def fallback():
             r"^(\.카오스게이트|카오스게이트|\.카게|카게|\.ㅋㅇㅅㄱㅇㅌ|ㅋㅇㅅㄱㅇㅌ|\.ㅋㄱ|ㅋㄱ)(.*)$", 
             user_input
         )
+        
         if match_chaos_gate:
             chaos_gate_command = match_chaos_gate.group(1).strip()
         
             # 전체 캘린더 데이터
             data = fetch_calendar()
             today = NOW_KST.date()  # 한국시간 기준 (naive)
-        
-            # 오늘 일정이 최소 1개라도 포함된 카오스게이트만 선택
+            
             chaos_gates = [
                 item for item in data
                 if item.get("CategoryName") == "카오스게이트"
                 and any(datetime.fromisoformat(t).date() == today for t in item.get("StartTimes", []))
             ]
-        
+            
             result = "◕ᴗ◕🌸\n오늘의 카오스게이트 정보를 알려드릴게요.\n"
             result += "――――――――――――――\n\n"
-        
+            
             if chaos_gates:
-                # 1) 최소 입장 레벨: 전체에서 고유값 수집
-                level_set = set()
-                for gate in chaos_gates:
-                    lvl = gate.get("MinItemLevel")
-                    if lvl:
-                        level_set.add(lvl)
-                if level_set:
-                    levels_sorted = ", ".join(str(x) for x in sorted(level_set))
-                    result += f"❚ 최소 입장 레벨: {levels_sorted}\n\n"
-                else:
-                    result += "❚ 최소 입장 레벨: 정보 없음\n\n"
-        
-                # 2) 날짜별 입장 시간: 중복 제거(set) 후 정렬
+                # 전체 최소 입장 레벨 수집 (중복 제거)
+                all_levels = {gate.get("MinItemLevel") for gate in chaos_gates if gate.get("MinItemLevel")}
+                result += f"❚ 최소 입장 레벨: {', '.join(map(str, sorted(all_levels)))}\n\n"
+            
+                # ---------- 입장 시간 정리 ----------
                 from collections import defaultdict
-                date_to_hours = defaultdict(set)   # key: date(YYYY-MM-DD), val: set of int hours
-        
+                date_dict = defaultdict(list)
+                result += "❚ 카오스게이트 입장 시간\n"
+                
                 for gate in chaos_gates:
                     for t in gate.get("StartTimes", []):
                         dt = datetime.fromisoformat(t)
-                        date_to_hours[dt.date()].add(dt.hour)
-        
-                if date_to_hours:
-                    result += "❚ 카오스게이트 입장 시간\n"
-                    for d in sorted(date_to_hours.keys()):
-                        weekday_ko = WEEKDAY_KO[datetime(d.year, d.month, d.day).strftime("%A")]
-                        hours = sorted(date_to_hours[d])
-                        hour_str = ", ".join(f"{h:02d}시" for h in hours)
-                        result += f"- {d.strftime('%Y년 %m월 %d일')}({weekday_ko}) : {hour_str}\n"
-                    result += "\n"
-                else:
-                    result += "❚ 카오스게이트 입장 시간\n- 없음\n\n"
-        
-                # 3) 지역별 최소 레벨(원하면 표시): (이름, 위치, 레벨) 기준 중복 제거
-                seen = set()
-                region_rows = []
-                for gate in chaos_gates:
-                    name = (gate.get("ContentsName") or "이름 없음").strip()
-                    location = (gate.get("Location") or "").strip()
-                    lvl = gate.get("MinItemLevel") or "정보 없음"
-                    key = (name, location, lvl)
-                    if key not in seen:
-                        seen.add(key)
-                        region_rows.append((name, location, lvl))
-        
-                if region_rows:
-                    result += "❚ 지역별 최소 입장 레벨\n"
-                    for name, location, lvl in sorted(region_rows, key=lambda x: (x[0], x[1], str(x[2]))):
-                        tail = f" ({location})" if location else ""
-                        result += f"- {name}{tail} : {lvl}\n"
-        
-                items = [{"simpleText": {"text": result.rstrip(), "extra": {}}}]
+                        weekday = WEEKDAY_KO[dt.strftime("%A")]
+                        date_key = dt.strftime(f"%Y년 %m월 %d일") + f"({weekday})"
+                        hour_str = dt.strftime("%H시")
+                        date_dict[date_key].append(hour_str)
+            
+                for date_key in sorted(date_dict.keys()):
+                    hours = sorted(set(date_dict[date_key]), key=lambda x: int(x.replace("시", "")))
+                    result += f"- {date_key} : {', '.join(hours)}\n"
+                result += "\n"
+            
+                items = [{"simpleText": {"text": result, "extra": {}}}]
             else:
-                items = [{
-                    "simpleText": {
-                        "text": "◕_◕💧\n오늘은 카오스게이트가 없어요.\n💡전체 정보를 보려면 클릭하세요.",
-                        "extra": {}
+                items = [
+                    {
+                        "simpleText": {
+                            "text": "◕_◕💧\n오늘은 카오스게이트가 없어요.\n💡전체 정보를 보려면 클릭하세요.", 
+                            "extra": {}
+                        }
                     }
-                }]
+                ]
 
         # ---------- 3. 모험섬 일정 관련 패턴 ----------
         match_adventure_island = re.match(r"^(\.모험섬|모험섬|\.ㅁㅎㅅ|ㅁㅎㅅ)(.*)$", user_input)
@@ -1777,6 +1751,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
