@@ -789,9 +789,7 @@ def fallback():
                     minutes = remainder // 60
                     response_text += f"⏰ {next_time.strftime('%H시 %M분')}까지 {hours}시간 {minutes}분 남았습니다.\n"
                 else:
-                    if not pattern_groups:
-                        response_text += ""
-                    else:
+                    if pattern_groups:
                         response_text += "✅ 오늘 일정이 모두 종료되었습니다.\n"
 
         
@@ -2046,6 +2044,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
