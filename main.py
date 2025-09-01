@@ -703,26 +703,32 @@ def fallback():
                 return today_times
         
             # 일정 요약 텍스트 생성
-            response_text = "◕ᴗ◕🌸\n오늘의 컨텐츠 정보를 알려드릴게요.\n\n"
-
+            response_text = "◕ᴗ◕🌸\n오늘의 컨텐츠 일정을 알려드릴게요.\n\n"
+            
             for cat_name, items in categories:
                 response_text += f"❙ {cat_name} 일정\n"
                 for item in items:
                     today_start_times = filter_today_start_times(item) or []
                     # 중복 제거 + 정렬
-                    today_start_times = sorted(set(today_start_times))
-                    
+                    today_start_times = sorted(set(today_start_times), key=lambda x: datetime.strptime(x, "%H:%M"))
+            
                     response_text += f"❛{item['ContentsName']}❜ 오늘 일정\n"
+            
                     if today_start_times:
-                        response_text += "".join(f"- {t}\n" for t in today_start_times)
+                        # "00시 00분" 포맷으로 변환
+                        times_text = " · ".join(f"{t[:2]}시 {t[3:]}분" for t in today_start_times)
+                        response_text += f"{times_text}\n"
                     else:
                         response_text += "- 오늘은 일정이 없습니다.\n"
+            
                     response_text += "\n"
+
                     
             # 전체 response_text 로그
             logger.info("response_text: %s", response_text)
             
             if len(response_text) <= 400:
+                logger.info("400자이내: %s", "400자 이내다!")
                 use_share_button = True
 
         # ---------- 4. 원정대 관련 패턴 ----------
@@ -1970,6 +1976,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
