@@ -712,14 +712,28 @@ def fallback():
             def summarize_times(times):
                 if not times:
                     return "오늘은 일정이 없습니다."
+                
+                def format_time(dt):
+                    if dt.minute == 0:
+                        return dt.strftime("%H시")
+                    return dt.strftime("%H시 %M분")
+                
                 if len(times) == 1:
-                    return times[0].strftime("%H시 %M분")
+                    return format_time(times[0])
+                
+                # 일정 간격 확인
                 intervals = [(times[i + 1] - times[i]).seconds // 60 for i in range(len(times) - 1)]
                 if all(interval == intervals[0] for interval in intervals):
                     start, end = times[0], times[-1]
-                    end_text = f"다음날 {end.strftime('%H시 %M분')}" if end.date() != start.date() else end.strftime("%H시 %M분")
-                    return f"{start.strftime('%H시 %M분')} ~ {end_text} ({intervals[0]}분 간격)"
-                return ", ".join(f"{'다음날 ' if dt.date()!=DAY_START.date() else ''}{dt.strftime('%H시 %M분')}" for dt in times)
+                    end_text = f"다음날 {format_time(end)}" if end.date() != start.date() else format_time(end)
+                    return f"{format_time(start)} ~ {end_text} ({intervals[0]}분 간격)"
+                
+                # 불규칙 일정은 나열
+                time_texts = []
+                for dt in times:
+                    day_prefix = "다음날 " if dt.date() != DAY_START.date() else ""
+                    time_texts.append(f"{day_prefix}{format_time(dt)}")
+                return ", ".join(time_texts)
         
             # ---------- 이름 그룹화 (공통 접두어만 밖으로) ----------
             def group_names(names):
@@ -2029,6 +2043,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
