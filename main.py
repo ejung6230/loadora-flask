@@ -761,7 +761,7 @@ def fallback():
             
                 if len(suffixes) >= 8:
                     # 접두어 + 첫 번째 suffix, 나머지 외 N
-                    return f"{prefix}{suffixes[0]} 외 {len(suffixes)-1}"
+                    return f"{suffixes[0]} 외 {len(suffixes)-1}"
             
                 if suffixes:
                     return f"{prefix}{', '.join(suffixes)}"
@@ -2056,6 +2056,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
