@@ -712,11 +712,22 @@ def fallback():
             def summarize_times(times):
                 if not times:
                     return "- 없음"
-                
+
                 def format_time(dt):
-                    if dt.minute == 0:
-                        return dt.strftime("%H시")
-                    return dt.strftime("%H시 %M분")
+                    hour = dt.hour
+                    minute = dt.minute
+                
+                    # 분이 50일 때만 다음 시간으로 올림
+                    if minute == 50:
+                        hour += 1
+                        if hour == 24:
+                            hour = 0
+                        minute = 0  # 반올림 후 분은 0으로 처리
+                
+                    if minute == 0:
+                        return f"{hour:02d}시"
+                    else:
+                        return f"{hour:02d}시 {minute:02d}분"
                 
                 if len(times) == 1:
                     return format_time(times[0])
@@ -2056,6 +2067,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
