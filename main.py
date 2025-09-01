@@ -55,7 +55,7 @@ WEEKDAY_KO = {
 def fetch_calendar():
     url = "https://developer-lostark.game.onstove.com/gamecontents/calendar"
     try:
-        response = requests.get(url, headers=HEADERS, timeout=4.5)
+        response = requests.get(url, headers=HEADERS, timeout=3.5)
         response.raise_for_status()  # HTTP 오류 발생 시 예외 발생
         return response.json()
     except requests.exceptions.HTTPError as e:
@@ -2051,6 +2051,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
