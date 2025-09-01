@@ -733,23 +733,30 @@ def fallback():
             def group_names_by_common_prefix(names):
                 if not names:
                     return ""
-                # 공통 접두어 추출
+            
+                # 최소 2글자 이상 공통 접두어만 사용
                 prefix = names[0]
                 for n in names[1:]:
-                    # 최소 길이까지 비교
                     min_len = min(len(prefix), len(n))
                     i = 0
                     while i < min_len and prefix[i] == n[i]:
                         i += 1
                     prefix = prefix[:i]
-                prefix = prefix.rstrip(" (")  # 불필요한 공백/괄호 제거
-        
-                # 접두어 제거 후 나머지
-                suffixes = [n.replace(prefix, "").strip(" ()") for n in names]
-                if any(suffixes):
+            
+                if len(prefix) < 2:  # 의미 없는 접두어면 제거
+                    prefix = names[0]
+                    suffixes = names[1:]
+                else:
+                    prefix = prefix.rstrip(" (")  # 불필요한 공백/괄호 제거
+                    suffixes = [n.replace(prefix, "").strip(" ()") for n in names]
+                    # 접두어만 있는 경우 suffix 제거
+                    suffixes = [s for s in suffixes if s]
+            
+                if suffixes:
                     return f"❛{prefix}❜ ({', '.join(suffixes)})"
                 else:
                     return f"❛{prefix}❜"
+
         
             # ---------- 일정 요약 텍스트 생성 ----------
             response_text = "◕ᴗ◕🌸\n오늘의 컨텐츠 일정을 알려드릴게요.\n"
@@ -2023,6 +2030,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
