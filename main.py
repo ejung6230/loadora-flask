@@ -734,7 +734,14 @@ def fallback():
                 if not names:
                     return ""
             
-                # 최소 2글자 이상 공통 접두어만 사용
+                if len(names) == 1:
+                    return f"❛{names[0]}❜"
+            
+                # 모든 이름이 서로 다른 경우: 단순 나열
+                if all(n != names[0] for n in names[1:]):
+                    return ", ".join(f"❛{n}❜" for n in names)
+            
+                # 공통 접두어 추출
                 prefix = names[0]
                 for n in names[1:]:
                     min_len = min(len(prefix), len(n))
@@ -743,19 +750,16 @@ def fallback():
                         i += 1
                     prefix = prefix[:i]
             
-                if len(prefix) < 2:  # 의미 없는 접두어면 제거
-                    prefix = names[0]
-                    suffixes = names[1:]
-                else:
-                    prefix = prefix.rstrip(" (")  # 불필요한 공백/괄호 제거
-                    suffixes = [n.replace(prefix, "").strip(" ()") for n in names]
-                    # 접두어만 있는 경우 suffix 제거
-                    suffixes = [s for s in suffixes if s]
+                if len(prefix) < 2:
+                    return ", ".join(f"❛{n}❜" for n in names)
             
+                prefix = prefix.rstrip(" (")
+                suffixes = [n.replace(prefix, "").strip(" ()") for n in names if n != names[0]]
                 if suffixes:
                     return f"❛{prefix}❜ ({', '.join(suffixes)})"
                 else:
                     return f"❛{prefix}❜"
+
 
         
             # ---------- 일정 요약 텍스트 생성 ----------
@@ -2030,6 +2034,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
