@@ -699,7 +699,7 @@ def fallback():
         
             # 카테고리별로 오늘 일정 출력
             categories = [
-                ("모험 섬", adventure_island_items),
+                ("모험섬", adventure_island_items),
                 ("카오스게이트", chaos_gate_items),
                 ("필드보스", field_boss_items),
                 ("항해", voyage_items),
@@ -707,7 +707,7 @@ def fallback():
             ]
             
             for cat_name, items in categories:
-                response_text += f"== {cat_name} ==\n"
+                response_text += f"❙ {cat_name} 일정\n"
                 for item in items:
                     today_start_times = filter_today_start_times(item)
                     response_text += f"❛{item['ContentsName']}❜ 오늘 일정\n"
@@ -1966,6 +1966,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
