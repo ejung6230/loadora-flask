@@ -712,7 +712,7 @@ def fallback():
                     # 중복 제거 + 정렬
                     today_start_times = sorted(set(today_start_times), key=lambda x: datetime.strptime(x, "%H:%M"))
             
-                    response_text += f"❛{item['ContentsName']}❜ 오늘 일정\n"
+                    response_text += f"- ❛{item['ContentsName']}❜: "
             
                     if today_start_times:
                         # "00시 00분" 포맷으로 변환
@@ -1976,6 +1976,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
