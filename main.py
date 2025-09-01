@@ -724,8 +724,8 @@ def fallback():
             # 전체 response_text 로그
             logger.info("response_text: %s", response_text)
             
-            if len(response_text) <= 400:
-                use_share_button = True
+            # if len(response_text) <= 400:
+            #     use_share_button = True
 
         # ---------- 4. 원정대 관련 패턴 ----------
         match_expedition = re.match(r"^(\.원정대|원정대|\.ㅇㅈㄷ|ㅇㅈㄷ)\s*(.*)$", user_input)
@@ -1972,6 +1972,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
