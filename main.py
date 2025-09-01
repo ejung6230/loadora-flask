@@ -711,7 +711,7 @@ def fallback():
             # ---------- 반복 일정 요약 ----------
             def summarize_times(times):
                 if not times:
-                    return "❌ 없음"
+                    return "- 없음"
                 
                 def format_time(dt):
                     if dt.minute == 0:
@@ -777,12 +777,12 @@ def fallback():
                 for it in its:
                     today_times = filter_today_times(it)
                     summary = summarize_times(today_times)
-                    if summary != "❌ 없음":
+                    if summary != "- 없음":
                         pattern_groups[summary].append(it["ContentsName"])
             
                 response_text += f"\n❙ {cat_name}\n"
                 if not pattern_groups:
-                    response_text += "❌ 없음\n"
+                    response_text += "- 없음\n"
                 else:
                     for summary, names in pattern_groups.items():
                         response_text += f"- {group_names(names)}: {summary}\n"
@@ -2056,6 +2056,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
