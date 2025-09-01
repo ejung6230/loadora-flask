@@ -694,7 +694,7 @@ def fallback():
                 ("필드보스", field_boss_its),
                 ("모험섬", adventure_island_its),
                 ("항해협동", voyage_its),
-                ("로웬", rowen_its)
+                # ("로웬", rowen_its)
             ]
             
             # ---------- 오늘 일정 필터링 ----------
@@ -2091,6 +2091,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
