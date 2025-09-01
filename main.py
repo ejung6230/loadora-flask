@@ -805,23 +805,24 @@ def fallback():
                     for dt in filter_today_times(it):
                         if dt > NOW_KST:
                             upcoming_times.append(dt)
-                
                 if upcoming_times:
                     next_time = min(upcoming_times)
                     remaining = next_time - NOW_KST
                     
-                    # 총 분 계산
+                    # 남은 시간 계산
                     total_minutes = remaining.seconds // 60
-                    hours = total_minutes // 60
-                    minutes = total_minutes % 60
+                    remaining_hours = total_minutes // 60
+                    remaining_minutes = total_minutes % 60
                     
-                    # 50분이면 next_time 표시만 반올림
+                    # next_time의 분
+                    minutes = next_time.minute
+                    
                     # 분에 따른 표시 방식 결정
                     if minutes == 0:
                         # 정시인 경우 그대로 표시
-                        response_text += f"⏰ {next_time.strftime('%H시')}까지 {hours}시간 {minutes:02d}분 남았습니다.\n"
+                        response_text += f"⏰ {next_time.strftime('%H시')}까지 {remaining_hours}시간 {remaining_minutes:02d}분 남았습니다.\n"
                     elif minutes == 50:
-                        # next_time 표시를 반올림된 시간으로 표시
+                        # 50분이면 next_time 표시만 반올림
                         rounded_time = next_time.replace(minute=0) + timedelta(hours=1)
                         # 반올림된 시간 기준으로 남은 시간 재계산
                         remaining_rounded = rounded_time - NOW_KST
@@ -829,10 +830,10 @@ def fallback():
                         hours_rounded = total_minutes_rounded // 60
                         minutes_rounded = total_minutes_rounded % 60
                         response_text += f"⏰ {rounded_time.strftime('%H시')}까지 {hours_rounded}시간 {minutes_rounded:02d}분 남았습니다.\n"
-                    elif hours > 0:
-                        response_text += f"⏰ {next_time.strftime('%H시 %M분')}까지 {hours}시간 {minutes}분 남았습니다.\n"
+                    elif remaining_hours > 0:
+                        response_text += f"⏰ {next_time.strftime('%H시 %M분')}까지 {remaining_hours}시간 {remaining_minutes}분 남았습니다.\n"
                     else:
-                        response_text += f"⏰ {next_time.strftime('%H시 %M분')}까지 {minutes}분 남았습니다.\n"
+                        response_text += f"⏰ {next_time.strftime('%H시 %M분')}까지 {remaining_minutes}분 남았습니다.\n"
                 else:
                     if pattern_groups:
                         response_text += "✅ 오늘 일정이 모두 종료되었습니다.\n"
@@ -2089,6 +2090,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
