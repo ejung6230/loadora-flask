@@ -768,7 +768,7 @@ def fallback():
                     if summary != "❌ 오늘은 일정이 없습니다.":
                         pattern_groups[summary].append(it["ContentsName"])
             
-                response_text += f"\n❙ {cat_name} 일정\n"
+                response_text += f"\n❙ {cat_name}\n"
                 if not pattern_groups:
                     response_text += "❌ 오늘은 일정이 없습니다.\n"
                 else:
@@ -787,7 +787,7 @@ def fallback():
                     remaining = next_time - NOW_KST
                     hours, remainder = divmod(remaining.seconds, 3600)
                     minutes = remainder // 60
-                    response_text += f"⏰ {next_time.strftime('%H시 %M분')}까지 {hours}시간 {minutes}분 남았습니다.\n"
+                    response_text += f"\n⏰ {next_time.strftime('%H시 %M분')}까지 {hours}시간 {minutes}분 남았습니다.\n"
                 else:
                     if pattern_groups:
                         response_text += "✅ 오늘 일정이 모두 종료되었습니다.\n"
@@ -2044,6 +2044,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
