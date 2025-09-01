@@ -816,7 +816,11 @@ def fallback():
                     minutes = total_minutes % 60
                     
                     # 50분이면 next_time 표시만 반올림
-                    if minutes == 50:
+                    # 분에 따른 표시 방식 결정
+                    if minutes == 0:
+                        # 정시인 경우 그대로 표시
+                        response_text += f"⏰ {next_time.strftime('%H시')}까지 {hours}시간 {minutes:02d}분 남았습니다.\n"
+                    elif minutes == 50:
                         # next_time 표시를 반올림된 시간으로 표시
                         rounded_time = next_time.replace(minute=0) + timedelta(hours=1)
                         # 반올림된 시간 기준으로 남은 시간 재계산
@@ -2085,6 +2089,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
