@@ -35,6 +35,7 @@ HEADERS = {
 # 현재 한국 시간 (naive)
 KST = timezone(timedelta(hours=9))
 NOW_KST = datetime.now(KST).replace(tzinfo=None)
+TODAY = NOW_KST.date()
 
 # 요일 한글 매핑
 WEEKDAY_KO = {
@@ -89,7 +90,8 @@ def fallback():
 
     # 현재 한국 시간 (naive)
     KST = timezone(timedelta(hours=9))
-    NOW_KST = datetime.now(KST).replace(tzinfo=None)  # tz 제거
+    NOW_KST = datetime.now(KST).replace(tzinfo=None)
+    TODAY = NOW_KST.date()
     
     # 특수문자 참고 ❘ ❙ ❚ ❛ ❜
     server_down = False  # 서버 점검 여부 플래그
@@ -1954,6 +1956,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
