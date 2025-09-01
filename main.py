@@ -670,7 +670,7 @@ def fallback():
         match_calendar = re.match(r"^(\.캘린더|캘린더|\.ㅋㄹㄷ|ㅋㄹㄷ|\.일정|일정|\.ㅇㅈ|ㅇㅈ|\.컨텐츠|컨텐츠|\.ㅋㅌㅊ|ㅋㅌㅊ)$", user_input)
         if match_calendar:
             calendar_command = match_calendar.group(1).strip()
-
+            
             # 공식 api에서 데이터 받아오기
             data = fetch_calendar()
 
@@ -680,7 +680,18 @@ def fallback():
             field_boss_items   = [item for item in data if item.get("CategoryName") == "필드보스"]
             voyage_items       = [item for item in data if item.get("CategoryName") == "항해"]
             rowen_items        = [item for item in data if item.get("CategoryName") == "로웬"]
-        
+
+            # 카테고리별로 오늘 일정 출력
+            categories = [
+                ("모험섬", adventure_island_items),
+                ("카오스게이트", chaos_gate_items),
+                ("필드보스", field_boss_items),
+                ("항해", voyage_items),
+                ("로웬", rowen_items)
+            ]
+
+            logger.info("categories: %s", categories)
+            
             # 오늘 일정 필터링 함수
             def filter_today_start_times(item):
                 start_times = item.get("StartTimes", [])
@@ -695,16 +706,8 @@ def fallback():
         
             # 일정 요약 텍스트 생성
             response_text = "◕ᴗ◕🌸\n오늘의 컨텐츠 정보를 알려드릴게요.\n\n"
-            response_text += f"{calendar_command}\n\n"
-        
-            # 카테고리별로 오늘 일정 출력
-            categories = [
-                ("모험섬", adventure_island_items),
-                ("카오스게이트", chaos_gate_items),
-                ("필드보스", field_boss_items),
-                ("항해", voyage_items),
-                ("로웬", rowen_items)
-            ]
+
+            logger.info("response_text: %s", response_text)
             
             for cat_name, items in categories:
                 response_text += f"❙ {cat_name} 일정\n"
@@ -717,7 +720,10 @@ def fallback():
                     else:
                         response_text += "- 오늘은 일정이 없습니다.\n"
                     response_text += "\n"
-        
+                    
+            # 전체 response_text 로그
+            logger.info("response_text: %s", response_text)
+            
             if len(response_text) <= 400:
                 use_share_button = True
 
@@ -1966,6 +1972,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
