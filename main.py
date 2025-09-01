@@ -740,7 +740,7 @@ def fallback():
                 suffixes = [n.replace(prefix, "").strip(" ()") for n in names]
                 suffixes = [s for s in suffixes if s]
                 if suffixes:
-                    return f"❛{prefix}❜ ({', '.join(suffixes)})"
+                    return f"장소: {', '.join(suffixes)}"
                 return f"❛{prefix}❜"
         
             # ---------- 일정 요약 텍스트 생성 ----------
@@ -759,7 +759,7 @@ def fallback():
                     response_text += "오늘은 일정이 없습니다.\n"
                 else:
                     for summary, names in pattern_groups.items():
-                        response_text += f"- {group_names(names)}: {summary}\n"
+                        response_text += f"- {group_names(names)}\n: {summary}\n"
             
                 # ---------- 남은 시간 계산 ----------
                 # 오늘 일정 중 가장 빠른 시간이 현재보다 이후인 것 찾기
@@ -2029,6 +2029,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
