@@ -805,12 +805,25 @@ def fallback():
                     for dt in filter_today_times(it):
                         if dt > NOW_KST:
                             upcoming_times.append(dt)
+                
                 if upcoming_times:
                     next_time = min(upcoming_times)
                     remaining = next_time - NOW_KST
-                    hours, remainder = divmod(remaining.seconds, 3600)
-                    minutes = remainder // 60
-                    response_text += f"⏰ {next_time.strftime('%H시 %M분')}까지 {hours}시간 {minutes}분 남았습니다.\n"
+                    
+                    # 총 분 계산
+                    total_minutes = remaining.seconds // 60
+                    hours = total_minutes // 60
+                    minutes = total_minutes % 60
+                    
+                    # 50분이면 next_time 표시만 반올림
+                    if minutes == 50:
+                        # next_time 표시를 반올림된 시간으로 표시
+                        rounded_time = next_time.replace(minute=0) + timedelta(hours=1)
+                        response_text += f"⏰ {rounded_time.strftime('%H시')}까지 {hours}시간 {minutes}분 남았습니다.\n"
+                    elif hours > 0:
+                        response_text += f"⏰ {next_time.strftime('%H시 %M분')}까지 {hours}시간 {minutes}분 남았습니다.\n"
+                    else:
+                        response_text += f"⏰ {next_time.strftime('%H시 %M분')}까지 {minutes}분 남았습니다.\n"
                 else:
                     if pattern_groups:
                         response_text += "✅ 오늘 일정이 모두 종료되었습니다.\n"
@@ -2067,6 +2080,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
