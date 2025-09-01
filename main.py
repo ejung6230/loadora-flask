@@ -746,10 +746,10 @@ def fallback():
             # ---------- 일정 요약 텍스트 생성 ----------
             response_text = "◕ᴗ◕🌸\n오늘의 컨텐츠 일정을 알려드릴게요.\n"
             
-            for cat_name, items in categories:  # 리스트 언패킹
+            for cat_name, its in categories:  # 리스트 언패킹
                 # 카테고리 내 오늘 일정 필터링
                 item_summaries = []
-                for item in items:
+                for item in its:
                     today_times = filter_today_times(item)
                     summary = summarize_times(today_times)
                     if summary != "오늘은 일정이 없습니다.":  # 일정 있는 항목만 추가
@@ -762,7 +762,6 @@ def fallback():
                 else:
                     response_text += "\n".join(item_summaries) + "\n"
         
-                    
             # 전체 response_text 로그
             logger.info("response_text: %s", response_text)
             
@@ -2015,6 +2014,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
