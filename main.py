@@ -673,15 +673,13 @@ def fallback():
 
             # 공식 api에서 데이터 받아오기
             data = fetch_calendar()
-            
+
             # 카테고리별 분류
-            categories = {
-                "모험 섬": [item for item in data if item.get("CategoryName") == "모험 섬"],
-                "카오스게이트": [item for item in data if item.get("CategoryName") == "카오스게이트"],
-                "필드보스": [item for item in data if item.get("CategoryName") == "필드보스"],
-                "항해": [item for item in data if item.get("CategoryName") == "항해"],
-                "로웬": [item for item in data if item.get("CategoryName") == "로웬"],
-            }
+            adventure_island_items = [item for item in data if item.get("CategoryName") == "모험 섬"]
+            chaos_gate_items = [item for item in data if item.get("CategoryName") == "카오스게이트"]
+            field_boss_items   = [item for item in data if item.get("CategoryName") == "필드보스"]
+            voyage_items       = [item for item in data if item.get("CategoryName") == "항해"]
+            rowen_items        = [item for item in data if item.get("CategoryName") == "로웬"]
         
             # 오늘 일정 필터링 함수
             def filter_today_start_times(item):
@@ -697,28 +695,19 @@ def fallback():
         
             # 일정 요약 텍스트 생성
             response_text = "◕ᴗ◕🌸\n오늘의 컨텐츠 정보를 알려드릴게요.\n\n"
+            response_text += f"{calendar_command}\n\n"
         
-            # 카테고리별 출력
-            for category_name, items in categories.items():
-                response_text += f"❙ {category_name} 일정:\n"
-        
-                if not items:
-                    response_text += "- 오늘은 관련 컨텐츠가 없습니다.\n\n"
-                    continue
-        
-                for item in items:
-                    today_start_times = filter_today_start_times(item)
-                    response_text += f"  ❛{item['ContentsName']}❜\n"
-                    if today_start_times:
-                        for t in today_start_times:
-                            response_text += f"  - {t}\n"
-                    else:
-                        response_text += "  - 오늘은 일정이 없습니다.\n"
+            # 모든 항목에 대해 오늘 일정 여부 출력
+            for item in data:
+                today_start_times = filter_today_start_times(item)
+                response_text += f"❛{item['ContentsName']}❜ 오늘 일정\n"
+                if today_start_times:
+                    for t in today_start_times:
+                        response_text += f"- {t}\n"
+                else:
+                    response_text += "- 오늘은 일정이 없습니다.\n"
                 response_text += "\n"
         
-            response_text += f"(입력 명령어: {calendar_command})\n"
-
-            # logger.info("내용: %s", response_text)
             if len(response_text) <= 400:
                 use_share_button = True
 
@@ -1967,9 +1956,6 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
-
 
 
 
