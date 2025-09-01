@@ -740,7 +740,7 @@ def fallback():
                 suffixes = [n.replace(prefix, "").strip(" ()") for n in names]
                 suffixes = [s for s in suffixes if s]
                 if suffixes:
-                    return f"장소: {', '.join(suffixes)}"
+                    return f"{', '.join(suffixes)}"
                 return f"❛{prefix}❜"
         
             # ---------- 일정 요약 텍스트 생성 ----------
@@ -2029,6 +2029,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
