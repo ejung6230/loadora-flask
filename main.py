@@ -705,9 +705,6 @@ def fallback():
                         today_times.append(dt.strftime("%H:%M"))
         
                 return today_times
-        
-            # 일정 요약 텍스트 생성
-            response_text = "◕ᴗ◕🌸\n오늘의 컨텐츠 일정을 알려드릴게요.\n\n"
             
             # ---------- 오늘 일정 필터링 함수 ----------
             def filter_today_times(item):
@@ -746,7 +743,7 @@ def fallback():
                         time_texts.append(f"{day_prefix}{dt.strftime('%H시 %M분')}")
                     return ", ".join(time_texts)
             
-            # ---------- 6. 일정 요약 생성 ----------
+            # ---------- 일정 요약 텍스트 생성 ----------
             response_text = "◕ᴗ◕🌸\n오늘의 컨텐츠 일정을 알려드릴게요.\n\n"
             
             for cat_name, items in categories.items():
@@ -2012,6 +2009,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
