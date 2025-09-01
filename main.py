@@ -681,36 +681,24 @@ def fallback():
             
             # 공식 api에서 데이터 받아오기
             data = fetch_calendar()
-
+        
             # 카테고리별 분류
-            adventure_island_items = [item for item in data if item.get("CategoryName") == "모험 섬"]
-            chaos_gate_items = [item for item in data if item.get("CategoryName") == "카오스게이트"]
-            field_boss_items   = [item for item in data if item.get("CategoryName") == "필드보스"]
-            voyage_items       = [item for item in data if item.get("CategoryName") == "항해"]
-            rowen_items        = [item for item in data if item.get("CategoryName") == "로웬"]
-
+            adventure_island_its = [item for item in data if item.get("CategoryName") == "모험 섬"]
+            chaos_gate_its      = [item for item in data if item.get("CategoryName") == "카오스게이트"]
+            field_boss_its      = [item for item in data if item.get("CategoryName") == "필드보스"]
+            voyage_its          = [item for item in data if item.get("CategoryName") == "항해"]
+            rowen_its           = [item for item in data if item.get("CategoryName") == "로웬"]
+        
             # 카테고리별로 오늘 일정 출력
             categories = [
-                ("모험섬", adventure_island_items),
-                ("카오스게이트", chaos_gate_items),
-                ("필드보스", field_boss_items),
-                ("항해", voyage_items),
-                ("로웬", rowen_items)
+                ("모험섬", adventure_island_its),
+                ("카오스게이트", chaos_gate_its),
+                ("필드보스", field_boss_its),
+                ("항해", voyage_its),
+                ("로웬", rowen_its)
             ]
-            
+        
             # 오늘 일정 필터링 함수
-            def filter_today_start_times(item):
-                start_times = item.get("StartTimes", [])
-                today_times = []
-        
-                for t in start_times:
-                    dt = datetime.fromisoformat(t)  # naive datetime
-                    if dt.date() == TODAY:
-                        today_times.append(dt.strftime("%H:%M"))
-        
-                return today_times
-            
-            # ---------- 오늘 일정 필터링 함수 ----------
             def filter_today_times(item):
                 today_times = []
                 for t in item.get("StartTimes", []):
@@ -720,61 +708,75 @@ def fallback():
                     if DAY_START <= dt <= DAY_END:
                         today_times.append(dt)
                 return sorted(today_times)
-            
-            # ---------- 반복 일정 요약 함수 ----------
+        
+            # 반복 일정 요약 함수
             def summarize_times(times):
-                    if not times:
-                        return "오늘은 일정이 없습니다."
-
-                    # 모든 간격 계산
-                    if len(times) == 1:
-                        return times[0].strftime("%H시 %M분")
-            
-                    # 일정이 일정 간격으로 반복되는지 확인
-                    intervals = [(times[i + 1] - times[i]).seconds // 60 for i in range(len(times) - 1)]
-                    if all(interval == intervals[0] for interval in intervals):
-                        start, end = times[0], times[-1]
-                        # 다음날 여부 표시
-                        end_text = f"다음날 {end.strftime('%H시 %M분')}" if end.date() != start.date() else end.strftime("%H시 %M분")
-                        return f"{start.strftime('%H시 %M분')} ~ {end_text} ({intervals[0]}분 간격)"
-                    else:
-                        # 불규칙 일정은 그냥 나열
-                        time_texts = []
-                        for dt in times:
-                            day_prefix = "다음날 " if dt.date() != DAY_START.date() else ""
-                            time_texts.append(f"{day_prefix}{dt.strftime('%H시 %M분')}")
-                        return ", ".join(time_texts)
-            
+                if not times:
+                    return "오늘은 일정이 없습니다."
+        
+                if len(times) == 1:
+                    return times[0].strftime("%H시 %M분")
+        
+                intervals = [(times[i+1] - times[i]).seconds // 60 for i in range(len(times)-1)]
+                if all(interval == intervals[0] for interval in intervals):
+                    start, end = times[0], times[-1]
+                    end_text = f"다음날 {end.strftime('%H시 %M분')}" if end.date() != start.date() else end.strftime("%H시 %M분")
+                    return f"{start.strftime('%H시 %M분')} ~ {end_text} ({intervals[0]}분 간격)"
+                else:
+                    time_texts = []
+                    for dt in times:
+                        day_prefix = "다음날 " if dt.date() != DAY_START.date() else ""
+                        time_texts.append(f"{day_prefix}{dt.strftime('%H시 %M분')}")
+                    return ", ".join(time_texts)
+        
+            # 공통 접두어 제거 후 이름 묶기
+            def group_names_by_common_prefix(names):
+                if not names:
+                    return ""
+                # 공통 접두어 추출
+                prefix = names[0]
+                for n in names[1:]:
+                    # 최소 길이까지 비교
+                    min_len = min(len(prefix), len(n))
+                    i = 0
+                    while i < min_len and prefix[i] == n[i]:
+                        i += 1
+                    prefix = prefix[:i]
+                prefix = prefix.rstrip(" (")  # 불필요한 공백/괄호 제거
+        
+                # 접두어 제거 후 나머지
+                suffixes = [n.replace(prefix, "").strip(" ()") for n in names]
+                if any(suffixes):
+                    return f"❛{prefix}❜ ({', '.join(suffixes)})"
+                else:
+                    return f"❛{prefix}❜"
+        
             # ---------- 일정 요약 텍스트 생성 ----------
             response_text = "◕ᴗ◕🌸\n오늘의 컨텐츠 일정을 알려드릴게요.\n"
         
-            for cat_name, items in categories:
-                # 시간 패턴별로 그룹화
+            for cat_name, its in categories:
                 pattern_groups = defaultdict(list)  # key: 시간 요약, value: 항목 이름
-                for item in items:
-                    today_times = filter_today_times(item)
+                for it in its:
+                    today_times = filter_today_times(it)
                     summary = summarize_times(today_times)
                     if summary != "오늘은 일정이 없습니다.":
-                        pattern_groups[summary].append(item["ContentsName"])
+                        pattern_groups[summary].append(it["ContentsName"])
         
                 response_text += f"\n❙ {cat_name} 일정\n"
                 if not pattern_groups:
                     response_text += "오늘은 일정이 없습니다.\n"
                 else:
                     for summary, names in pattern_groups.items():
-                        # 이름 묶기
-                        if len(names) > 1:
-                            name_text = f"❛{names[0]}❜ ({', '.join(names[1:])})"
-                        else:
-                            name_text = f"❛{names[0]}❜"
+                        name_text = group_names_by_common_prefix(names)
                         response_text += f"- {name_text}: {summary}\n"
         
             # 전체 response_text 로그
             logger.info("response_text: %s", response_text)
-            
+        
             if len(response_text) <= 400:
                 logger.info("400자이내: %s", "400자 이내다!")
                 use_share_button = True
+
 
         # ---------- 4. 원정대 관련 패턴 ----------
         match_expedition = re.match(r"^(\.원정대|원정대|\.ㅇㅈㄷ|ㅇㅈㄷ)\s*(.*)$", user_input)
@@ -2021,6 +2023,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
