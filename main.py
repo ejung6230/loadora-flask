@@ -92,6 +92,10 @@ def fallback():
     KST = timezone(timedelta(hours=9))
     NOW_KST = datetime.now(KST).replace(tzinfo=None)
     TODAY = NOW_KST.date()
+
+    # 하루 기준: 오늘 06:00 ~ 다음날 05:59
+    DAY_START = datetime.combine(TODAY, datetime.min.time()) + timedelta(hours=6)
+    DAY_END = DAY_START + timedelta(days=1) - timedelta(minutes=1)
     
     # 특수문자 참고 ❘ ❙ ❚ ❛ ❜
     server_down = False  # 서버 점검 여부 플래그
@@ -705,24 +709,56 @@ def fallback():
             # 일정 요약 텍스트 생성
             response_text = "◕ᴗ◕🌸\n오늘의 컨텐츠 일정을 알려드릴게요.\n\n"
             
-            for cat_name, items in categories:
+            # ---------- 오늘 일정 필터링 함수 ----------
+            def filter_today_times(item):
+                today_times = []
+                for t in item.get("StartTimes", []):
+                    dt = datetime.fromisoformat(t)
+                    if dt.tzinfo:
+                        dt = dt.astimezone(KST).replace(tzinfo=None)
+                    # 하루 범위 안에 포함되는지 확인
+                    if DAY_START <= dt <= DAY_END:
+                        today_times.append(dt)
+                return sorted(today_times)
+            
+            # ---------- 반복 일정 요약 함수 ----------
+            def summarize_times(times):
+                if not times:
+                    return "오늘은 일정이 없습니다."
+                
+                # 모든 간격 계산
+                if len(times) == 1:
+                    return times[0].strftime("%H시 %M분")
+                
+                # 일정이 일정 간격으로 반복되는지 확인
+                intervals = [(times[i+1] - times[i]).seconds // 60 for i in range(len(times)-1)]
+                if all(interval == intervals[0] for interval in intervals):
+                    start = times[0]
+                    end = times[-1]
+                    # 다음날 여부 표시
+                    end_text = f"다음날 {end.strftime('%H시 %M분')}" if end.date() != start.date() else end.strftime("%H시 %M분")
+                    return f"{start.strftime('%H시 %M분')} ~ {end_text} ({intervals[0]}분 간격)"
+                else:
+                    # 불규칙 일정은 그냥 나열
+                    time_texts = []
+                    for dt in times:
+                        day_prefix = "다음날 " if dt.date() != DAY_START.date() else ""
+                        time_texts.append(f"{day_prefix}{dt.strftime('%H시 %M분')}")
+                    return ", ".join(time_texts)
+            
+            # ---------- 6. 일정 요약 생성 ----------
+            response_text = "◕ᴗ◕🌸\n오늘의 컨텐츠 일정을 알려드릴게요.\n\n"
+            
+            for cat_name, items in categories.items():
                 response_text += f"❙ {cat_name} 일정\n"
+                if not items:
+                    response_text += "- 오늘은 일정이 없습니다.\n"
+                    continue
+                
                 for item in items:
-                    today_start_times = filter_today_start_times(item) or []
-                    # 중복 제거 + 정렬
-                    today_start_times = sorted(set(today_start_times), key=lambda x: datetime.strptime(x, "%H:%M"))
-            
-                    response_text += f"- ❛{item['ContentsName']}❜: "
-            
-                    if today_start_times:
-                        # "00시 00분" 포맷으로 변환
-                        times_text = ", ".join(f"{t[:2]}시 {t[3:]}분" for t in today_start_times)
-                        response_text += f"{times_text}"
-                    else:
-                        response_text += "오늘은 일정이 없습니다."
-            
-                    response_text += "\n"
-
+                    today_times = filter_today_times(item)
+                    summary = summarize_times(today_times)
+                    response_text += f"- ❛{item['ContentsName']}❜: {summary}\n"
                     
             # 전체 response_text 로그
             logger.info("response_text: %s", response_text)
@@ -1976,6 +2012,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
