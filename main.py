@@ -739,6 +739,7 @@ def fallback():
             def group_names(names):
                 if len(names) == 1:
                     return f"❛{names[0]}❜"
+                
                 # 공통 접두어 추출
                 prefix = names[0]
                 for n in names[1:]:
@@ -748,13 +749,19 @@ def fallback():
                         i += 1
                     prefix = prefix[:i]
                 prefix = prefix.rstrip(" (")
-                if not prefix:
-                    return ", ".join(f"❛{n}❜" for n in names)
+                
                 # 접두어 제거 후 나머지
                 suffixes = [n.replace(prefix, "").strip(" ()") for n in names]
                 suffixes = [s for s in suffixes if s]
+            
+                if len(names) >= 8:
+                    # 8개 이상이면 "~외 N" 형태
+                    first = f"❛{prefix}{(' ' + suffixes[0]) if suffixes else ''}❜"
+                    return f"{first} 외 {len(names)-1}개"
+                
+                # 일반 출력
                 if suffixes:
-                    return f"{', '.join(suffixes)}"
+                    return f"{', '.join(f'❛{prefix}{s}❜' for s in suffixes)}"
                 return f"❛{prefix}❜"
         
             # ---------- 일정 요약 텍스트 생성 ----------
@@ -2044,6 +2051,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
