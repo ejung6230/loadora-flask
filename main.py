@@ -740,10 +740,6 @@ def fallback():
                 if len(names) == 1:
                     return f"❛{names[0]}❜"
             
-                # 8개 이상이면 간략 표시
-                if len(names) >= 8:
-                    return f"❛{names[0]}❜ 외 {len(names)-1}개"
-            
                 # 공통 접두어 추출
                 prefix = names[0]
                 for n in names[1:]:
@@ -755,15 +751,20 @@ def fallback():
             
                 prefix = prefix.rstrip(" (")
             
-                if not prefix:
-                    return ", ".join(f"❛{n}❜" for n in names)
-            
                 # 접두어 제거 후 나머지
                 suffixes = [n.replace(prefix, "").strip(" ()") for n in names]
                 suffixes = [s for s in suffixes if s]
             
+                if not prefix:
+                    # 접두어 없으면 그냥 나열
+                    return ", ".join(f"❛{n}❜" for n in names)
+            
+                if len(suffixes) >= 8:
+                    # 접두어 + 첫 번째 suffix, 나머지 외 N개
+                    return f"{prefix}{suffixes[0]} 외 {len(suffixes)-1}개"
+            
                 if suffixes:
-                    return f"{', '.join(suffixes)}"
+                    return f"{prefix}{', '.join(suffixes)}"
             
                 return f"❛{prefix}❜"
 
@@ -2055,6 +2056,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
