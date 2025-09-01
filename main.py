@@ -676,7 +676,7 @@ def fallback():
             
             # 카테고리별 분류
             categories = {
-                "모험섬": [item for item in data if item.get("CategoryName") == "모험 섬"],
+                "모험 섬": [item for item in data if item.get("CategoryName") == "모험 섬"],
                 "카오스게이트": [item for item in data if item.get("CategoryName") == "카오스게이트"],
                 "필드보스": [item for item in data if item.get("CategoryName") == "필드보스"],
                 "항해": [item for item in data if item.get("CategoryName") == "항해"],
@@ -1966,6 +1966,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
