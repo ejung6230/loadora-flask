@@ -646,7 +646,6 @@ def fallback():
                                 remaining_text = "오늘 남은 일정이 없습니다."
 
                 
-                
                 card_footer = {
                     "title": f"⏰ {remaining_text}",
                     "link": {"web": ""},
@@ -754,13 +753,28 @@ def fallback():
                     summary = summarize_times(today_times)
                     if summary != "오늘은 일정이 없습니다.":
                         pattern_groups[summary].append(it["ContentsName"])
-        
+            
                 response_text += f"\n❙ {cat_name} 일정\n"
                 if not pattern_groups:
                     response_text += "오늘은 일정이 없습니다.\n"
                 else:
                     for summary, names in pattern_groups.items():
-                        response_text += f"- {group_names(names)}\n: {summary}\n"
+                        response_text += f"- {group_names(names)}: {summary}\n"
+            
+                # ---------- 남은 시간 계산 ----------
+                # 오늘 일정 중 가장 빠른 시간이 현재보다 이후인 것 찾기
+                upcoming_times = []
+                for it in its:
+                    for dt in filter_today_times(it):
+                        if dt > NOW_KST:
+                            upcoming_times.append(dt)
+                if upcoming_times:
+                    next_time = min(upcoming_times)
+                    remaining = next_time - NOW_KST
+                    hours, remainder = divmod(remaining.seconds, 3600)
+                    minutes = remainder // 60
+                    response_text += f"⏰ {next_time.strftime('%H시 %M분')}까지 {hours}시간 {minutes}분 남았습니다.\n"
+
         
             logger.info("response_text: %s", response_text)
             if len(response_text) < 400:
@@ -2013,6 +2027,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
