@@ -717,9 +717,9 @@ def fallback():
                     if today_start_times:
                         # "00시 00분" 포맷으로 변환
                         times_text = ", ".join(f"{t[:2]}시 {t[3:]}분" for t in today_start_times)
-                        response_text += f"{times_text}\n"
+                        response_text += f"{times_text}"
                     else:
-                        response_text += "- 오늘은 일정이 없습니다.\n"
+                        response_text += "오늘은 일정이 없습니다.\n"
             
                     response_text += "\n"
 
@@ -1976,6 +1976,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
