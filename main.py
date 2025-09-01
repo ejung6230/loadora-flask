@@ -760,10 +760,10 @@ def fallback():
                     response_text += "오늘은 일정이 없습니다.\n"
                 else:
                     for summary, names in pattern_groups.items():
-                        response_text += f"- {group_names(names)}: {summary}\n"
+                        response_text += f"- {group_names(names)}\n: {summary}\n"
         
             logger.info("response_text: %s", response_text)
-            if len(response_text) <= 400:
+            if len(response_text) < 400:
                 logger.info("400자이내: %s", "400자 이내다!")
                 use_share_button = True
 
@@ -959,7 +959,7 @@ def fallback():
             response_text += format_reports_by_region(current_data, is_on_sale)
             response_text += f"\n\n{get_remaining_time_text()}"
         
-            if len(response_text) <= 400:
+            if len(response_text) < 400:
                 use_share_button = True
                 
         # ---------- 7. 주급 관련 패턴 ----------
@@ -2013,6 +2013,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
