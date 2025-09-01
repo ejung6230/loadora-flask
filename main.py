@@ -34,7 +34,7 @@ HEADERS = {
 
 # 현재 한국 시간 (naive)
 KST = timezone(timedelta(hours=9))
-NOW_KST = datetime.now(KST).replace(tzinfo=None)  # tz 제거
+NOW_KST = datetime.now(KST).replace(tzinfo=None)
 
 # 요일 한글 매핑
 WEEKDAY_KO = {
@@ -115,6 +115,7 @@ def fallback():
                 ]
             }
         ]
+
 
         # ---------- 1. 공지 관련 패턴 ----------
         match_notice = re.match(r"^(\.공지|공지|\.ㄱㅈ|ㄱㅈ)$", user_input)
@@ -664,15 +665,49 @@ def fallback():
                     ]
 
         # ---------- 3. 캘린더 or 일정 관련 패턴 ----------
-        match_calendar = re.match(r"^(\.캘린더|캘린더|\.ㅋㄹㄷ|ㅋㄹㄷ|\.일정|일정|\.ㅇㅈ|ㅇㅈ)$", user_input)
+        match_calendar = re.match(r"^(\.캘린더|캘린더|\.ㅋㄹㄷ|ㅋㄹㄷ|\.일정|일정|\.ㅇㅈ|ㅇㅈ|\.컨텐츠|컨텐츠|\.ㅋㅌㅊ|ㅋㅌㅊ)$", user_input)
         if match_calendar:
-            calendar_command = match_calendar.group(1).strip()  # 변수 이름 수정
+            calendar_command = match_calendar.group(1).strip()
 
             # 공식 api에서 데이터 받아오기
             data = fetch_calendar()
-            
-            response_text = "◕ᴗ◕🌸\n컨텐츠 일정 정보를 알려드릴게요.\n\n"
-            response_text += f"[컨텐츠 일정 명령어]\n내용: {calendar_command}"
+
+            # 카테고리별 분류
+            adventure_island_items = [item for item in data if item.get("CategoryName") == "모험 섬"]
+            chaos_gate_items = [item for item in data if item.get("CategoryName") == "카오스게이트"]
+            field_boss_items   = [item for item in data if item.get("CategoryName") == "필드보스"]
+            voyage_items       = [item for item in data if item.get("CategoryName") == "항해"]
+            rowen_items        = [item for item in data if item.get("CategoryName") == "로웬"]
+        
+            # 오늘 일정 필터링 함수
+            def filter_today_start_times(item):
+                start_times = item.get("StartTimes", [])
+                today_times = []
+        
+                for t in start_times:
+                    dt = datetime.fromisoformat(t)  # naive datetime
+                    if dt.date() == TODAY:
+                        today_times.append(dt.strftime("%H:%M"))
+        
+                return today_times
+        
+            # 일정 요약 텍스트 생성
+            response_text = "◕ᴗ◕🌸\n오늘의 컨텐츠 정보를 알려드릴게요.\n\n"
+            response_text += f"{calendar_command}\n\n"
+        
+            # 모든 항목에 대해 오늘 일정 여부 출력
+            for item in data:
+                today_start_times = filter_today_start_times(item)
+                response_text += f"❛{item['ContentsName']}❜ 오늘 일정\n"
+                if today_start_times:
+                    for t in today_start_times:
+                        response_text += f"- {t}\n"
+                else:
+                    response_text += "- 오늘은 일정이 없습니다.\n"
+                response_text += "\n"
+        
+            if len(response_text) <= 400:
+                use_share_button = True
 
         # ---------- 4. 원정대 관련 패턴 ----------
         match_expedition = re.match(r"^(\.원정대|원정대|\.ㅇㅈㄷ|ㅇㅈㄷ)\s*(.*)$", user_input)
@@ -1919,6 +1954,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
