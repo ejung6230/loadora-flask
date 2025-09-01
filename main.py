@@ -697,16 +697,26 @@ def fallback():
             response_text = "◕ᴗ◕🌸\n오늘의 컨텐츠 정보를 알려드릴게요.\n\n"
             response_text += f"{calendar_command}\n\n"
         
-            # 모든 항목에 대해 오늘 일정 여부 출력
-            for item in data:
-                today_start_times = filter_today_start_times(item)
-                response_text += f"❛{item['ContentsName']}❜ 오늘 일정\n"
-                if today_start_times:
-                    for t in today_start_times:
-                        response_text += f"- {t}\n"
-                else:
-                    response_text += "- 오늘은 일정이 없습니다.\n"
-                response_text += "\n"
+            # 카테고리별로 오늘 일정 출력
+            categories = [
+                ("모험 섬", adventure_island_items),
+                ("카오스게이트", chaos_gate_items),
+                ("필드보스", field_boss_items),
+                ("항해", voyage_items),
+                ("로웬", rowen_items)
+            ]
+            
+            for cat_name, items in categories:
+                response_text += f"== {cat_name} ==\n"
+                for item in items:
+                    today_start_times = filter_today_start_times(item)
+                    response_text += f"❛{item['ContentsName']}❜ 오늘 일정\n"
+                    if today_start_times:
+                        for t in today_start_times:
+                            response_text += f"- {t}\n"
+                    else:
+                        response_text += "- 오늘은 일정이 없습니다.\n"
+                    response_text += "\n"
         
             if len(response_text) <= 400:
                 use_share_button = True
@@ -1956,6 +1966,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
