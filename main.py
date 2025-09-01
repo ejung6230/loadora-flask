@@ -717,7 +717,8 @@ def fallback():
                 response_text += "\n"
         
             response_text += f"(입력 명령어: {calendar_command})\n"
-        
+
+            # logger.info("내용: %s", response_text)
             if len(response_text) <= 400:
                 use_share_button = True
 
@@ -1966,6 +1967,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
