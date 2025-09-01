@@ -737,7 +737,7 @@ def fallback():
                 if all(interval == intervals[0] for interval in intervals):
                     start, end = times[0], times[-1]
                     end_text = f"다음날 {format_time(end)}" if end.date() != start.date() else format_time(end)
-                    return f"{format_time(start)}~{end_text} ({intervals[0]}분 간격)"
+                    return f"{format_time(start)} ~ {end_text} ({intervals[0]}분 간격)"
                 
                 # 불규칙 일정은 나열
                 time_texts = []
@@ -2091,6 +2091,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
