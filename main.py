@@ -693,7 +693,7 @@ def fallback():
                 ("카오스게이트", chaos_gate_its),
                 ("필드보스", field_boss_its),
                 ("모험섬", adventure_island_its),
-                ("항해", voyage_its),
+                ("항해협동", voyage_its),
                 ("로웬", rowen_its)
             ]
             
@@ -2056,6 +2056,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
