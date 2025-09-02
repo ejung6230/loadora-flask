@@ -37,8 +37,13 @@ KST = timezone(timedelta(hours=9))
 NOW_KST = datetime.now(KST).replace(tzinfo=None)
 TODAY = NOW_KST.date()
 
-# 하루 기준: 오늘 06:00 ~ 다음날 05:59
-DAY_START = datetime.combine(TODAY, datetime.min.time()) + timedelta(hours=6)
+# 하루 범위: 오늘 06:00 ~ 다음날 05:59
+# 06:00~23:59 조회 → 오늘 일정 기준
+# 00:00~05:59 조회 → 전날 일정 기준
+if NOW_KST.hour < 6:
+    DAY_START = datetime.combine(NOW_KST.date() - timedelta(days=1), datetime.min.time()) + timedelta(hours=6)
+else:
+    DAY_START = datetime.combine(NOW_KST.date(), datetime.min.time()) + timedelta(hours=6)
 DAY_END = DAY_START + timedelta(days=1) - timedelta(minutes=1)
 
 # 요일 한글 매핑
@@ -96,9 +101,14 @@ def fallback():
     KST = timezone(timedelta(hours=9))
     NOW_KST = datetime.now(KST).replace(tzinfo=None)
     TODAY = NOW_KST.date()
-
-    # 하루 기준: 오늘 06:00 ~ 다음날 05:59
-    DAY_START = datetime.combine(TODAY, datetime.min.time()) + timedelta(hours=6)
+    
+    # 하루 범위: 오늘 06:00 ~ 다음날 05:59
+    # 06:00~23:59 조회 → 오늘 일정 기준
+    # 00:00~05:59 조회 → 전날 일정 기준
+    if NOW_KST.hour < 6:
+        DAY_START = datetime.combine(NOW_KST.date() - timedelta(days=1), datetime.min.time()) + timedelta(hours=6)
+    else:
+        DAY_START = datetime.combine(NOW_KST.date(), datetime.min.time()) + timedelta(hours=6)
     DAY_END = DAY_START + timedelta(days=1) - timedelta(minutes=1)
     
     # 특수문자 참고 ❘ ❙ ❚ ❛ ❜
@@ -883,7 +893,7 @@ def fallback():
                             chars.sort(key=lambda x: x['ItemAvgLevel'], reverse=True)
                             expedition_text += f"[{server} 서버]\n"
                             for c in chars:
-                                expedition_text += f"- {c['CharacterName']} Lv{c['CharacterLevel']} {c['CharacterClassName']} ({c['ItemAvgLevel']})\n"
+                                expedition_text += f"- [{c['CharacterClassName']}] {c['CharacterName']} Lv{c['CharacterLevel']} ({c['ItemAvgLevel']})\n"
                             expedition_text += "\n"
         
                         response_text = expedition_text.strip()
@@ -2107,6 +2117,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
