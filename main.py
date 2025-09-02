@@ -1251,7 +1251,7 @@ def fallback():
                 lopec_ranking_text += f"\n직업: {lopec_ranking['classRank']['rank']}위 (상위 {lopec_ranking['classRank']['percentage']}%)"
                 # 전체: 17,699위 (상위 2.94%)
                 # 직업: 1,546위 (상위 3.86%)
-                
+
                 
                 # 데이터를 보기좋게 텍스트로 정제하기 (참조 : https://flask-production-df81.up.railway.app/armories/아도라o/summary)
                 # response_text = match_info_to_text(data)
@@ -1261,6 +1261,10 @@ def fallback():
                 
                 # 로펙(LOPEC) 바로가기 URL
                 lopec_url = f"https://lopec.kr/mobile/search/search.html?headerCharacterName={info_char_name}"
+
+                card_text = f"""
+{lopec_ranking_text}
+"""
 
                 preview_text = f"""❙ {info_char_name} #{character_class} 
                 
@@ -2362,6 +2366,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
