@@ -1312,6 +1312,12 @@ def fallback():
                     character_image = data["ArmoryProfile"]["CharacterImage"]
                     items = [
                         {
+                            "simpleImage": {
+                                "imageUrl": character_image,
+                                "altText": f"{info_char_name} 캐릭터 이미지"
+                            }
+                        },
+                        {
                             "textCard": {
                                 "description": f"◕ᴗ◕🌸\n❛{info_char_name}❜ 님의 캐릭터 정보를 알려드릴게요\n\n",
                                 "buttons": [
@@ -1324,14 +1330,14 @@ def fallback():
                             }
                         },
                         {
-                            "simpleImage": {
-                                "imageUrl": character_image,
-                                "altText": f"{info_char_name} 캐릭터 이미지"
+                            "simpleText": {
+                                "text": preview_text,
+                                "extra": {}
                             }
                         },
                         {
                             "simpleText": {
-                                "text": preview_text,
+                                "text": character_image,
                                 "extra": {}
                             }
                         }
@@ -2358,6 +2364,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
