@@ -778,9 +778,7 @@ def fallback():
                                 for item in reward["Items"]:
                                     if item["Name"] == "골드":
                                         tags.append("골드")
-                                    elif item["Name"] == "실링":
-                                        tags.append("실링")
-                        # 중복 제거
+                        
                         tags = list(dict.fromkeys(tags))
                         tag_str = f"({', '.join(tags)})" if tags else ""
                         formatted_names.append(f"❛{n}{tag_str}❜")
@@ -2109,6 +2107,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
