@@ -768,22 +768,22 @@ def fallback():
                 
                 if not prefix:
                     # 접두어 없으면 그냥 나열
-                    
                     formatted_names = []
-                    
+                
                     for n in names:
-                        # 모험섬 중에서 ContentsName이 일치하는 것 찾기
                         its = next((x for x in adventure_island_its if x["ContentsName"] == n), None)
+                        tags = []
                         if its:
-                            has_gold = any(
-                                item["Name"] == "골드"
-                                for reward in its["RewardItems"]
-                                for item in reward["Items"]
-                            )
-                            if has_gold:
-                                formatted_names.append(f"❛{n}(골드)❜")
-                            else:
-                                formatted_names.append(f"❛{n}❜")
+                            for reward in its["RewardItems"]:
+                                for item in reward["Items"]:
+                                    if item["Name"] == "골드":
+                                        tags.append("골드")
+                                    elif item["Name"] == "실링":
+                                        tags.append("실링")
+                        # 중복 제거
+                        tags = list(dict.fromkeys(tags))
+                        tag_str = f"({', '.join(tags)})" if tags else ""
+                        formatted_names.append(f"❛{n}{tag_str}❜")
                 
                     return ", ".join(formatted_names)
             
@@ -2109,6 +2109,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
