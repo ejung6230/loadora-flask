@@ -1239,15 +1239,21 @@ def fallback():
                 # 공식 api에서 데이터 받아오기
                 data = fetch_armory(info_char_name, "summary")
 
-                # CharacterClassName과 ArkPassive Title 합치기
+                # 로펙 기준 랭킹 불러오기
                 passive_title = data.get("ArkPassive", {}).get("Title", "")
                 class_name = data.get("ArmoryProfile", {}).get("CharacterClassName", "")
-                initial_title = get_initial(passive_title) # 로펙 기준으로 이니셜 변환
+                initial_title = get_initial(passive_title) 
                 character_class = f"{initial_title} {class_name}" if initial_title else class_name
 
-                lopec_test = fetch_ranking(info_char_name, character_class)
+                lopec_ranking = fetch_ranking(info_char_name, character_class)
 
                 logger.info("lopec_test: %s", lopec_test)
+
+                # 전체랭킹 : 17,699위2.94%
+                # 직업랭킹 : 1,546위3.86%
+
+                lopec_ranking_text = f"전체랭킹 : {lopec_ranking['totalRank']['rank']}위 {lopec_ranking['totalRank']['percentage']}%"
+                lopec_ranking_text += f"\n직업랭킹 : {lopec_ranking['classRank']['rank']}위 {lopec_ranking['classRank']['percentage']}%"
 
                 
                 # 데이터를 보기좋게 텍스트로 정제하기 (참조 : https://flask-production-df81.up.railway.app/armories/아도라o/summary)
@@ -1259,16 +1265,10 @@ def fallback():
                 # 로펙(LOPEC) 바로가기 URL
                 lopec_url = f"https://lopec.kr/mobile/search/search.html?headerCharacterName={info_char_name}"
 
-                # simpleText 전체보기용 함수
-                def make_preview_with_more(text, max_lines=6):
-                    lines = text.split("\n")
-                    if len(lines) > max_lines:
-                        allsee = "\u034F" * 50  # 숨김 문자
-                        return "\n".join(lines[:max_lines]) + f"\n▼ 더보기 {allsee}"
-                    return text
-                
-                # 전체 텍스트 예시 (API 데이터를 기반으로 구성)
-                full_text = f"""❙ {info_char_name}님의 장비 정보
+                preview_text = f"""❙ {info_char_name}님의 랭킹 
+{lopec_ranking_text}
+
+[장비 정보]
 고대 무기 +21 [+40]: 92
 고대 투구 +19 [+40]: 92
 고대 상의 +20 [+40]: 93
@@ -1305,8 +1305,6 @@ def fallback():
 • 아이템 레벨: 1,730.00
 • 평균 품질: 94.83
 """
-                
-                preview_text = make_preview_with_more(full_text, max_lines=6)
                 
                 if data:
                     # 데이터가 있을 때만 텍스트 + 이미지 + 버튼
@@ -2359,6 +2357,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
