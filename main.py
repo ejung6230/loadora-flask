@@ -1274,7 +1274,6 @@ def fallback():
                 card_text = f"""# {character_class}
 
 ❙ 정보
-서버: {server_name}
 길드: {guild_name} ({guild_member_grade})
 캐릭터레벨: Lv {character_level}
 템레벨: {item_avg_level}
@@ -1336,7 +1335,7 @@ def fallback():
                         },
                         {
                             "basicCard": {
-                                "title": info_char_name,
+                                "title": f"{server_name} 서버 | {info_char_name}",
                                 "description": card_text,
                                 "thumbnail": {
                                     "imageUrl": character_image,
@@ -2381,6 +2380,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
