@@ -1249,11 +1249,11 @@ def fallback():
 
                 logger.info("lopec_ranking: %s", lopec_ranking)
 
-                # 전체랭킹 : 17,699위2.94%
-                # 직업랭킹 : 1,546위3.86%
+                # 전체랭킹: 17,699위 (상위 2.94%)
+                # 직업랭킹: 1,546위 (상위 3.86%)
 
-                lopec_ranking_text = f"전체랭킹 : {lopec_ranking['totalRank']['rank']}위 {lopec_ranking['totalRank']['percentage']}%"
-                lopec_ranking_text += f"\n직업랭킹 : {lopec_ranking['classRank']['rank']}위 {lopec_ranking['classRank']['percentage']}%"
+                lopec_ranking_text = f"전체랭킹 : {lopec_ranking['totalRank']['rank']}위 (상위 {lopec_ranking['totalRank']['percentage']}%)"
+                lopec_ranking_text += f"\n직업랭킹 : {lopec_ranking['classRank']['rank']}위 (상위 {lopec_ranking['classRank']['percentage']}%)"
 
                 
                 # 데이터를 보기좋게 텍스트로 정제하기 (참조 : https://flask-production-df81.up.railway.app/armories/아도라o/summary)
@@ -2364,6 +2364,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
