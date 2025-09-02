@@ -83,7 +83,47 @@ def get_calendar():
             "error": True,
             "message": str(e)
         }), 500
-        
+
+
+# ---------- 원정대 API 요청 함수 ----------
+def fetch_expedition(character_name: str, timeout: float = 5) -> dict:
+    if not character_name:
+        raise ValueError("캐릭터 이름을 입력해야 합니다.")
+    
+    url = f"https://developer-lostark.game.onstove.com/characters/{character_name}/siblings"
+    
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=timeout)
+        resp.raise_for_status()
+        return resp.json()
+    except requests.exceptions.HTTPError as e:
+        if e.response and e.response.status_code == 503:
+            raise Exception("서비스 점검 중입니다. 잠시 후 다시 시도해주세요.") from e
+        else:
+            raise Exception(f"원정대 정보를 불러올 수 없습니다. (오류 코드: {e.response.status_code})") from e
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"서버와 통신 중 오류가 발생했습니다. ({e})") from e
+
+# ---------- Flask 라우트 (쿼리 파라미터 사용) ----------
+@app.route('/account/characters', methods=['GET'])
+def get_expedition_route():
+    character_name = request.args.get('characterName', '').strip()
+    
+    if not character_name:
+        return jsonify({
+            "error": True,
+            "message": "characterName 쿼리 파라미터를 입력해주세요."
+        }), 400
+    
+    try:
+        data = fetch_expedition(character_name)
+        # 필요하면 organize_characters_by_server(data) 적용 가능
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({
+            "error": True,
+            "message": str(e)
+        }), 500
 
 def organize_characters_by_server(char_list):
     organized = {}
@@ -913,14 +953,12 @@ def fallback():
             if not expedition_char_name:
                 response_text = "◕_◕💧\n캐릭터 이름을 입력해주세요.\nex) .원정대 캐릭터명"
             else:
-                url = f"https://developer-lostark.game.onstove.com/characters/{expedition_char_name}/siblings"
-
                 try:
-                    resp = requests.get(url, headers=HEADERS, timeout=5)
-                    resp.raise_for_status()
-                    data = resp.json()
-        
+                    # 원정대 정보 받아오기
+                    data = fetch_expedition(expedition_char_name)
+                    # 캐릭터 리스트를 서버별로 그룹화
                     organized_chars = organize_characters_by_server(data)
+                    
                     if organized_chars:
                         expedition_text = f"◕ᴗ◕🌸\n❛{expedition_char_name}❜ 님의 원정대 정보를 알려드릴게요.\n\n"
                         for server, chars in organized_chars.items():
@@ -935,6 +973,7 @@ def fallback():
                             expedition_text += "\n"
                                    
                         response_text = expedition_text.strip()
+
                 except requests.exceptions.HTTPError as e:
                     if e.response is not None and e.response.status_code == 503:
                         # 서버 점검 처리
@@ -2155,6 +2194,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
