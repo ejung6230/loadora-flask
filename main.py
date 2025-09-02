@@ -1324,7 +1324,7 @@ def fallback():
                                     "link": {
                                         "web": character_image
                                     },
-                                    "fixedRatio": true,
+                                    "fixedRatio": True,
                                     "altText": f"{info_char_name} 캐릭터 이미지"
                                 },
                                 "buttons": [
@@ -2362,6 +2362,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
