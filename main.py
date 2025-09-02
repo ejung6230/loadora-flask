@@ -1265,7 +1265,8 @@ def fallback():
                 # 로펙(LOPEC) 바로가기 URL
                 lopec_url = f"https://lopec.kr/mobile/search/search.html?headerCharacterName={info_char_name}"
 
-                preview_text = f"""❙ {info_char_name}님의 랭킹 
+                preview_text = f"""❙ {info_char_name} #{character_class} 
+                
 {lopec_ranking_text}
 
 [장비 정보]
@@ -2357,6 +2358,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
