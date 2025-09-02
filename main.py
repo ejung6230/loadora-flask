@@ -1247,7 +1247,7 @@ def fallback():
 
                 lopec_ranking = fetch_ranking(info_char_name, character_class)
 
-                logger.info("lopec_test: %s", lopec_test)
+                logger.info("lopec_ranking: %s", lopec_ranking)
 
                 # 전체랭킹 : 17,699위2.94%
                 # 직업랭킹 : 1,546위3.86%
@@ -2364,6 +2364,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
