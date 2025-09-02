@@ -949,13 +949,13 @@ def fallback():
                 "환수사": "[환수사]",
             }
 
-            
             if not expedition_char_name:
                 response_text = "◕_◕💧\n캐릭터 이름을 입력해주세요.\nex) .원정대 캐릭터명"
             else:
                 try:
                     # 원정대 정보 받아오기
                     data = fetch_expedition(expedition_char_name)
+                    
                     # 캐릭터 리스트를 서버별로 그룹화
                     organized_chars = organize_characters_by_server(data)
                     
@@ -963,7 +963,7 @@ def fallback():
                         expedition_text = f"◕ᴗ◕🌸\n❛{expedition_char_name}❜ 님의 원정대 정보를 알려드릴게요.\n\n"
                         for server, chars in organized_chars.items():
                             chars.sort(key=lambda x: x['ItemAvgLevel'], reverse=True)
-                            expedition_text += f"❙ {server}({len(chars)}개)\n"
+                            expedition_text += f"❙ {server} ({len(chars)}개)\n"
 
                             # 출력 부분 수정
                             for c in chars:
@@ -2194,6 +2194,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
