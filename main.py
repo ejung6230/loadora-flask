@@ -930,7 +930,7 @@ def fallback():
                             # 출력 부분 수정
                             for c in chars:
                                 class_display = CLASS_MAP.get(c['CharacterClassName'], f"[{c['CharacterClassName']}]")
-                                expedition_text += f"- {class_display} {c['CharacterName']} Lv{c['CharacterLevel']} ({c['ItemAvgLevel']})\n"
+                                expedition_text += f"- {class_display} Lv{c['CharacterLevel']} {c['CharacterName']} ({c['ItemAvgLevel']})\n"
                                 
                             expedition_text += "\n"
                                    
