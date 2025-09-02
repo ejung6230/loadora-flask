@@ -1318,20 +1318,8 @@ def fallback():
                             }
                         },
                         {
-                            "textCard": {
-                                "description": f"◕ᴗ◕🌸\n❛{info_char_name}❜ 님의 캐릭터 정보를 알려드릴게요\n\n",
-                                "buttons": [
-                                    {"label": "전투정보실 보기", "action": "webLink", "webLinkUrl": armory_url, "highlight": True},
-                                    {"label": "로펙 보기", "action": "webLink", "webLinkUrl": lopec_url, "highlight": True},
-                                    {"label": "공유하기", "highlight": False, "action": "share"}
-                                ],
-                                "lock": False,
-                                "forwardable": False
-                            }
-                        },
-                        {
                             "simpleText": {
-                                "text": preview_text,
+                                "text": f"◕ᴗ◕🌸\n❛{info_char_name}❜ 님의 캐릭터 정보를 알려드릴게요\n\n",
                                 "extra": {}
                             }
                         },
@@ -2364,6 +2352,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
