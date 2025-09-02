@@ -1236,7 +1236,7 @@ def fallback():
                 combined_text = f"{initial_title} {class_name}" if initial_title else class_name
                 
 
-                # logger.info("combined_text: %s", combined_text)
+                logger.info("combined_text: %s", combined_text)
                 
                 # 데이터를 보기좋게 텍스트로 정제하기 (참조 : https://flask-production-df81.up.railway.app/armories/아도라o/summary)
                 # response_text = match_info_to_text(data)
@@ -2347,6 +2347,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
