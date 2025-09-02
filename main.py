@@ -1268,13 +1268,15 @@ def fallback():
                 item_avg_level = data["ArmoryProfile"]["ItemAvgLevel"]
                 combat_power = data["ArmoryProfile"]["CombatPower"]
                 guild_name = data["ArmoryProfile"]["GuildName"]
+                guild_member_grade = data["ArmoryProfile"]["GuildMemberGrade"]
                 character_level = data["ArmoryProfile"]["CharacterLevel"]
+                GuildMemberGrade
                 
                 card_text = f"""# {character_class}
 
 ❙ 정보
 서버: {server_name}
-길드: {guild_name}
+길드: {guild_name} ({guild_member_grade})
 
 ❙ 레벨
 캐릭터레벨: Lv {character_level}
@@ -2386,6 +2388,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
