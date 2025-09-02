@@ -60,23 +60,28 @@ WEEKDAY_KO = {
 # -----------------------------
 # 로펙 랭킹 조회 api
 # -----------------------------
-def fetch_ranking(nickname: str):
+def fetch_ranking(nickname: str, character_class: str) -> dict:
     url = "https://api.lopec.kr/api/ranking"
 
     header = {
         "Accept": "application/json",
         "User-Agent": "Flask-App/1.0"
     }
-    
+
+
     try:
         response = requests.get(
             url,
-            params={"nickname": nickname},
+            params={
+                "nickname": nickname,
+                "characterClass": character_class
+            },
             headers=header,
             timeout=3.5
         )
         response.raise_for_status()
         return response.json()
+
 
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 503:
@@ -90,6 +95,7 @@ def fetch_ranking(nickname: str):
 @app.route("/ranking", methods=["GET"])
 def get_ranking():
     nickname = request.args.get("nickname")
+    character_class = request.args.get("characterClass")  # 추가
 
     if not nickname:
         return jsonify({
@@ -97,8 +103,14 @@ def get_ranking():
             "message": "nickname 파라미터가 필요합니다."
         }), 400
 
+    if not character_class:
+        return jsonify({
+            "error": True,
+            "message": "characterClass 파라미터가 필요합니다."
+        }), 400
+
     try:
-        data = fetch_ranking(nickname)
+        data = fetch_ranking(nickname, character_class)
         return jsonify(data)
     except Exception as e:
         return jsonify({
@@ -1230,13 +1242,13 @@ def fallback():
                 # CharacterClassName과 ArkPassive Title 합치기
                 passive_title = data.get("ArkPassive", {}).get("Title", "")
                 class_name = data.get("ArmoryProfile", {}).get("CharacterClassName", "")
+                initial_title = get_initial(passive_title) # 로펙 기준으로 이니셜 변환
+                character_class = f"{initial_title} {class_name}" if initial_title else class_name
 
-                initial_title = get_initial(passive_title)
-                
-                combined_text = f"{initial_title} {class_name}" if initial_title else class_name
-                
+                lopec_test = fetch_ranking(info_char_name, character_class)
 
-                logger.info("combined_text: %s", combined_text)
+                logger.info("lopec_test: %s", lopec_test)
+
                 
                 # 데이터를 보기좋게 텍스트로 정제하기 (참조 : https://flask-production-df81.up.railway.app/armories/아도라o/summary)
                 # response_text = match_info_to_text(data)
@@ -2347,6 +2359,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
