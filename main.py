@@ -765,10 +765,27 @@ def fallback():
                 # 접두어 제거 후 나머지
                 suffixes = [n.replace(prefix, "").strip(" ()") for n in names]
                 suffixes = [s for s in suffixes if s]
-            
+                
                 if not prefix:
                     # 접두어 없으면 그냥 나열
-                    return ", ".join(f"❛{n}❜" for n in names)
+                    
+                    formatted_names = []
+                    
+                    for n in names:
+                        # 모험섬 중에서 ContentsName이 일치하는 것 찾기
+                        its = next((x for x in adventure_island_its if x["ContentsName"] == n), None)
+                        if its:
+                            has_gold = any(
+                                item["Name"] == "골드"
+                                for reward in its["RewardItems"]
+                                for item in reward["Items"]
+                            )
+                            if has_gold:
+                                formatted_names.append(f"❛{n}(골드)❜")
+                            else:
+                                formatted_names.append(f"❛{n}❜")
+                
+                    return ", ".join(formatted_names)
             
                 if len(suffixes) >= 8:
                     # 접두어 + 첫 번째 suffix, 나머지 외N
@@ -799,7 +816,6 @@ def fallback():
                     for summary, names in pattern_groups.items():
                         response_text += f"- {group_names(names)}: {summary}\n"
                         
-                    logger.info("pattern_groups: %s", pattern_groups)
             
                 # ---------- 남은 시간 계산 ----------
                 # 오늘 일정 중 가장 빠른 시간이 현재보다 이후인 것 찾기
@@ -2093,6 +2109,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
