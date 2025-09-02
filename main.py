@@ -876,6 +876,40 @@ def fallback():
         match_expedition = re.match(r"^(\.원정대|원정대|\.ㅇㅈㄷ|ㅇㅈㄷ)\s*(.*)$", user_input)
         if match_expedition:
             expedition_char_name = match_expedition.group(2).strip()
+
+            # 캐릭터 클래스명 축약 매핑
+            CLASS_MAP = {
+                "디스트로이어": "[디　트]",
+                "워로드": "[워로드]",
+                "버서커": "[버서커]",
+                "홀리나이트": "[홀　나]",
+                "슬레이어": "[슬　레]",
+                "발키리": "[발키리]",
+                "스트라이커": "[스　커]",
+                "브레이커": "[브　커]",
+                "배틀마스터": "[배　마]",
+                "인파이터": "[인　파]",
+                "기공사": "[기공사]",
+                "창술사": "[창술사]",
+                "데빌헌터": "[데　헌]",
+                "블래스터": "[블　래]",
+                "호크아이": "[호　크]",
+                "스카우터": "[스　카]",
+                "건슬링어": "[건　슬]",
+                "바드": "[바　드]",
+                "서머너": "[서머너]",
+                "아르카나": "[알　카]",
+                "소서리스": "[소　서]",
+                "블레이드": "[블　레]",
+                "데모닉": "[데모닉]",
+                "리퍼": "[리　퍼]",
+                "소울이터": "[소　울]",
+                "도화가": "[도화가]",
+                "기상술사": "[기　상]",
+                "환수사": "[환수사]",
+            }
+
+            
             if not expedition_char_name:
                 response_text = "◕_◕💧\n캐릭터 이름을 입력해주세요.\nex) .원정대 캐릭터명"
             else:
@@ -891,11 +925,15 @@ def fallback():
                         expedition_text = f"◕ᴗ◕🌸\n❛{expedition_char_name}❜ 님의 원정대 정보를 알려드릴게요.\n\n"
                         for server, chars in organized_chars.items():
                             chars.sort(key=lambda x: x['ItemAvgLevel'], reverse=True)
-                            expedition_text += f"[{server} 서버]\n"
+                            expedition_text += f"❙ {server}\n"
+
+                            # 출력 부분 수정
                             for c in chars:
-                                expedition_text += f"- [{c['CharacterClassName']}] {c['CharacterName']} Lv{c['CharacterLevel']} ({c['ItemAvgLevel']})\n"
+                                class_display = CLASS_MAP.get(c['CharacterClassName'], f"[{c['CharacterClassName']}]")
+                                expedition_text += f"- {class_display} {c['CharacterName']} Lv{c['CharacterLevel']} ({c['ItemAvgLevel']})\n"
+                                
                             expedition_text += "\n"
-        
+                                   
                         response_text = expedition_text.strip()
                 except requests.exceptions.HTTPError as e:
                     if e.response is not None and e.response.status_code == 503:
@@ -2117,6 +2155,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
