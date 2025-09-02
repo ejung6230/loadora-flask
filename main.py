@@ -57,9 +57,6 @@ WEEKDAY_KO = {
     'Sunday':'일'
 }
 
-
-
-
 # -----------------------------
 # 로펙 랭킹 조회 api
 # -----------------------------
@@ -1229,6 +1226,17 @@ def fallback():
             else:
                 # 공식 api에서 데이터 받아오기
                 data = fetch_armory(info_char_name, "summary")
+
+                # CharacterClassName과 ArkPassive Title 합치기
+                passive_title = data.get("ArkPassive", {}).get("Title", "")
+                class_name = data.get("ArmoryProfile", {}).get("CharacterClassName", "")
+
+                initial_title = get_initial(passive_title)
+                
+                combined_text = f"{initial_title} {class_name}" if initial_title else class_name
+                
+
+                # logger.info("combined_text: %s", combined_text)
                 
                 # 데이터를 보기좋게 텍스트로 정제하기 (참조 : https://flask-production-df81.up.railway.app/armories/아도라o/summary)
                 # response_text = match_info_to_text(data)
@@ -1582,11 +1590,104 @@ def get_armory(character_name, endpoint):
 
 
 
+
+
+
 # KorLark API URL
 KORLARK_API_URL = "https://api.korlark.com/lostark/merchant/reports"
 
 # 서버 이름 순서
 SERVER_ORDER = ["루페온", "실리안", "아만", "아브렐슈드", "카단", "카마인", "카제로스", "니나브"]
+
+
+# name → initial 변환 함수
+def get_initial(name: str) -> str:
+    for item in arkFilter:
+        if item["name"] == name:
+            return item["initial"]
+    return name  # 없으면 원래 이름 반환
+                    
+arkFilter = [
+    { name: "창술 수련", initial: "고기", finalDamagePer: 6.4, criticalChancePer: 15, healthPer: 2.5 },
+    { name: "철옹성", initial: "전태", finalDamagePer: 6.4, healthPer: 2.5 },
+    { name: "강인한 육체", initial: "비기", moveSpeed: 20, atkSpeed: 20, finalDamagePer: 6, criticalChancePer: 63.2, healthPer: 2.2 },
+    { name: "광기", initial: "광기", moveSpeed: 15, atkSpeed: 15, finalDamagePer: 6, criticalChancePer: 33.2, healthPer: 2.2 },
+    { name: "중력 갑옷", initial: "분망", finalDamagePer: 6.4, criticalChancePer: 18, healthPer: 2.3 },
+    { name: "중력 충격", initial: "중수", finalDamagePer: 6.4, criticalChancePer: 30, healthPer: 2.3 },
+    { name: "빛의 기사", initial: "빛의 기사", finalDamagePer: 6, healthPer: 2.2 },
+    { name: "해방자", initial: "서폿", stigmaPer: 10, healthPer: 2.2 },
+    { name: "신성한 의무", initial: "심판자", criFinalDamagePer: 8, finalDamagePer: 6, healthPer: 2.1 },
+    { name: "신성 보호", initial: "서폿", stigmaPer: 10, healthPer: 2.1 },
+    { name: "지치지 않는 힘", initial: "처단", criticalChancePer: 10, moveSpeed: 20, atkSpeed: 20, finalDamagePer: 6, criticalChancePer: 30, healthPer: 2.2 },
+    { name: "끝나지 않는 분노", initial: "포식", criticalChancePer: 10, moveSpeed: 20, atkSpeed: 20, finalDamagePer: 6, criticalChancePer: 30, healthPer: 2.2 },
+    { name: "기력 회복", initial: "체술", criticalChancePer: 10, moveSpeed: 1, atkSpeed: 1, finalDamagePer: 6, healthPer: 2.3 },
+    { name: "속도 강화", initial: "충단", criticalChancePer: 10, moveSpeed: 1, atkSpeed: 20, finalDamagePer: 6, healthPer: 2.3 },
+    { name: "강력한 체술", initial: "초심", criticalChancePer: 30, moveSpeed: 16, atkSpeed: 20.8, criticalDamagePer: 35, finalDamagePer: 6, healthPer: 2.2 },
+    { name: "강력한 오의", initial: "오의", criticalChancePer: 30, moveSpeed: 16, atkSpeed: 20.8, finalDamagePer: 6, healthPer: 2.2 },
+    { name: "세맥타통", initial: "세맥", moveSpeed: 1, atkSpeed: 10, atkPer: 6, finalDamagePer: 6, healthPer: 2.1 },
+    { name: "역천지체", initial: "역천", moveSpeed: 1, atkSpeed: 15, atkPer: 6, finalDamagePer: 6, healthPer: 2.1 },
+    { name: "절제", initial: "절제", criticalChancePer: 10, criFinalDamagePer: 8, criticalChancePer: 20, finalDamagePer: 6, healthPer: 2.2 },
+    { name: "절정", initial: "절정", criticalChancePer: 10, moveSpeed: 15, atkSpeed: 15, criFinalDamagePer: 8, criticalChancePer: 20, finalDamagePer: 6, healthPer: 2.2 },
+    { name: "일격필살", initial: "일격", criticalChancePer: 30, finalDamagePer: 6, healthPer: 2.2 },
+    { name: "오의난무", initial: "난무", criticalChancePer: 30, atkSpeed: 8, finalDamagePer: 6, healthPer: 2.2 },
+    { name: "권왕파천무", initial: "권왕", atkSpeed: 20, finalDamagePer: 6, criticalChancePer: 15, healthPer: 2.3 },
+    { name: "수라의 길", initial: "수라", moveSpeed: 15, finalDamagePer: 6, healthPer: 2.3 },
+    { name: "전술 탄환", initial: "전탄", criticalChancePer: 34, finalDamagePer: 6, healthPer: 2.0 },
+    { name: "핸드 거너", initial: "핸건", criticalChancePer: 10, moveSpeed: 8, atkSpeed: 8, skillCool: 5, finalDamagePer: 6, healthPer: 2.0 },
+    { name: "죽음의 습격", initial: "죽습", finalDamagePer: 6, healthPer: 2.1 },
+    { name: "두 번째 동료", initial: "두동", moveSpeed: 8, finalDamagePer: 6, criticalChancePer: 40, healthPer: 2.1 },
+    { name: "포격 강화", initial: "포강", atkSpeed: 4, finalDamagePer: 6.4, criticalChancePer: 40, healthPer: 2.1 },
+    { name: "화력 강화", initial: "화강", finalDamagePer: 6.4, healthPer: 2.1 },
+    { name: "진화의 유산", initial: "유산", moveSpeed: 30, atkSpeed: 15, atkPer: 6, finalDamagePer: 6, healthPer: 2.0 },
+    { name: "아르데타인의 기술", initial: "기술", moveSpeed: 29.2, atkPer: 6, finalDamagePer: 6, healthPer: 2.0 },
+    { name: "피스메이커", initial: "피메", criticalChancePer: 10, atkSpeed: 16, finalDamagePer: 6, healthPer: 2.0 },
+    { name: "사냥의 시간", initial: "사시", criticalChancePer: 10, finalDamagePer: 6, healthPer: 2.0 },
+    { name: "황후의 은총", initial: "황후", criticalChancePer: 10, moveSpeed: 30, atkSpeed: 19.2, criticalChancePer: 33, finalDamagePer: 6, healthPer: 2.1 },
+    { name: "황제의 칙령", initial: "황제", criticalChancePer: 10, criticalChancePer: 37.6, finalDamagePer: 6, healthPer: 2.1 },
+    { name: "넘치는 교감", initial: "교감", moveSpeed: 10, atkSpeed: 10, finalDamagePer: 6.4, criticalChancePer: 11.8, healthPer: 2.1 },
+    { name: "상급 소환사", initial: "상소", moveSpeed: 1, atkSpeed: 1, finalDamagePer: 6.4, criticalChancePer: 27.8, healthPer: 2.1 },
+    { name: "구원의 선물", initial: "서폿", stigmaPer: 10, healthPer: 2.0 },
+    { name: "진실된 용맹", initial: "진실된 용맹", healthPer: 2.0 },
+    { name: "점화", initial: "점화", finalDamagePer: 6, criticalChancePer: 30, criticalDamagePer: 55, healthPer: 2.1 },
+    { name: "환류", initial: "환류", finalDamagePer: 6, healthPer: 2.1 },
+    { name: "버스트 강화", initial: "버스트", criticalChancePer: 10, moveSpeed: 22.8, atkSpeed: 32.8, finalDamagePer: 6, healthPer: 2.2 },
+    { name: "신속한 일격", initial: "잔재", criticalChancePer: 10, moveSpeed: 24.8, atkSpeed: 24.8, finalDamagePer: 6, healthPer: 2.2 },
+    { name: "멈출 수 없는 충동", initial: "충동", moveSpeed: 20, finalDamagePer: 6, healthPer: 2.1 },
+    { name: "완벽한 억제", initial: "억제", moveSpeed: 30, finalDamagePer: 6, healthPer: 2.1 },
+    { name: "달의 소리", initial: "달소", criticalChancePer: 10, moveSpeed: 30, atkSpeed: 12, finalDamagePer: 6.4, criticalChancePer: 37, healthPer: 2.0 },
+    { name: "피냄새", initial: "갈증", criticalChancePer: 10, moveSpeed: 10, atkSpeed: 10, finalDamagePer: 6.4, criticalChancePer: 43, healthPer: 2.0 },
+    { name: "영혼친화력", initial: "만월", moveSpeed: 39.2, atkSpeed: 10, finalDamagePer: 6, criticalChancePer: 34, healthPer: 2.1 },
+    { name: "그믐의 경계", initial: "그믐", moveSpeed: 29.2, atkSpeed: 20, finalDamagePer: 6, healthPer: 2.1 },
+    { name: "해의 조화", initial: "서폿", stigmaPer: 10, healthPer: 2.0 },
+    { name: "회귀", initial: "회귀", healthPer: 2.0 },
+    { name: "질풍노도", initial: "질풍", criticalChancePer: 10, criticalDamagePer: 102.08, finalDamagePer: 6, healthPer: 2.1 },
+    { name: "이슬비", initial: "이슬비", criticalChancePer: 10, finalDamagePer: 6, healthPer: 2.1 },
+    { name: "야성", initial: "야성", healthPer: 2.1 },
+    { name: "환수 각성", initial: "환각", healthPer: 2.1 },
+
+    { name: "핸드거너", initial: "핸건", criticalChancePer: 10, moveSpeed: 8, atkSpeed: 8, skillCool: 5, finalDamagePer: 6 },
+    { name: "강화 무기", initial: "전탄", criticalChancePer: 34, finalDamagePer: 6 },
+    { name: "고독한 기사", initial: "고기", finalDamagePer: 6, criticalChancePer: 15 },
+    { name: "전투 태세", initial: "전태", finalDamagePer: 6 },
+    { name: "광전사의 비기", initial: "비기", moveSpeed: 20, atkSpeed: 20, finalDamagePer: 6, criticalChancePer: 63.2 },
+    { name: "분노의 망치", initial: "분망", finalDamagePer: 6.4, criticalChancePer: 18 },
+    { name: "중력 수련", initial: "중수", finalDamagePer: 6.4, criticalChancePer: 30 },
+    { name: "심판자", initial: "심판자", criFinalDamagePer: 8, finalDamagePer: 6 },
+    { name: "축복의 오라", initial: "서폿", stigmaPer: 10 },
+    { name: "처단자", initial: "처단", criticalChancePer: 10, moveSpeed: 20, atkSpeed: 20, finalDamagePer: 6, criticalChancePer: 30 },
+    { name: "포식자", initial: "포식", criticalChancePer: 10, moveSpeed: 20, atkSpeed: 20, finalDamagePer: 6, criticalChancePer: 30 },
+    { name: "극의: 체술", initial: "체술", criticalChancePer: 10, finalDamagePer: 6 },
+    { name: "충격 단련", initial: "충단", criticalChancePer: 10, atkSpeed: 20, finalDamagePer: 6 },
+    { name: "초심", initial: "초심", criticalChancePer: 30, moveSpeed: 16, atkSpeed: 20.8, finalDamagePer: 6 },
+    { name: "오의 강화", initial: "오의", criticalChancePer: 30, moveSpeed: 16, atkSpeed: 20.8, finalDamagePer: 6 },
+    { name: "절실한 구원", initial: "서폿", stigmaPer: 10 },
+    { name: "버스트", initial: "버스트", criticalChancePer: 10, moveSpeed: 22.8, atkSpeed: 32.8, finalDamagePer: 6 },
+    { name: "잔재된 기운", initial: "잔재", criticalChancePer: 10, moveSpeed: 24.8, atkSpeed: 24.8, finalDamagePer: 6 },
+    { name: "깔쯩", initial: "갈증", criticalChancePer: 10, moveSpeed: 10, atkSpeed: 10, finalDamagePer: 6.4, criticalChancePer: 43 },
+    { name: "만월의 집행자", initial: "만월", moveSpeed: 39.2, atkSpeed: 10, finalDamagePer: 6, criticalChancePer: 34 },
+    { name: "만개", initial: "서폿", stigmaPer: 10 },
+
+]
 
 # 서버 ID → 서버 이름 매핑
 SERVER_MAP = {
@@ -2247,6 +2348,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
