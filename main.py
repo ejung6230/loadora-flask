@@ -1247,14 +1247,11 @@ def fallback():
 
                 lopec_ranking = fetch_ranking(info_char_name, character_class)
 
-                logger.info("lopec_ranking: %s", lopec_ranking)
-
-                # 전체랭킹: 17,699위 (상위 2.94%)
-                # 직업랭킹: 1,546위 (상위 3.86%)
-
-                lopec_ranking_text = f"전체랭킹 : {lopec_ranking['totalRank']['rank']}위 (상위 {lopec_ranking['totalRank']['percentage']}%)"
-                lopec_ranking_text += f"\n직업랭킹 : {lopec_ranking['classRank']['rank']}위 (상위 {lopec_ranking['classRank']['percentage']}%)"
-
+                lopec_ranking_text = f"전체: {lopec_ranking['totalRank']['rank']}위 (상위 {lopec_ranking['totalRank']['percentage']}%)"
+                lopec_ranking_text += f"\n직업: {lopec_ranking['classRank']['rank']}위 (상위 {lopec_ranking['classRank']['percentage']}%)"
+                # 전체: 17,699위 (상위 2.94%)
+                # 직업: 1,546위 (상위 3.86%)
+                
                 
                 # 데이터를 보기좋게 텍스트로 정제하기 (참조 : https://flask-production-df81.up.railway.app/armories/아도라o/summary)
                 # response_text = match_info_to_text(data)
@@ -1310,13 +1307,8 @@ def fallback():
                 if data:
                     # 데이터가 있을 때만 텍스트 + 이미지 + 버튼
                     character_image = data["ArmoryProfile"]["CharacterImage"]
+                    
                     items = [
-                        {
-                            "simpleImage": {
-                                "imageUrl": character_image,
-                                "altText": f"{info_char_name} 캐릭터 이미지"
-                            }
-                        },
                         {
                             "simpleText": {
                                 "text": f"◕ᴗ◕🌸\n❛{info_char_name}❜ 님의 캐릭터 정보를 알려드릴게요\n\n",
@@ -1324,11 +1316,29 @@ def fallback():
                             }
                         },
                         {
+                            "basicCard": {
+                                "title": info_char_name,
+                                "description": f"{character_class}\n\n❙ 랭킹\n{lopec_ranking_text}",
+                                "thumbnail": {
+                                    "imageUrl": character_image,
+                                    "link": {
+                                        "web": character_image
+                                    },
+                                    "fixedRatio": true,
+                                    "altText": f"{info_char_name} 캐릭터 이미지"
+                                },
+                                "buttons": [
+                                    {"label": "전투정보실 보기", "action": "webLink", "webLinkUrl": armory_url, "highlight": True},
+                                    {"label": "공유하기", "highlight": False, "action": "share"}
+                                ]
+                            }
+                        },
+                        {
                             "simpleText": {
-                                "text": character_image,
+                                "text": preview_text,
                                 "extra": {}
                             }
-                        }
+                        },
                     ]
                 else:
                     # 데이터 없으면 텍스트 카드만
@@ -2352,6 +2362,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
