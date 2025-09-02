@@ -1262,7 +1262,26 @@ def fallback():
                 # 로펙(LOPEC) 바로가기 URL
                 lopec_url = f"https://lopec.kr/mobile/search/search.html?headerCharacterName={info_char_name}"
 
-                card_text = f"""
+                # 캐릭터 정보
+                character_image = data["ArmoryProfile"]["CharacterImage"]
+                server_name = data["ArmoryProfile"]["ServerName"]
+                item_avg_level = data["ArmoryProfile"]["ItemAvgLevel"]
+                combat_power = data["ArmoryProfile"]["CombatPower"]
+                guild_name = data["ArmoryProfile"]["GuildName"]
+                character_level = data["ArmoryProfile"]["CharacterLevel"]
+                
+                card_text = f"""#{character_class}
+
+❙ 정보
+캐릭터레벨: Lv {character_level}
+템레벨: {item_avg_level}
+길드: {guild_name}
+
+❙ 점수
+전투력: {combat_power}
+로펙  : 임시기재
+
+❙ 랭킹
 {lopec_ranking_text}
 """
 
@@ -1309,30 +1328,28 @@ def fallback():
 """
                 
                 if data:
-                    # 데이터가 있을 때만 텍스트 + 이미지 + 버튼
-                    character_image = data["ArmoryProfile"]["CharacterImage"]
                     
                     items = [
                         {
                             "simpleText": {
-                                "text": f"◕ᴗ◕🌸\n❛{info_char_name}❜ 님의 캐릭터 정보를 알려드릴게요\n\n",
+                                "text": f"◕ᴗ◕🌸\n {server_name} 서버 ❛{info_char_name}❜ 님의 캐릭터 정보를 알려드릴게요\n\n",
                                 "extra": {}
                             }
                         },
                         {
                             "basicCard": {
                                 "title": info_char_name,
-                                "description": f"{character_class}\n\n❙ 랭킹\n{lopec_ranking_text}",
+                                "description": card_text,
                                 "thumbnail": {
                                     "imageUrl": character_image,
                                     "link": {
-                                        "web": character_image
+                                        "web": ""
                                     },
                                     "fixedRatio": True,
                                     "altText": f"{info_char_name} 캐릭터 이미지"
                                 },
                                 "buttons": [
-                                    {"label": "전투정보실 보기", "action": "webLink", "webLinkUrl": armory_url, "highlight": True},
+                                    {"label": "전투정보실", "action": "webLink", "webLinkUrl": armory_url, "highlight": True},
                                     {"label": "공유하기", "highlight": False, "action": "share"}
                                 ]
                             }
@@ -2366,6 +2383,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
