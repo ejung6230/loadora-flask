@@ -1287,11 +1287,7 @@ def fallback():
 {lopec_ranking_text}
 """
 
-                preview_text = f"""❙ {info_char_name} #{character_class} 
-                
-{lopec_ranking_text}
-
-[장비 정보]
+                preview_text = f"""❙ 장비 정보
 고대 무기 +21 [+40]: 92
 고대 투구 +19 [+40]: 92
 고대 상의 +20 [+40]: 93
@@ -2385,6 +2381,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
