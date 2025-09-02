@@ -57,6 +57,58 @@ WEEKDAY_KO = {
     'Sunday':'일'
 }
 
+
+
+
+# -----------------------------
+# 로펙 랭킹 조회 api
+# -----------------------------
+def fetch_ranking(nickname: str):
+    url = "https://api.lopec.kr/api/ranking"
+
+    header = {
+        "Accept": "application/json",
+        "User-Agent": "Flask-App/1.0"
+    }
+    
+    try:
+        response = requests.get(
+            url,
+            params={"nickname": nickname},
+            headers=header,
+            timeout=3.5
+        )
+        response.raise_for_status()
+        return response.json()
+
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 503:
+            raise Exception("랭킹 서버 점검 중입니다. 잠시 후 다시 시도해주세요.") from e
+        else:
+            raise Exception(f"랭킹 정보를 불러올 수 없습니다. (오류 코드: {e.response.status_code})") from e
+
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"랭킹 서버와 통신 중 오류가 발생했습니다. ({e})") from e
+
+@app.route("/ranking", methods=["GET"])
+def get_ranking():
+    nickname = request.args.get("nickname")
+
+    if not nickname:
+        return jsonify({
+            "error": True,
+            "message": "nickname 파라미터가 필요합니다."
+        }), 400
+
+    try:
+        data = fetch_ranking(nickname)
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({
+            "error": True,
+            "message": str(e)
+        }), 500
+
 def fetch_calendar():
     url = "https://developer-lostark.game.onstove.com/gamecontents/calendar"
     try:
@@ -1171,6 +1223,7 @@ def fallback():
         match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ)\s*(.*)$", user_input)
         if match_info:
             info_char_name = match_info.group(2).strip()
+            
             if not info_char_name:
                 response_text = "◕_◕💧\n캐릭터 이름을 입력해주세요.\nex) .정보 캐릭터명"
             else:
@@ -2194,6 +2247,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
