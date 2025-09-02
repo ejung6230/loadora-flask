@@ -798,6 +798,8 @@ def fallback():
                     response_text += " ⭐\n"
                     for summary, names in pattern_groups.items():
                         response_text += f"- {group_names(names)}: {summary}\n"
+                        
+                    logger.info("pattern_groups: %s", pattern_groups)
             
                 # ---------- 남은 시간 계산 ----------
                 # 오늘 일정 중 가장 빠른 시간이 현재보다 이후인 것 찾기
@@ -2091,6 +2093,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
