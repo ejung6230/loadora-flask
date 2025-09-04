@@ -27,6 +27,8 @@ JWT_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IktYMk40TkRDSTJ5NTA5NWp
 GEMINI_API_KEY = "AIzaSyBsxfr_8Mw-7fwr_PqZAcv3LyGuI0ybv08"
 GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
 
+MARI_SHOP_URL = "https://m-lostark.game.onstove.com/Shop"
+
 HEADERS = {
     "accept": "application/json",
     "authorization": f"bearer {JWT_TOKEN}"
@@ -40,6 +42,7 @@ TODAY = NOW_KST.date()
 # 하루 범위: 오늘 06:00 ~ 다음날 05:59
 # 06:00~23:59 조회 → 오늘 일정 기준
 # 00:00~05:59 조회 → 전날 일정 기준
+
 if NOW_KST.hour < 6:
     DAY_START = datetime.combine(NOW_KST.date() - timedelta(days=1), datetime.min.time()) + timedelta(hours=6)
 else:
@@ -56,6 +59,92 @@ WEEKDAY_KO = {
     'Saturday':'토',
     'Sunday':'일'
 }
+
+
+def fetch_shop_html():
+    headers = {"User-Agent": "Mozilla/5.0"}
+    response = requests.get(MARI_SHOP_URL, headers=headers)
+    return response.status_code, response.text
+
+@app.route("/marishop")
+def get_shop():
+    status_code, content = fetch_shop_html()
+    return jsonify({
+        "status_code": status_code,
+        "content": content
+    })
+
+def parse_shop_items(html):
+    """HTML을 받아 현재/이전 판매 상품 정보를 파싱"""
+    
+    item_pattern = re.compile(
+        r'<span class="item-name">(.+?)</span>.*?class="list__price".*?<em>(\d+)</em>(?:\s*<del>(\d+)</del>)?',
+        re.DOTALL
+    )
+
+    def clean_html_tags(text):
+        text = re.sub(r'<[^>]+>', '', text)
+        text = re.sub(r'\s+', ' ', text)
+        return text.strip()
+
+    # --- 현재 판매 상품 ---
+    current_section = html.split('<h3 class="shop-sub-title">이전 판매 상품</h3>')[0]
+    current_desc_match = re.search(r'<p class="shop-dsc">\s*(.*?)\s*</p>', current_section, re.DOTALL)
+    current_desc = clean_html_tags(current_desc_match.group(1)) if current_desc_match else ""
+
+    current_items = []
+    for name, price, original_price in item_pattern.findall(current_section):
+        price_val = int(price.strip())
+        original_val = int(original_price.strip()) if original_price and original_price.strip().isdigit() else None
+
+        current_items.append({
+            "name": name.strip(),
+            "price": price_val,
+            "original_price": original_val,
+            "discount_rate": round((original_val - price_val) / original_val * 100, 2) if original_val else None
+        })
+
+    # --- 이전 판매 상품 ---
+    previous_section = html.split('<h3 class="shop-sub-title">이전 판매 상품</h3>')[1]
+    block_pattern = re.compile(
+        r'<p class="shop-dsc">\s*(.*?)\s*</p>(.*?)(?=<p class="shop-dsc">|$)',
+        re.DOTALL
+    )
+
+    previous_blocks = []
+    for desc_html, items_html in block_pattern.findall(previous_section):
+        description = clean_html_tags(desc_html)
+        items = []
+        for name, price, original_price in item_pattern.findall(items_html):
+            price_val = int(price.strip())
+            original_val = int(original_price.strip()) if original_price and original_price.strip().isdigit() else None
+
+            items.append({
+                "name": name.strip(),
+                "price": price_val,
+                "original_price": original_val,
+                "discount_rate": round((original_val - price_val) / original_val * 100, 2) if original_val else None
+            })
+        previous_blocks.append({"description": description, "items": items})
+
+    return {
+        "current_items": {
+            "description": current_desc,
+            "items": current_items
+        },
+        "previous_items": previous_blocks
+    }
+
+@app.route("/marishop-items")
+def get_shop_items():
+    status_code, html = fetch_shop_html()
+    if status_code != 200:
+        return jsonify({"error": "Failed to fetch shop page", "status_code": status_code}), status_code
+
+    shop_data = parse_shop_items(html)
+    return jsonify(shop_data)
+
+
 
 # -----------------------------
 # 클로아 랭킹 조회 api
@@ -215,7 +304,40 @@ def fallback():
             }
         ]
 
+        # ---------- 1. 마리샵 관련 패턴 ----------
+        match_marishop = re.match(r"^(\.마리샵|마리샵|\.ㅁㄹㅅ|ㅁㄹㅅ|.ㅁㄽ|ㅁㄽ)$", user_input)
+        if match_marishop:
+            url = "https://developer-lostark.game.onstove.com/news/notices"
 
+
+
+        # ---------- 1. 마리샵 관련 패턴 ----------
+        match_marishop = re.match(r"^(\.마리샵|마리샵|\.ㅁㄹㅅ|ㅁㄹㅅ|.ㅁㄽ|ㅁㄽ)$", user_input)
+        if match_marishop:
+            status_code, html = fetch_shop_html()
+            parse_data = parse_shop_items(html)
+            shop_data = jsonify(shop_data)
+
+            
+            # ---------- 텍스트 정제 ----------
+            response_text = "◕ᴗ◕🌸\n현재 마리샵 정보를 알려드릴게요.\n\n"
+            response_text += "【현재 판매 아이템】\n"
+            for item in shop_data["current_items"]["items"]:
+                price = item["price"]
+                original = item["original_price"] if item["original_price"] is not None else "-"
+                discount = f'{item["discount_rate"]}%' if item["discount_rate"] is not None else "-"
+                response_text += f"- {item['name']} | 가격: {price} | 원래 가격: {original} | 할인율: {discount}\n"
+    
+            # 이전 아이템도 같은 형식으로 출력
+            for prev in shop_data["previous_items"]:
+                response_text += f"\n【{prev['description']}】\n"
+                for item in prev["items"]:
+                    price = item["price"]
+                    original = item["original_price"] if item["original_price"] is not None else "-"
+                    discount = f'{item["discount_rate"]}%' if item["discount_rate"] is not None else "-"
+                    response_text += f"- {item['name']} | 가격: {price} | 원래 가격: {original} | 할인율: {discount}\n"
+                        
+        
         # ---------- 1. 공지 관련 패턴 ----------
         match_notice = re.match(r"^(\.공지|공지|\.ㄱㅈ|ㄱㅈ)$", user_input)
         if match_notice:
@@ -2362,6 +2484,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
