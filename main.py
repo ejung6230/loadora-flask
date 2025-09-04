@@ -1244,7 +1244,7 @@ def fallback():
                 # 로펙(LOPEC) 바로가기 URL
                 lopec_url = f"https://lopec.kr/mobile/search/search.html?headerCharacterName={info_char_name}"
 
-                # 캐릭터 정보
+                # 캐릭터 프로필 정보 ArmoryProfile
                 character_image = data["ArmoryProfile"]["CharacterImage"]
                 server_name = data["ArmoryProfile"]["ServerName"]
                 item_avg_level = data["ArmoryProfile"]["ItemAvgLevel"]
@@ -1252,6 +1252,19 @@ def fallback():
                 guild_name = data["ArmoryProfile"]["GuildName"]
                 guild_member_grade = data["ArmoryProfile"]["GuildMemberGrade"]
                 character_level = data["ArmoryProfile"]["CharacterLevel"]
+
+                # 캐릭터 장비 정보
+                armory_equipment = data["ArmoryEquipment"]
+                # 무기 = armory_equipment
+                # 투구 = 
+                # 상의 = 
+                # 하의 = 
+                # 장갑 = 
+                # 어깨 = 
+
+
+                # JSON 파싱
+                data = json.loads(raw_json_str)
                 
                 card_text = f"""# {character_class}
 
@@ -2334,6 +2347,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
