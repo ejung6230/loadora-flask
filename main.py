@@ -78,9 +78,9 @@ def fetch_ranking(name: str):
 
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 503:
-            raise Exception("랭킹 서버 점검 중입니다. 잠시 후 다시 시도해주세요.") from e
+            return "랭킹 서버 점검 중입니다. 잠시 후 다시 시도해주세요."
         else:
-            raise Exception(f"랭킹 정보를 불러올 수 없습니다. (오류 코드: {e.response.status_code})") from e
+            return "랭킹 정보를 불러올 수 없습니다."
 
     except requests.exceptions.RequestException as e:
         raise Exception(f"랭킹 서버와 통신 중 오류가 발생했습니다. ({e})") from e
@@ -1223,12 +1223,10 @@ def fallback():
                 initial_title = get_initial(passive_title) 
                 character_class = f"{initial_title} {class_name}" if initial_title else class_name
 
-                
+                # 클로아 랭킹 통계
                 kloa_ranking = fetch_ranking(info_char_name)
-
                 kloa_ranking_text = f"전체: {kloa_ranking['total']['value']}위 (상위 {kloa_ranking['total']['position']*100:.2f}%)"
                 kloa_ranking_text += f"\n직업: {kloa_ranking['job']['value']}위 (상위 {kloa_ranking['job']['position']*100:.2f}%)"
-
                 
                 # 데이터를 보기좋게 텍스트로 정제하기 (참조 : https://flask-production-df81.up.railway.app/armories/아도라o/summary)
                 # response_text = match_info_to_text(data)
@@ -2356,6 +2354,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
