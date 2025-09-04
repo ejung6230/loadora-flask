@@ -321,7 +321,11 @@ def fallback():
                 name = item["name"]
                 count = f" [{item['count']}개]" if "count" in item else ""
                 price = item["price"]
-                discount = f" ({item['discount_rate']}% 할인)" if item.get("discount_rate") else ""
+
+                # 할인률이 존재할 때 소수점 1자리까지 표시
+                discount_rate = item.get("discount_rate")
+                discount = f" ({discount_rate:.1f}% 할인)" if discount_rate is not None else ""
+    
                 response_text += f"- {name}{count} : {price} 💎{discount}\n"
         
             # 이전 아이템
@@ -331,7 +335,11 @@ def fallback():
                     name = item["name"]
                     count = f" [{item['count']}개]" if "count" in item else ""
                     price = item["price"]
-                    discount = f" ({item['discount_rate']}% 할인)" if item.get("discount_rate") else ""
+                    
+                    # 할인률이 존재할 때 소수점 1자리까지 표시
+                    discount_rate = item.get("discount_rate")
+                    discount = f" ({discount_rate:.1f}% 할인)" if discount_rate is not None else ""
+                    
                     response_text += f"- {name}{count} : {price} 💎{discount}\n"
 
         
@@ -2481,6 +2489,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
