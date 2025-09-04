@@ -1262,7 +1262,6 @@ def fallback():
 
 ❙ 점수
 전투력: {combat_power}
-로펙   : 임시기재
 
 ❙ 랭킹
 {kloa_ranking_text}
@@ -2335,6 +2334,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
