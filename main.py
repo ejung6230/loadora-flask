@@ -322,7 +322,7 @@ def fallback():
             
             # ---------- 텍스트 정제 ----------
             response_text = "◕ᴗ◕🌸\n현재 마리샵 정보를 알려드릴게요.\n\n"
-            response_text += "【현재 판매 아이템】\n"
+            response_text += "❙ 현재 판매 아이템\n"
             for item in shop_data["current_items"]["items"]:
                 price = item["price"]
                 original = item["original_price"] if item["original_price"] is not None else "-"
@@ -331,7 +331,7 @@ def fallback():
     
             # 이전 아이템도 같은 형식으로 출력
             for prev in shop_data["previous_items"]:
-                response_text += f"\n【{prev['description']}】\n"
+                response_text += f"❙ 이전 판매 아이템{prev['description']}\n"
                 for item in prev["items"]:
                     price = item["price"]
                     original = item["original_price"] if item["original_price"] is not None else "-"
@@ -2485,6 +2485,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
