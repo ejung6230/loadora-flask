@@ -314,15 +314,15 @@ def fallback():
             parse_data = parse_shop_items(html)  # dict 형태
         
             # ---------- 텍스트 정제 ----------
-            response_text = "◕ᴗ◕🌸\n현재 마리샵 정보를 알려드릴게요.\n\n"
-            response_text += "❙ 현재 판매 아이템\n"
+            response_text = "◕ᴗ◕🌸\n현재 마리샵 판매 정보를 알려드릴게요.\n\n"
+            response_text += "❙ 현재 판매 상품\n"
             
             for item in parse_data["current_items"]["items"]:
                 name = item["name"]
                 count = f" [{item['count']}개]" if "count" in item else ""
                 price = item["price"]
                 discount = f" ({item['discount_rate']}% 할인)" if item.get("discount_rate") else ""
-                response_text += f"- {name}{count} : {price} 크리스탈{discount}\n"
+                response_text += f"- {name}{count} : {price} 💎{discount}\n"
         
             # 이전 아이템
             for prev in parse_data.get("previous_items", []):
@@ -332,7 +332,7 @@ def fallback():
                     count = f" [{item['count']}개]" if "count" in item else ""
                     price = item["price"]
                     discount = f" ({item['discount_rate']}% 할인)" if item.get("discount_rate") else ""
-                    response_text += f"- {name}{count} : {price} 크리스탈{discount}\n"
+                    response_text += f"- {name}{count} : {price} 💎{discount}\n"
 
         
         # ---------- 1. 공지 관련 패턴 ----------
@@ -2481,6 +2481,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
