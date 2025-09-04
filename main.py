@@ -330,13 +330,13 @@ def fallback():
                     name = raw_name.strip()
                     count = f"[{item['count']}개]" if "count" in item else ""
                 
-                price = item["price"]
+                price = str(item["price"]).ljust(3)
 
                 # 할인률이 존재할 때 소수점 1자리까지 표시
                 discount_rate = item.get("discount_rate")
                 discount = f" ({discount_rate:.1f}% 할인)" if discount_rate is not None else ""
     
-                response_text += f"- {price}💎: {count}{name} {discount}\n"
+                response_text += f"- {price}💎: {count} {name} {discount}\n"
         
             # 이전 아이템
             for prev in parse_data.get("previous_items", []):
@@ -354,13 +354,13 @@ def fallback():
                         name = raw_name.strip()
                         count = f"[{item['count']}개]" if "count" in item else ""
                 
-                    price = item["price"]
+                    price = str(item["price"]).ljust(3)
                     
                     # 할인률이 존재할 때 소수점 1자리까지 표시
                     discount_rate = item.get("discount_rate")
                     discount = f" ({discount_rate:.1f}% 할인)" if discount_rate is not None else ""
                     
-                    response_text += f"- {price}💎: {count}{name} {discount}\n"
+                    response_text += f"- {price}💎: {count} {name} {discount}\n"
 
         
         # ---------- 1. 공지 관련 패턴 ----------
