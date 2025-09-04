@@ -315,9 +315,10 @@ def fallback():
         match_marishop = re.match(r"^(\.마리샵|마리샵|\.ㅁㄹㅅ|ㅁㄹㅅ|.ㅁㄽ|ㅁㄽ)$", user_input)
         if match_marishop:
             status_code, html = fetch_shop_html()
+            if status_code != 200:
+                return jsonify({"error": "Failed to fetch shop page", "status_code": status_code}), status_code
             parse_data = parse_shop_items(html)
-            shop_data = jsonify(shop_data)
-
+            shop_data = jsonify(parse_data)
             
             # ---------- 텍스트 정제 ----------
             response_text = "◕ᴗ◕🌸\n현재 마리샵 정보를 알려드릴게요.\n\n"
@@ -2484,6 +2485,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
