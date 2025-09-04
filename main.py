@@ -326,7 +326,7 @@ def fallback():
                 discount_rate = item.get("discount_rate")
                 discount = f" ({discount_rate:.1f}% 할인)" if discount_rate is not None else ""
     
-                response_text += f"- {name}{count} : {price} 💎{discount}\n"
+                response_text += f"- {name}{count} : {price}💎{discount}\n"
         
             # 이전 아이템
             for prev in parse_data.get("previous_items", []):
@@ -340,7 +340,7 @@ def fallback():
                     discount_rate = item.get("discount_rate")
                     discount = f" ({discount_rate:.1f}% 할인)" if discount_rate is not None else ""
                     
-                    response_text += f"- {name}{count} : {price} 💎{discount}\n"
+                    response_text += f"- {name}{count} : {price}💎{discount}\n"
 
         
         # ---------- 1. 공지 관련 패턴 ----------
@@ -2489,6 +2489,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
