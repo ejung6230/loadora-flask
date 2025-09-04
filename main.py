@@ -326,7 +326,7 @@ def fallback():
         
             # 이전 아이템
             for prev in parse_data.get("previous_items", []):
-                response_text += f"❙ {prev.get('description', '')}\n"
+                response_text += f"\n❙ {prev.get('description', '')}\n"
                 for item in prev.get("items", []):
                     name = item["name"]
                     count = f" [{item['count']}개]" if "count" in item else ""
@@ -2481,6 +2481,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
