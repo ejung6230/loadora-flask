@@ -58,30 +58,23 @@ WEEKDAY_KO = {
 }
 
 # -----------------------------
-# 로펙 랭킹 조회 api
+# 클로아 랭킹 조회 api
 # -----------------------------
-def fetch_ranking(nickname: str, character_class: str) -> dict:
-    url = "https://api.lopec.kr/api/ranking"
+def fetch_ranking(name: str):
+    """korlark API에서 캐릭터 랭킹 데이터 가져오기"""
+    url = f"https://api.korlark.com/lostark/characters/{name}/rank"
 
-    header = {
-        "Accept": "application/json",
-        "User-Agent": "Flask-App/1.0"
+    headers = {
+        "Accept": "*/*",
+        "User-Agent": "Flask-App/1.0",
+        "Origin": "https://kloa.gg",
+        "Referer": "https://kloa.gg/"
     }
-
-
+    
     try:
-        response = requests.get(
-            url,
-            params={
-                "nickname": nickname,
-                "characterClass": character_class
-            },
-            headers=header,
-            timeout=3.5
-        )
-        response.raise_for_status()
-        return response.json()
-
+        response = requests.get(url, headers=headers)
+            response.raise_for_status()  # 오류 발생 시 예외 발생
+            return response.json()
 
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 503:
@@ -94,29 +87,16 @@ def fetch_ranking(nickname: str, character_class: str) -> dict:
 
 @app.route("/ranking", methods=["GET"])
 def get_ranking():
-    nickname = request.args.get("nickname")
-    character_class = request.args.get("characterClass")  # 추가
-
-    if not nickname:
-        return jsonify({
-            "error": True,
-            "message": "nickname 파라미터가 필요합니다."
-        }), 400
-
-    if not character_class:
-        return jsonify({
-            "error": True,
-            "message": "characterClass 파라미터가 필요합니다."
-        }), 400
+    # 쿼리 파라미터에서 name 가져오기
+    name = request.args.get("name")
+    if not name:
+        return jsonify({"error": "Missing required query parameter: name"}), 400
 
     try:
-        data = fetch_ranking(nickname, character_class)
-        return jsonify(data)
-    except Exception as e:
-        return jsonify({
-            "error": True,
-            "message": str(e)
-        }), 500
+        data = fetch_character_rank(name)
+        return jsonify(data), 200
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": str(e)}), 500
 
 def fetch_calendar():
     url = "https://developer-lostark.game.onstove.com/gamecontents/calendar"
@@ -1239,18 +1219,17 @@ def fallback():
                 # 공식 api에서 데이터 받아오기
                 data = fetch_armory(info_char_name, "summary")
 
-                # 로펙 기준 랭킹 불러오기
+                # 로펙 기준 클래스 이름 변환
                 passive_title = data.get("ArkPassive", {}).get("Title", "")
                 class_name = data.get("ArmoryProfile", {}).get("CharacterClassName", "")
                 initial_title = get_initial(passive_title) 
                 character_class = f"{initial_title} {class_name}" if initial_title else class_name
 
-                lopec_ranking = fetch_ranking(info_char_name, character_class)
+                
+                kloa_ranking = fetch_ranking(info_char_name)
 
-                lopec_ranking_text = f"전체: {lopec_ranking['totalRank']['rank']}위 (상위 {lopec_ranking['totalRank']['percentage']}%)"
-                lopec_ranking_text += f"\n직업: {lopec_ranking['classRank']['rank']}위 (상위 {lopec_ranking['classRank']['percentage']}%)"
-                # 전체: 17,699위 (상위 2.94%)
-                # 직업: 1,546위 (상위 3.86%)
+                kloa_ranking_text = f"전체: {kloa_ranking['total']['value']}위 (상위 {kloa_ranking['total']['position']*100:.2f}%)"
+                kloa_ranking_text += f"\n직업: {kloa_ranking['job']['value']}위 (상위 {kloa_ranking['job']['position']*100:.2f}%)"
 
                 
                 # 데이터를 보기좋게 텍스트로 정제하기 (참조 : https://flask-production-df81.up.railway.app/armories/아도라o/summary)
@@ -1258,7 +1237,6 @@ def fallback():
 
                 # 전투정보실 바로가기 URL
                 armory_url = f"https://lostark.game.onstove.com/Profile/Character/{info_char_name}"
-                
                 # 로펙(LOPEC) 바로가기 URL
                 lopec_url = f"https://lopec.kr/mobile/search/search.html?headerCharacterName={info_char_name}"
 
@@ -1283,7 +1261,7 @@ def fallback():
 로펙   : 임시기재
 
 ❙ 랭킹
-{lopec_ranking_text}
+{kloa_ranking_text}
 """
 
                 preview_text = f"""❙ 장비 정보
@@ -2380,6 +2358,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
