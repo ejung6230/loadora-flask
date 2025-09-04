@@ -88,15 +88,13 @@ def fetch_ranking(name: str):
 @app.route("/ranking", methods=["GET"])
 def get_ranking():
     # 쿼리 파라미터에서 name 가져오기
-    name = request.args.get("name")
-    if not name:
-        return jsonify({"error": "Missing required query parameter: name"}), 400
+    character_name = request.args.get('characterName', '').strip()
+    
+    if not character_name:
+        return jsonify({"error": "Missing required query parameter: characterName"}), 400
 
-    try:
-        data = fetch_character_rank(name)
-        return jsonify(data), 200
-    except requests.exceptions.RequestException as e:
-        return jsonify({"error": str(e)}), 500
+    data = fetch_ranking(character_name)
+    return jsonify(data), (200 if "error" not in data else 500)
 
 def fetch_calendar():
     url = "https://developer-lostark.game.onstove.com/gamecontents/calendar"
@@ -2358,6 +2356,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
