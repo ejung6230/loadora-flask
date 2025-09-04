@@ -318,19 +318,21 @@ def fallback():
             response_text += "❙ 현재 판매 아이템\n"
             
             for item in parse_data["current_items"]["items"]:
+                name = item["name"]
+                count = f" [{item['count']}개]" if "count" in item else ""
                 price = item["price"]
-                original = item["original_price"] if item["original_price"] is not None else "-"
-                discount = f'{item["discount_rate"]}%' if item["discount_rate"] is not None else "-"
-                response_text += f"- {item['name']} | 가격: {price} | 원래 가격: {original} | 할인율: {discount}\n"
+                discount = f" ({item['discount_rate']}% 할인)" if item.get("discount_rate") else ""
+                response_text += f"- {name}{count} : {price} 크리스탈{discount}\n"
         
             # 이전 아이템
             for prev in parse_data.get("previous_items", []):
-                response_text += f"❙ 이전 판매 아이템 {prev.get('description', '')}\n"
+                response_text += f"❙ {prev.get('description', '')}\n"
                 for item in prev.get("items", []):
+                    name = item["name"]
+                    count = f" [{item['count']}개]" if "count" in item else ""
                     price = item["price"]
-                    original = item["original_price"] if item["original_price"] is not None else "-"
-                    discount = f'{item["discount_rate"]}%' if item["discount_rate"] is not None else "-"
-                    response_text += f"- {item['name']} | 가격: {price} | 원래 가격: {original} | 할인율: {discount}\n"
+                    discount = f" ({item['discount_rate']}% 할인)" if item.get("discount_rate") else ""
+                    response_text += f"- {name}{count} : {price} 크리스탈{discount}\n"
 
         
         # ---------- 1. 공지 관련 패턴 ----------
@@ -2479,6 +2481,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
