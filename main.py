@@ -1225,8 +1225,16 @@ def fallback():
 
                 # 클로아 랭킹 통계
                 kloa_ranking = fetch_ranking(info_char_name)
-                kloa_ranking_text = f"전체: {kloa_ranking['total']['value']}위 (상위 {kloa_ranking['total']['position']*100:.2f}%)"
-                kloa_ranking_text += f"\n직업: {kloa_ranking['job']['value']}위 (상위 {kloa_ranking['job']['position']*100:.2f}%)"
+                kloa_ranking_text = kloa_ranking
+                
+                # 정상 응답이면 총합/직업 랭킹 표시
+                if isinstance(kloa_ranking, dict):
+                    kloa_ranking_text = (
+                        f"전체: {kloa_ranking['total']['value']}위 "
+                        f"(상위 {kloa_ranking['total']['position']*100:.2f}%)\n"
+                        f"직업: {kloa_ranking['job']['value']}위 "
+                        f"(상위 {kloa_ranking['job']['position']*100:.2f}%)"
+                    )
                 
                 # 데이터를 보기좋게 텍스트로 정제하기 (참조 : https://flask-production-df81.up.railway.app/armories/아도라o/summary)
                 # response_text = match_info_to_text(data)
@@ -2327,6 +2335,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
