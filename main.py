@@ -307,37 +307,31 @@ def fallback():
         # ---------- 1. 마리샵 관련 패턴 ----------
         match_marishop = re.match(r"^(\.마리샵|마리샵|\.ㅁㄹㅅ|ㅁㄹㅅ|.ㅁㄽ|ㅁㄽ)$", user_input)
         if match_marishop:
-            url = "https://developer-lostark.game.onstove.com/news/notices"
-
-
-
-        # ---------- 1. 마리샵 관련 패턴 ----------
-        match_marishop = re.match(r"^(\.마리샵|마리샵|\.ㅁㄹㅅ|ㅁㄹㅅ|.ㅁㄽ|ㅁㄽ)$", user_input)
-        if match_marishop:
             status_code, html = fetch_shop_html()
             if status_code != 200:
-                return jsonify({"error": "Failed to fetch shop page", "status_code": status_code}), status_code
-            parse_data = parse_shop_items(html)
-            shop_data = jsonify(parse_data)
-            
+                return "마리샵 페이지를 가져오는데 실패했습니다."
+        
+            parse_data = parse_shop_items(html)  # dict 형태
+        
             # ---------- 텍스트 정제 ----------
             response_text = "◕ᴗ◕🌸\n현재 마리샵 정보를 알려드릴게요.\n\n"
             response_text += "❙ 현재 판매 아이템\n"
-            for item in shop_data["current_items"]["items"]:
+            
+            for item in parse_data["current_items"]["items"]:
                 price = item["price"]
                 original = item["original_price"] if item["original_price"] is not None else "-"
                 discount = f'{item["discount_rate"]}%' if item["discount_rate"] is not None else "-"
                 response_text += f"- {item['name']} | 가격: {price} | 원래 가격: {original} | 할인율: {discount}\n"
-    
-            # 이전 아이템도 같은 형식으로 출력
-            for prev in shop_data["previous_items"]:
-                response_text += f"❙ 이전 판매 아이템{prev['description']}\n"
-                for item in prev["items"]:
+        
+            # 이전 아이템
+            for prev in parse_data.get("previous_items", []):
+                response_text += f"❙ 이전 판매 아이템 {prev.get('description', '')}\n"
+                for item in prev.get("items", []):
                     price = item["price"]
                     original = item["original_price"] if item["original_price"] is not None else "-"
                     discount = f'{item["discount_rate"]}%' if item["discount_rate"] is not None else "-"
                     response_text += f"- {item['name']} | 가격: {price} | 원래 가격: {original} | 할인율: {discount}\n"
-                        
+
         
         # ---------- 1. 공지 관련 패턴 ----------
         match_notice = re.match(r"^(\.공지|공지|\.ㄱㅈ|ㄱㅈ)$", user_input)
@@ -2485,6 +2479,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
