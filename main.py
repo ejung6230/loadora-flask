@@ -318,8 +318,18 @@ def fallback():
             response_text += "❙ 현재 판매 상품\n"
             
             for item in parse_data["current_items"]["items"]:
-                name = item["name"]
-                count = f" [{item['count']}개]" if "count" in item else ""
+                raw_name = item["name"]
+                            
+                # 정규식으로 [숫자개] 패턴 분리
+                match = re.search(r"\[(\d+)개\]", raw_name)
+                if match:
+                    count_value = match.group(1)
+                    name = re.sub(r"\[\d+개\]", "", raw_name).strip()  # [] 부분 제거
+                    count = f"[{count_value}개]"
+                else:
+                    name = raw_name.strip()
+                    count = f"[{item['count']}개]" if "count" in item else ""
+                
                 price = item["price"]
 
                 # 할인률이 존재할 때 소수점 1자리까지 표시
@@ -332,8 +342,18 @@ def fallback():
             for prev in parse_data.get("previous_items", []):
                 response_text += f"\n❙ {prev.get('description', '')}\n"
                 for item in prev.get("items", []):
-                    name = item["name"]
-                    count = f" [{item['count']}개]" if "count" in item else ""
+                    raw_name = item["name"]
+                            
+                    # 정규식으로 [숫자개] 패턴 분리
+                    match = re.search(r"\[(\d+)개\]", raw_name)
+                    if match:
+                        count_value = match.group(1)
+                        name = re.sub(r"\[\d+개\]", "", raw_name).strip()  # [] 부분 제거
+                        count = f"[{count_value}개]"
+                    else:
+                        name = raw_name.strip()
+                        count = f"[{item['count']}개]" if "count" in item else ""
+                
                     price = item["price"]
                     
                     # 할인률이 존재할 때 소수점 1자리까지 표시
