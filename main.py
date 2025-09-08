@@ -1475,8 +1475,8 @@ def fallback():
                     class_percentage = lopec_ranking["classRank"]["percentage"]
                 
                     lopec_ranking_text += (
-                        f"전체: {total_rank}위/{total_count} ({total_percentage}%)\n"
-                        f"직업: {class_rank}위/{class_count} ({class_percentage}%)"
+                        f"전체: {total_rank:,}위/{total_count:,} ({total_percentage:.2f}%)\n"
+                        f"직업: {class_rank:,}위/{class_count:,} ({class_percentage:.2f}%)"
                     )
                 else:
                     lopec_ranking_text += "랭킹 정보를 불러오지 못했습니다."
@@ -1512,14 +1512,13 @@ def fallback():
 
 ❙ 정보
 길드: {guild_name} ({guild_member_grade})
-캐릭터레벨: Lv {character_level}
-템레벨: {item_avg_level}
+레벨: {item_avg_level}
 
 ❙ 점수
-전투력: {combat_power}
+투력: {combat_power}
 로펙: {lopec_total_sum_text}
 
-❙ 랭킹
+❙ 클로아 랭킹
 {kloa_ranking_text}
 
 ❙ 로펙 랭킹
@@ -1565,7 +1564,7 @@ def fallback():
                         },
                         {
                             "basicCard": {
-                                "title": f"{server_name} 서버 | {info_char_name}",
+                                "title": f"{server_name} 서버 | {character_level} {info_char_name}",
                                 "description": card_text,
                                 "thumbnail": {
                                     "imageUrl": character_image,
@@ -2610,6 +2609,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
