@@ -1498,8 +1498,8 @@ def fallback():
                 item_avg_level = armory.get("ItemAvgLevel", "정보 없음")
                 combat_power = armory.get("CombatPower")
                 combat_power_text = f"{combat_power}" if combat_power is not None else "정보 없음"
-                guild_name = armory.get("GuildName", "정보 없음")
-                guild_member_grade = armory.get("GuildMemberGrade", "정보 없음")
+                guild_name = armory.get("GuildName") or "정보 없음"
+                guild_member_grade = armory.get("GuildMemberGrade") or "정보 없음"
                 character_level = armory.get("CharacterLevel", "정보 없음")
 
                 logger.info("여기출력3: %s", "여기출력3")
@@ -2623,6 +2623,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
