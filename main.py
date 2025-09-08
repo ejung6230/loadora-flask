@@ -1472,8 +1472,8 @@ def fallback():
                     class_percentage = lopec_ranking["classRank"]["percentage"]
                 
                     lopec_ranking_text += (
-                        f"전체 랭크: {total_rank}/{total_count} ({total_percentage}%)\n"
-                        f"클래스 랭크: {class_rank}/{class_count} ({class_percentage}%)"
+                        f"전체: {total_rank}위/{total_count} ({total_percentage}%)\n"
+                        f"직업: {class_rank}위/{class_count} ({class_percentage}%)"
                     )
                 else:
                     lopec_ranking_text += "랭킹 정보를 불러오지 못했습니다."
@@ -2607,6 +2607,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
