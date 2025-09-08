@@ -1491,14 +1491,16 @@ def fallback():
                 lopec_url = f"https://lopec.kr/mobile/search/search.html?headerCharacterName={info_char_name}"
 
                 # 캐릭터 프로필 정보 ArmoryProfile
-                character_image = data["ArmoryProfile"]["CharacterImage"]
-                server_name = data["ArmoryProfile"]["ServerName"]
-                item_avg_level = data["ArmoryProfile"]["ItemAvgLevel"]
-                combat_power = data["ArmoryProfile"]["CombatPower"]
+                armory = (data or {}).get("ArmoryProfile", {})
+                
+                character_image = armory.get("CharacterImage", "정보 없음")
+                server_name = armory.get("ServerName", "정보 없음")
+                item_avg_level = armory.get("ItemAvgLevel", "정보 없음")
+                combat_power = armory.get("CombatPower")
                 combat_power_text = f"{combat_power}" if combat_power is not None else "정보 없음"
-                guild_name = data["ArmoryProfile"]["GuildName"]
-                guild_member_grade = data["ArmoryProfile"]["GuildMemberGrade"]
-                character_level = data["ArmoryProfile"]["CharacterLevel"]
+                guild_name = armory.get("GuildName", "정보 없음")
+                guild_member_grade = armory.get("GuildMemberGrade", "정보 없음")
+                character_level = armory.get("CharacterLevel", "정보 없음")
 
                 logger.info("여기출력3: %s", "여기출력3")
 
@@ -2613,6 +2615,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
