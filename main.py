@@ -1504,6 +1504,7 @@ def fallback():
                 character_level = armory.get("CharacterLevel", "정보 없음")
                 town_level = armory.get("TownLevel", "정보 없음")
                 town_name = armory.get("TownName", "정보 없음")
+                expedition_level = armory.get("ExpeditionLevel", "정보 없음")
                 
 
                 logger.info("여기출력3: %s", "여기출력3")
@@ -1523,9 +1524,10 @@ def fallback():
                 card_text = f"""# {character_class}
 
 ❙ 정보
-원정대: Lv.{town_level} {town_name}
+원정대: {expedition_level}
 길드: {guild_name} ({guild_member_grade})
 템렙: {item_avg_level}
+영지: Lv.{town_level} {town_name}
 
 ❙ 점수
 투력: {combat_power_text}
@@ -2628,6 +2630,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
