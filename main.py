@@ -1544,7 +1544,7 @@ PVP: {pvp_grade_name}
 ❙ 로펙 랭킹
 {lopec_ranking_text}
 
-💡캐릭터 선택창으로 이동 후 다시 시도하면 최신 데이터를 확인할 수 있습니다.
+💡캐선창 이동 후 재시도 시 최신 데이터 확인 가능
 """
 
                 preview_text = f"""❙ 장비 정보
@@ -2640,6 +2640,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
