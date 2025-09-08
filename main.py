@@ -1506,6 +1506,8 @@ def fallback():
                 town_name = "이름 없는 영지" if armory.get("TownName") == "컨텐츠 개방 필요" else armory.get("TownName", "정보 없음")
                 expedition_level = armory.get("ExpeditionLevel", "정보 없음")
                 title = armory.get("Title", "정보 없음")
+                honor_point = armory.get("HonorPoint", "정보 없음")
+                
                 
 
                 logger.info("여기출력3: %s", "여기출력3")
@@ -1528,6 +1530,7 @@ def fallback():
 원정대: Lv.{expedition_level}
 영지: Lv.{town_level} {town_name}
 칭호: {title}
+명예: {honor_point}점
 길드: {guild_name} ({guild_member_grade})
 템렙: {item_avg_level}
 
@@ -2632,6 +2635,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
