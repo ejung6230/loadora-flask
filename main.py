@@ -1507,6 +1507,8 @@ def fallback():
                 expedition_level = armory.get("ExpeditionLevel", "정보 없음")
                 title = armory.get("Title", "정보 없음")
                 honor_point = armory.get("HonorPoint", "정보 없음")
+                pvp_grade_name = armory.get("PvpGradeName", "정보 없음")
+                
                 
                 
 
@@ -1529,8 +1531,9 @@ def fallback():
 ❙ 정보
 원정대: Lv.{expedition_level}
 영지: Lv.{town_level} {town_name}
-칭호: {title}
+PVP: {pvp_grade_name}
 명예: {honor_point}점
+칭호: {title}
 길드: {guild_name} ({guild_member_grade})
 템렙: {item_avg_level}
 
@@ -2635,6 +2638,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
