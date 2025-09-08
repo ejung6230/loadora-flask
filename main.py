@@ -1602,7 +1602,7 @@ def fallback():
                                 "buttons": [
                                     {
                                         "label": "원정대 정보",
-                                        "highlight": false,
+                                        "highlight": False,
                                         "action": "message",
                                         "extra": {},
                                         "messageText": f".원정대 {info_char_name}"
@@ -2623,6 +2623,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
