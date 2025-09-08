@@ -1595,7 +1595,7 @@ PVP: {pvp_grade_name}
                                     "altText": f"{info_char_name} 캐릭터 이미지"
                                 },
                                 "buttons": [
-                                    {"label": "전투정보실", "action": "webLink", "webLinkUrl": armory_url, "highlight": True},
+                                    # {"label": "전투정보실", "action": "webLink", "webLinkUrl": armory_url, "highlight": True},
                                     {"label": "로펙", "action": "webLink", "webLinkUrl": lopec_url, "highlight": True},
                                     {"label": "공유하기", "highlight": False, "action": "share"}
                                 ]
@@ -2638,6 +2638,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
