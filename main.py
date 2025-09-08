@@ -1218,16 +1218,16 @@ def fallback():
                     if organized_chars:
                         expedition_text = f"◕ᴗ◕🌸\n❛{expedition_char_name}❜ 님의 원정대 정보를 알려드릴게요.\n\n"
                         for server, chars in organized_chars.items():
-                            chars.sort(key=lambda x: x['ItemAvgLevel'], reverse=True)
+                            # ItemAvgLevel 숫자로 변환 후 높은 순으로 정렬
+                            chars.sort(key=lambda x: float(x['ItemAvgLevel']), reverse=True)
+                            
                             expedition_text += f"❙ {server} ({len(chars)}개)\n"
-
-                            # 출력 부분 수정
                             for c in chars:
                                 class_display = CLASS_MAP.get(c['CharacterClassName'], f"[{c['CharacterClassName']}]")
-                                expedition_text += f"- {class_display} {c['CharacterName']} (Lv{c['CharacterLevel']}, {c['ItemAvgLevel']})\n"
-                                
+                                item_avg = float(c['ItemAvgLevel'])
+                                expedition_text += f"- {class_display} {c['CharacterName']} (Lv{c['CharacterLevel']}, {item_avg:,.2f})\n"
                             expedition_text += "\n"
-                                   
+                        
                         response_text = expedition_text.strip()
 
                 except requests.exceptions.HTTPError as e:
@@ -2623,6 +2623,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
