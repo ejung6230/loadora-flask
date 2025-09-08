@@ -1459,7 +1459,7 @@ def fallback():
                 # 로펙 점수 POST
                 lopec_score = fetch_lopec_character(info_char_name, character_class)
                 lopec_total_sum = lopec_score.get("totalSum", None)  # totalSum 없으면 None 반환
-                lopec_total_sum_text = f"{lopec_total_sum:,.2f}" if lopec_total_sum is not None else "로펙 사이트 접속 후 재시도해주세요"
+                lopec_total_sum_text = f"{lopec_total_sum:,.2f}" if lopec_total_sum is not None else "정보 없음"
 
                 logger.info("여기출력2: %s", "여기출력2")
 
@@ -2638,6 +2638,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
