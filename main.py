@@ -1598,13 +1598,31 @@ def fallback():
                     items = [
                         {
                             "textCard": {
-                                "description": "◕_◕💧\n최신화된 캐릭터 정보가 존재하지 않습니다.",
-                                "buttons": [],
+                                "description": "◕_◕💧\n❛{info_char_name}❜ 님의 최신화된 캐릭터 정보가 존재하지 않습니다. \n💡원정대 정보를 조회하려면 버튼을 클릭하세요.",
+                                "buttons": [
+                                    {
+                                        "label": "원정대 정보",
+                                        "highlight": false,
+                                        "action": "message",
+                                        "extra": {},
+                                        "messageText": f".원정대 {info_char_name}"
+                                    }
+                                ]
                                 "lock": False,
                                 "forwardable": False
                             }
                         }
                     ]
+
+
+                            # cards.append({
+                            #     "title": name,
+                            #     "imageUrl": icon,
+                            #     "messageText": f".모험섬 {name}",
+                            #     "link": {"web": island.get("Link", "")},
+                            #     "description": f"{items_text}",
+                            #     "action": "message"
+                            # })
 
         
         # ---------- 카카오 챗봇 응답 포맷 ----------
@@ -2615,6 +2633,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
