@@ -1219,7 +1219,7 @@ def fallback():
                         expedition_text = f"◕ᴗ◕🌸\n❛{expedition_char_name}❜ 님의 원정대 정보를 알려드릴게요.\n\n"
                         for server, chars in organized_chars.items():
                             # ItemAvgLevel 숫자로 변환 후 높은 순으로 정렬
-                            chars.sort(key=lambda x: float(x['ItemAvgLevel']), reverse=True)
+                            chars.sort(key=lambda x: float(str(x['ItemAvgLevel']).replace(',', '')), reverse=True)
                             
                             expedition_text += f"❙ {server} ({len(chars)}개)\n"
                             for c in chars:
@@ -2623,6 +2623,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
