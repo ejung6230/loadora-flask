@@ -60,6 +60,40 @@ WEEKDAY_KO = {
     'Sunday':'일'
 }
 
+# 로펙 랭킹 get
+def fetch_lopec_ranking(nickname: str, character_class: str):
+    """
+    LOPEC API에서 캐릭터 랭킹 정보 가져오기
+    필수: nickname, characterClass
+    """
+    url = "https://api.lopec.kr/api/ranking"
+    headers = {
+        "Accept": "application/json",
+        "User-Agent": "Flask-App/1.0",
+        "Origin": "https://lopec.kr",
+        "Referer": "https://lopec.kr/"
+    }
+    params = {
+        "nickname": nickname,
+        "characterClass": character_class
+    }
+
+    try:
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        return response.json()
+
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 400:
+            return {"error": "잘못된 요청입니다. nickname과 characterClass를 확인하세요."}
+        elif e.response.status_code == 503:
+            return {"error": "LOPEC 서버 점검 중입니다. 잠시 후 다시 시도해주세요."}
+        else:
+            return {"error": "랭킹 정보를 불러올 수 없습니다."}
+
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"LOPEC 서버와 통신 중 오류가 발생했습니다. ({e})") from e
+
 # 로펙 점수 post
 def fetch_lopec_character(nickname: str, character_class: str):
     """
@@ -1423,6 +1457,26 @@ def fallback():
                 # 로펙 점수 POST
                 lopec_score = fetch_lopec_character(info_char_name, character_class)
                 lopec_total_sum = lopec_score.get("totalSum", None)  # totalSum 없으면 None 반환
+
+                # 로펙 랭킹 GET
+                lopec_ranking = fetch_lopec_ranking(info_char_name, character_class)
+                lopec_ranking_text = ""
+                
+                if "totalRank" in lopec_ranking and "classRank" in lopec_ranking:
+                    total_rank = lopec_ranking["totalRank"]["rank"]
+                    total_count = lopec_ranking["totalRank"]["total"]
+                    total_percentage = lopec_ranking["totalRank"]["percentage"]
+                
+                    class_rank = lopec_ranking["classRank"]["rank"]
+                    class_count = lopec_ranking["classRank"]["total"]
+                    class_percentage = lopec_ranking["classRank"]["percentage"]
+                
+                    lopec_ranking_text += (
+                        f"전체 랭크: {total_rank}/{total_count} ({total_percentage}%)\n"
+                        f"클래스 랭크: {class_rank}/{class_count} ({class_percentage}%)"
+                    )
+                else:
+                    lopec_ranking_text += "랭킹 정보를 불러오지 못했습니다."
                 
                 # 데이터를 보기좋게 텍스트로 정제하기 (참조 : https://flask-production-df81.up.railway.app/armories/아도라o/summary)
                 # response_text = match_info_to_text(data)
@@ -1464,6 +1518,9 @@ def fallback():
 
 ❙ 랭킹
 {kloa_ranking_text}
+
+❙ 로펙 랭킹
+{lopec_ranking_text}
 """
 
                 preview_text = f"""❙ 장비 정보
@@ -2548,6 +2605,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
