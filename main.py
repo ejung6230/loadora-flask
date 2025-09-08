@@ -1565,7 +1565,7 @@ def fallback():
                         },
                         {
                             "basicCard": {
-                                "title": f"{server_name} 서버 | {character_level} {info_char_name}",
+                                "title": f"{server_name} 서버 | Lv.{character_level} {info_char_name}",
                                 "description": card_text,
                                 "thumbnail": {
                                     "imageUrl": character_image,
@@ -2610,6 +2610,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
