@@ -1614,16 +1614,6 @@ def fallback():
                         }
                     ]
 
-
-                            # cards.append({
-                            #     "title": name,
-                            #     "imageUrl": icon,
-                            #     "messageText": f".모험섬 {name}",
-                            #     "link": {"web": island.get("Link", "")},
-                            #     "description": f"{items_text}",
-                            #     "action": "message"
-                            # })
-
         
         # ---------- 카카오 챗봇 응답 포맷 ----------
         
@@ -2633,6 +2623,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
