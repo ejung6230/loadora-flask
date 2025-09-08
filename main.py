@@ -1424,6 +1424,8 @@ def fallback():
                 lopec_score = fetch_lopec_character(info_char_name, character_class)
                 lopec_total_sum = None
                 
+                logger.info("lopec_score: %s", lopec_score)
+                
                 if "data" in lopec_score and "totalSum" in lopec_score["data"]:
                     lopec_total_sum = lopec_score["data"]["totalSum"]
                 
@@ -2551,6 +2553,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
