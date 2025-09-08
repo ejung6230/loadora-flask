@@ -1526,8 +1526,8 @@ def fallback():
 
 ❙ 정보
 원정대: Lv.{expedition_level}
-칭호: {title}
 영지: Lv.{town_level} {town_name}
+칭호: {title}
 길드: {guild_name} ({guild_member_grade})
 템렙: {item_avg_level}
 
@@ -2632,6 +2632,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
