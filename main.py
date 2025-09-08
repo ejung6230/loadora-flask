@@ -1422,12 +1422,7 @@ def fallback():
 
                 # 로펙 점수 POST
                 lopec_score = fetch_lopec_character(info_char_name, character_class)
-                lopec_total_sum = None
-                
-                logger.info("lopec_score: %s", lopec_score)
-                
-                if "data" in lopec_score and "totalSum" in lopec_score["data"]:
-                    lopec_total_sum = lopec_score["data"]["totalSum"]
+                lopec_total_sum = lopec_score.get("totalSum", None)  # totalSum 없으면 None 반환
                 
                 # 데이터를 보기좋게 텍스트로 정제하기 (참조 : https://flask-production-df81.up.railway.app/armories/아도라o/summary)
                 # response_text = match_info_to_text(data)
@@ -2553,6 +2548,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
