@@ -61,27 +61,39 @@ WEEKDAY_KO = {
 }
 
 # 로펙 점수 post
-def fetch_lopec_info(nickname, character_class):
-    headers = {"User-Agent": "Mozilla/5.0", "Content-Type": "application/json"}
+def fetch_lopec_character(nickname: str, character_class: str):
+    """
+    LOPEC API에서 캐릭터 정보 가져오기
+    필수: nickname, characterClass
+    """
+    url = "https://api.lopec.kr/api/character/stats"
+    headers = {
+        "Accept": "application/json",
+        "User-Agent": "Flask-App/1.0",
+        "Content-Type": "application/json",
+        "Origin": "https://lopec.kr",
+        "Referer": "https://lopec.kr/"
+    }
     payload = {
         "nickname": nickname,
         "characterClass": character_class
     }
-    LOPEC_API = "https://api.lopec.kr/api/character/stats"
-    
-    response = requests.post(LOPEC_API, json=payload, headers=headers)
-    return response.status_code, response.json()
 
-@app.route("/info")
-def get_info():
-    nickname = request.args.get("nickname", "신새룸")
-    character_class = request.args.get("characterClass", "잔재 블레이드")
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        response.raise_for_status()
+        return response.json()
 
-    status_code, data = fetch_lopec_info(nickname, character_class)
-    return jsonify({
-        "status_code": status_code,
-        "data": data
-    })
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 400:
+            return {"error": "잘못된 요청입니다. nickname과 characterClass를 확인하세요."}
+        elif e.response.status_code == 503:
+            return {"error": "LOPEC 서버 점검 중입니다. 잠시 후 다시 시도해주세요."}
+        else:
+            return {"error": "캐릭터 정보를 불러올 수 없습니다."}
+
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"LOPEC 서버와 통신 중 오류가 발생했습니다. ({e})") from e
 
 
 def fetch_shop_html():
@@ -166,6 +178,7 @@ def get_shop_items():
 
     shop_data = parse_shop_items(html)
     return jsonify(shop_data)
+
 
 
 
@@ -1405,6 +1418,14 @@ def fallback():
                         f"직업: {kloa_ranking['job']['value']}위 "
                         f"(상위 {kloa_ranking['job']['position']*100:.2f}%)"
                     )
+
+
+                # 로펙 점수 POST
+                lopec_score = fetch_lopec_character(info_char_name, character_class)
+                lopec_total_sum = None
+                
+                if "data" in lopec_score and "totalSum" in lopec_score["data"]:
+                    lopec_total_sum = lopec_score["data"]["totalSum"]
                 
                 # 데이터를 보기좋게 텍스트로 정제하기 (참조 : https://flask-production-df81.up.railway.app/armories/아도라o/summary)
                 # response_text = match_info_to_text(data)
@@ -1442,35 +1463,36 @@ def fallback():
 
 ❙ 점수
 전투력: {combat_power}
+로펙: {lopec_total_sum}
 
 ❙ 랭킹
 {kloa_ranking_text}
 """
 
                 preview_text = f"""❙ 장비 정보
-4티어 고대 무기 +21 [+40]: 92
-4티어 고대 투구 +19 [+40]: 92
-4티어 고대 상의 +20 [+40]: 93
-4티어 고대 하의 +20 [+40]: 95
-4티어 고대 장갑 +20 [+40]: 100
-4티어 고대 어깨 +20 [+40]: 97
-• 아이템 레벨: 1,730.00
-• 평균 품질: 94.83
+# 4티어 고대 무기 +21 [+40]: 92
+# 4티어 고대 투구 +19 [+40]: 92
+# 4티어 고대 상의 +20 [+40]: 93
+# 4티어 고대 하의 +20 [+40]: 95
+# 4티어 고대 장갑 +20 [+40]: 100
+# 4티어 고대 어깨 +20 [+40]: 97
+# • 아이템 레벨: 1,730.00
+# • 평균 품질: 94.83
 
-❙ 악세 정보
-4티어 고대 목걸이 [중][상][중]: 00
-4티어 고대 귀걸이 [상][중][하]: 00
-4티어 고대 귀걸이 [상][중][하]: 100
-4티어 고대 반지    [중][상][중]: 00
-4티어 고대 반지    [중][상][중]: 00
+# ❙ 악세 정보
+# 4티어 고대 목걸이 [중][상][중]: 00
+# 4티어 고대 귀걸이 [상][중][하]: 00
+# 4티어 고대 귀걸이 [상][중][하]: 100
+# 4티어 고대 반지    [중][상][중]: 00
+# 4티어 고대 반지    [중][상][중]: 00
 
-❙ 엘릭서 정보
-4티어 고대 무기 [+5][+5]: 00
-4티어 고대 투구 [+5][+5]: 00
-4티어 고대 상의 [+5][+5]: 00
-4티어 고대 하의 [+5][+5]: 00
-4티어 고대 장갑 [+5][+5]: 100
-4티어 고대 어깨 [+5][+5]: 00
+# ❙ 엘릭서 정보
+# 4티어 고대 무기 [+5][+5]: 00
+# 4티어 고대 투구 [+5][+5]: 00
+# 4티어 고대 상의 [+5][+5]: 00
+# 4티어 고대 하의 [+5][+5]: 00
+# 4티어 고대 장갑 [+5][+5]: 100
+# 4티어 고대 어깨 [+5][+5]: 00
 """
                 
                 if data:
@@ -2529,6 +2551,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
