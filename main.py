@@ -1598,7 +1598,7 @@ def fallback():
                     items = [
                         {
                             "textCard": {
-                                "description": "◕_◕💧\n❛{info_char_name}❜ 님의 최신화된 캐릭터 정보가 존재하지 않습니다. \n💡원정대 정보를 조회하려면 버튼을 클릭하세요.",
+                                "description": f"◕_◕💧\n❛{info_char_name}❜ 님의 최신화된 캐릭터 정보가 존재하지 않습니다. \n💡원정대 정보를 조회하려면 버튼을 클릭하세요.",
                                 "buttons": [
                                     {
                                         "label": "원정대 정보",
@@ -2623,6 +2623,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
