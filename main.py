@@ -1435,8 +1435,8 @@ def fallback():
                 data = fetch_armory(info_char_name, "summary")
 
                 # 로펙 기준 클래스 이름 변환
-                passive_title = data.get("ArkPassive", {}).get("Title", "")
-                class_name = data.get("ArmoryProfile", {}).get("CharacterClassName", "")
+                passive_title = (data or {}).get("ArkPassive", {}).get("Title", "")
+                class_name = (data or {}).get("ArmoryProfile", {}).get("CharacterClassName", "")
                 initial_title = get_initial(passive_title) 
                 character_class = f"{initial_title} {class_name}" if initial_title else class_name
 
@@ -2613,6 +2613,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
