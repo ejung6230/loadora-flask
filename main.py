@@ -1453,13 +1453,14 @@ def fallback():
                         f"(상위 {kloa_ranking['job']['position']*100:.2f}%)"
                     )
 
-
+                logger.info("여기출력1: %s", "여기출력1")
+                
                 # 로펙 점수 POST
                 lopec_score = fetch_lopec_character(info_char_name, character_class)
                 lopec_total_sum = lopec_score.get("totalSum", None)  # totalSum 없으면 None 반환
                 lopec_total_sum_text = f"{lopec_total_sum:.2f}" if lopec_total_sum is not None else "정보 없음"
 
-                
+                logger.info("여기출력2: %s", "여기출력2")
 
                 # 로펙 랭킹 GET
                 lopec_ranking = fetch_lopec_ranking(info_char_name, character_class)
@@ -1498,6 +1499,8 @@ def fallback():
                 guild_name = data["ArmoryProfile"]["GuildName"]
                 guild_member_grade = data["ArmoryProfile"]["GuildMemberGrade"]
                 character_level = data["ArmoryProfile"]["CharacterLevel"]
+
+                logger.info("여기출력3: %s", "여기출력3")
 
                 # 캐릭터 장비 정보
                 armory_equipment = data["ArmoryEquipment"]
@@ -1552,6 +1555,7 @@ def fallback():
 # 4티어 고대 하의 [+5][+5]: 00
 # 4티어 고대 장갑 [+5][+5]: 100
 # 4티어 고대 어깨 [+5][+5]: 00
+                logger.info("여기출력4: %s", "여기출력4")
                 
                 if data:
                     
@@ -2609,6 +2613,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
