@@ -1508,7 +1508,9 @@ def fallback():
                 # 장갑 = 
                 # 어깨 = 
 
-                
+# ❙ 클로아 랭킹
+# {kloa_ranking_text}
+
                 card_text = f"""# {character_class}
 
 ❙ 정보
@@ -1518,9 +1520,6 @@ def fallback():
 ❙ 점수
 투력: {combat_power_text}
 로펙: {lopec_total_sum_text}
-
-❙ 클로아 랭킹
-{kloa_ranking_text}
 
 ❙ 로펙 랭킹
 {lopec_ranking_text}
@@ -2610,6 +2609,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
