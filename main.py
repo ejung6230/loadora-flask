@@ -1505,7 +1505,7 @@ def fallback():
                 logger.info("여기출력3: %s", "여기출력3")
 
                 # 캐릭터 장비 정보
-                armory_equipment = data["ArmoryEquipment"]
+                armory_equipment = (data or {}).get("ArmoryEquipment", [])
                 # 무기 = armory_equipment
                 # 투구 = 
                 # 상의 = 
@@ -2615,6 +2615,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
