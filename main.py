@@ -1494,6 +1494,7 @@ def fallback():
                 server_name = data["ArmoryProfile"]["ServerName"]
                 item_avg_level = data["ArmoryProfile"]["ItemAvgLevel"]
                 combat_power = data["ArmoryProfile"]["CombatPower"]
+                combat_power_text = f"{combat_power}" if combat_power is not None else "정보 없음"
                 guild_name = data["ArmoryProfile"]["GuildName"]
                 guild_member_grade = data["ArmoryProfile"]["GuildMemberGrade"]
                 character_level = data["ArmoryProfile"]["CharacterLevel"]
@@ -1515,7 +1516,7 @@ def fallback():
 레벨: {item_avg_level}
 
 ❙ 점수
-투력: {combat_power}
+투력: {combat_power_text}
 로펙: {lopec_total_sum_text}
 
 ❙ 클로아 랭킹
@@ -2609,6 +2610,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
