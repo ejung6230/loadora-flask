@@ -1513,7 +1513,7 @@ def fallback():
 
 ❙ 정보
 길드: {guild_name} ({guild_member_grade})
-레벨: {item_avg_level}
+템렙: {item_avg_level}
 
 ❙ 점수
 투력: {combat_power_text}
@@ -2610,6 +2610,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
