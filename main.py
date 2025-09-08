@@ -1224,8 +1224,9 @@ def fallback():
                             expedition_text += f"❙ {server} ({len(chars)}개)\n"
                             for c in chars:
                                 class_display = CLASS_MAP.get(c['CharacterClassName'], f"[{c['CharacterClassName']}]")
-                                item_avg = float(c['ItemAvgLevel'])
+                                item_avg = float(str(c['ItemAvgLevel']).replace(',', ''))  # 콤마 제거 후 float 변환
                                 expedition_text += f"- {class_display} {c['CharacterName']} (Lv{c['CharacterLevel']}, {item_avg:,.2f})\n"
+                            
                             expedition_text += "\n"
                         
                         response_text = expedition_text.strip()
@@ -2623,6 +2624,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
