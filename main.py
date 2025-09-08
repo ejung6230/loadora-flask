@@ -60,6 +60,29 @@ WEEKDAY_KO = {
     'Sunday':'일'
 }
 
+# 로펙 점수 post
+def fetch_lopec_info(nickname, character_class):
+    headers = {"User-Agent": "Mozilla/5.0", "Content-Type": "application/json"}
+    payload = {
+        "nickname": nickname,
+        "characterClass": character_class
+    }
+    LOPEC_API = "https://api.lopec.kr/api/character/stats"
+    
+    response = requests.post(LOPEC_API, json=payload, headers=headers)
+    return response.status_code, response.json()
+
+@app.route("/info")
+def get_info():
+    nickname = request.args.get("nickname", "신새룸")
+    character_class = request.args.get("characterClass", "잔재 블레이드")
+
+    status_code, data = fetch_lopec_info(nickname, character_class)
+    return jsonify({
+        "status_code": status_code,
+        "data": data
+    })
+
 
 def fetch_shop_html():
     headers = {"User-Agent": "Mozilla/5.0"}
@@ -2506,6 +2529,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
