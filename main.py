@@ -1464,13 +1464,13 @@ def fallback():
                     response_text = f"◕ᴗ◕🌸\n❛{search_keyword}❜에 대한 게시글을 찾을 수 없습니다."
                 else:
                     posts = data["posts"]
-                    output_lines = [f"◕ᴗ◕🌸\n❛{search_keyword}❜ 사사게 검색 결과를 알려드릴게요"]
-                    
+                    output_lines = [f"◕ᴗ◕🌸\n❛{search_keyword}❜의 사사게 검색 결과를 알려드릴게요"]
+
                     for idx, post in enumerate(posts, start=1):
+                        short_link = post.get("link").split('?')[0]  # ? 이후 제거
                         line = (
-                            f"{idx}. [{post.get('category')}] {post.get('title')}\n"
-                            f"   - 링크: {post.get('link')}\n"
-                            f"   - 댓글: {post.get('commentCount', 0)} | 추천: {post.get('recommendations', 0)} | 시간: {post.get('timestamp')}"
+                            f"{idx}. [{post.get('category')}] {post.get('title']} ({short_link})\n"
+                            f"   - 댓글: {post.get('commentCount',0)} | 추천: {post.get('recommendations',0)} | 시간: {post.get('timestamp')}"
                         )
                         output_lines.append(line)
                     
@@ -2690,6 +2690,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
