@@ -143,6 +143,29 @@ def get_shop():
         "content": content
     })
 
+# --- 사사게 API 호출 함수 ---
+def fetch_sasage_html(keyword):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                      "AppleWebKit/537.36 (KHTML, like Gecko) "
+                      "Chrome/138.0.0.0 Whale/4.33.325.17 Safari/537.36",
+        "Referer": "https://rloa.gg/search/inven"
+    }
+    params = {"keyword": keyword, "page": 1}  # page=1 고정
+    response = requests.get(CHAR_API_URL, headers=headers, params=params)
+    return response.status_code, response.json()  # JSON 반환
+
+# --- 사사게 검색 API ---
+@app.route("/sasage")
+def get_sasage():
+    keyword = request.args.get("keyword", "")
+    status_code, data = fetch_sasage_html(keyword)
+    return jsonify({
+        "status_code": status_code,
+        "data": data
+    })
+
+
 def parse_shop_items(html):
     """HTML을 받아 현재/이전 판매 상품 정보를 파싱"""
     
@@ -1423,6 +1446,34 @@ def fallback():
             else:
                 response_text = "◕ᴗ◕🌸\n던전 클골 정보를 알려드릴게요.\n\n"
                 response_text += f"[던전 명령어]\n내용: {dungeon_name}"
+
+        # ---------- 9. 사사게 검색 관련 패턴 ----------
+        sasage_match = re.match(r"^(\.사사게|사사게|\.ㅅㅅㄱ|ㅅㅅㄱㄱ)\s*(.*)$", user_input)
+        if sasage_match:
+            search_keyword = sasage_match.group(2).strip()
+            
+            if not search_keyword:
+                response_text = "◕_◕💧\n검색어를 입력해주세요.\nex) .사사게 검색어"
+            else:
+                # 사사게 API 호출
+                status_code, data = fetch_sasage_html(search_keyword)
+        
+                if status_code != 200 or not data.get("data", {}).get("posts"):
+                    response_text = f"◕_◕💧\n'{search_keyword}'에 대한 게시글을 찾을 수 없습니다."
+                else:
+                    # 게시글 목록 정리
+                    posts = data["data"]["posts"]
+                    output_lines = [f"◕ᴗ◕🌸\n❛{search_keyword}❜ 사사게 검색 결과를 알려드릴게요"]
+                    
+                    for idx, post in enumerate(posts, start=1):
+                        line = (
+                            f"{idx}. [{post.get('category')}] {post.get('title')}\n"
+                            f"   - 링크: {post.get('link')}\n"
+                            f"   - 댓글: {post.get('commentCount', 0)} | 추천: {post.get('recommendations', 0)} | 시간: {post.get('timestamp')}"
+                        )
+                        output_lines.append(line)
+                    
+                    response_text = "\n\n".join(output_lines)
                 
         # ---------- 9. 특정 캐릭터 정보 관련 패턴 ----------
         match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ)\s*(.*)$", user_input)
@@ -2638,6 +2689,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
