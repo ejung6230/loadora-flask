@@ -145,6 +145,7 @@ def get_shop():
 
 # --- 사사게 API 호출 함수 ---
 def fetch_sasage_html(keyword):
+    CHAR_API_URL = "https://rloa.gg/api/inven-scrape"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                       "AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -1459,7 +1460,7 @@ def fallback():
                 status_code, data = fetch_sasage_html(search_keyword)
         
                 if status_code != 200 or not data.get("data", {}).get("posts"):
-                    response_text = f"◕_◕💧\n'{search_keyword}'에 대한 게시글을 찾을 수 없습니다."
+                    response_text = f"◕ᴗ◕🌸\n'{search_keyword}'에 대한 게시글을 찾을 수 없습니다."
                 else:
                     # 게시글 목록 정리
                     posts = data["data"]["posts"]
@@ -2689,6 +2690,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
