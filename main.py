@@ -1460,11 +1460,10 @@ def fallback():
                 status_code, data = fetch_sasage_html(search_keyword)
                 logger.info("data: %s", data)
         
-                if status_code != 200 or not data.get("data", {}).get("posts"):
-                    response_text = f"◕ᴗ◕🌸\n'{search_keyword}'에 대한 게시글을 찾을 수 없습니다."
+                if status_code != 200 or not data.get("posts"):
+                    response_text = f"◕ᴗ◕🌸\n❛{search_keyword}❜에 대한 게시글을 찾을 수 없습니다."
                 else:
-                    # 게시글 목록 정리
-                    posts = data["data"]["posts"]
+                    posts = data["posts"]
                     output_lines = [f"◕ᴗ◕🌸\n❛{search_keyword}❜ 사사게 검색 결과를 알려드릴게요"]
                     
                     for idx, post in enumerate(posts, start=1):
@@ -2691,6 +2690,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
