@@ -1469,7 +1469,7 @@ def fallback():
                     for idx, post in enumerate(posts, start=1):
                         short_link = post.get("link").split('?')[0]  # ? 이후 제거
                         line = (
-                            f"{idx}. [{post.get('category')}] {post.get('title']} ({short_link})\n"
+                            f"{idx}. [{post.get('category')}] {post.get('title')} ({short_link})\n"
                             f"   - 댓글: {post.get('commentCount',0)} | 추천: {post.get('recommendations',0)} | 시간: {post.get('timestamp')}"
                         )
                         output_lines.append(line)
@@ -2690,6 +2690,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
