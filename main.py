@@ -2590,9 +2590,11 @@ def get_remaining_time_text(remaining_text=""):
     ]
 
     for start_hour, end_hour, end_minute in periods:
-        # 종료 시각 계산
-        if start_hour > end_hour:  # 다음날로 넘어가는 경우
-            end_time = now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0) + timedelta(days=1)
+        if start_hour > end_hour:  # 자정 넘어가는 구간
+            # 종료 시각을 오늘 또는 내일로 조정
+            end_time = now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0)
+            if now.hour >= start_hour:  # 예: 23시~24시
+                end_time += timedelta(days=1)
             if now.hour >= start_hour or now.hour < end_hour:
                 remaining = end_time - now
                 hours = remaining.seconds // 3600
@@ -2609,9 +2611,7 @@ def get_remaining_time_text(remaining_text=""):
                 remaining_text += f"⏰ 판매 마감까지 {hours}시간 {minutes:02d}분 남았습니다."
                 return remaining_text
 
-    # 어느 구간에도 속하지 않으면
-    remaining_text += "현재 시각은 판매 구간이 아닙니다."
-    return remaining_text
+    return remaining_text + "현재 시각은 판매 구간이 아닙니다."
 
 # ------------------ Flask endpoints ------------------
 @app.route("/")
