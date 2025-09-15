@@ -1720,15 +1720,21 @@ PVP: {pvp_grade_name}
                                 
                 # 2️⃣ 아크패시브에서 시너지 필터링
                 for effect in effects:
-                    ark_name = effect.get("Name", "")
+                    desc = effect.get("Description", "")
+                    name = effect.get("Name", "")
                     tooltip_json_str = effect.get("ToolTip", "")
-                    if not tooltip_json_str:
-                        continue
                 
+                    # Description에서 "깨달음 1티어 저물어 가는 달 Lv.1" 분리
+                    clean_desc = re.sub(r"<.*?>", "", desc).strip()
+                    parts = clean_desc.split()
+                    tripod_name = " ".join(parts[0:2]) if len(parts) >= 2 else name  # 깨달음 1티어
+                    skill_name = " ".join(parts[2:]) if len(parts) > 2 else ""        # 저물어 가는 달 Lv.1
+                
+                    # ToolTip JSON 파싱
                     try:
                         tooltip_json = json.loads(tooltip_json_str)
                     except json.JSONDecodeError:
-                        continue  # 잘못된 JSON이면 건너뜀
+                        continue
                 
                     tooltip_text = tooltip_json.get("Element_002", {}).get("value", "")
                     if not tooltip_text:
@@ -1742,8 +1748,8 @@ PVP: {pvp_grade_name}
                     if any(p in clean_tooltip for p in patterns):
                         synergy_skills.append({
                             "type": "아크패시브",
-                            "skill_name": ark_name,
-                            "tripod_name": "",
+                            "skill_name": skill_name,
+                            "tripod_name": tripod_name,
                             "tooltip": clean_tooltip
                         })
                 
@@ -2837,6 +2843,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
