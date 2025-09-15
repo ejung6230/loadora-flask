@@ -1720,8 +1720,11 @@ PVP: {pvp_grade_name}
                                 
                 # 2️⃣ 아크패시브에서 시너지 필터링
                 for effect in effects:
-                    logger.info("여기출력effect: %s", effect)
-                    tooltip_text = effect.get("ToolTip") or effect.get("Description", "")
+                    # 아크패시브 이름
+                    ark_name = effect.get("Element_000", {}).get("value", "")
+                
+                    # 효과 텍스트
+                    tooltip_text = effect.get("Element_002", {}).get("value", "")
                     if not tooltip_text:
                         continue
                 
@@ -1733,11 +1736,10 @@ PVP: {pvp_grade_name}
                     if any(p in clean_tooltip for p in patterns):
                         synergy_skills.append({
                             "type": "아크패시브",
-                            "skill_name": armory_arkpassive.get("Name", ""),
+                            "skill_name": ark_name,
                             "tripod_name": "",
                             "tooltip": clean_tooltip
                         })
-                
                 
                 # 3️⃣ preview_text 생성
                 lines = ["❙ 시너지 정보\n"]
@@ -2829,6 +2831,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
