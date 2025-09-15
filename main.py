@@ -1668,32 +1668,33 @@ PVP: {pvp_grade_name}
                 
                 # 시너지 관련 스킬만 필터링
                 synergy_skills = []
-                patterns = ["자신 및 파티원", "파티원에게"]  # 원하는 패턴을 리스트로 관리
+                patterns = ["자신 및 파티원", "파티원에게"]
                 
                 for skill in armory_skills:
                     for tripod in skill.get("Tripods", []):
                         tooltip = tripod.get("Tooltip", "")
-                        if tripod.get("IsSelected") and any(p in tooltip for p in patterns):
+                        # 1️⃣ HTML 태그 제거
+                        clean_tooltip = re.sub(r"<.*?>", "", tooltip)
+                        # 2️⃣ 불필요한 공백 정리
+                        clean_tooltip = re.sub(r"\s+", " ", clean_tooltip).strip()
+                        # 3️⃣ 선택된 스킬 & 패턴 매칭
+                        if tripod.get("IsSelected") and any(p in clean_tooltip for p in patterns):
                             synergy_skills.append({
                                 "skill_name": skill.get("Name"),
                                 "tripod_name": tripod.get("Name"),
-                                "tooltip": tooltip
+                                "tooltip": clean_tooltip
                             })
                 
-                # preview_text에 추가
-                preview_text = f"""❙ 시너지 정보
-
-"""
+                # preview_text 생성
+                lines = ["❙ 시너지 정보\n"]
                 if synergy_skills:
                     for s in synergy_skills:
-                        # HTML 태그 제거
-                        clean_tooltip = re.sub(r"<.*?>", "", s['tooltip'])
-                        # 불필요한 공백 제거
-                        clean_tooltip = clean_tooltip.replace("\r", "").replace("\n", " ").strip()
-                        preview_text += f"• {s['skill_name']} - {s['tripod_name']}\n"
-                        preview_text += f"  {clean_tooltip}\n\n"
+                        lines.append(f"• {s['skill_name']} - {s['tripod_name']}")
+                        lines.append(f"  {s['tooltip']}\n")
                 else:
-                    preview_text += "• 시너지 관련 스킬 없음\n"
+                    lines.append("• 시너지 관련 스킬 없음")
+                
+                preview_text = "\n".join(lines)
                 
                 if data:
                     
@@ -2760,6 +2761,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
