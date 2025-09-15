@@ -1521,11 +1521,12 @@ def fallback():
             # 전체 시너지 정보 함수 (클래스별로 출력)
             def get_full_synergy_info():
                 result = "◕ᴗ◕🌸\n전체 시너지 정보를 알려드릴게요\n\n"
-                for class_name, jobs in job_data.items():
+                class_items = list(job_data.items())
+                for idx, (class_name, jobs) in enumerate(class_items):
                     result += f"✤ {class_name}\n"
                     for job_name, info in jobs.items():
                         result += f"{job_name}: {info['synergy_info']}\n"
-                    if idx != len(class_names) - 1:
+                    if idx != len(class_items) - 1:
                         result += "\n"  # 마지막 클래스 뒤에는 공백 줄 추가하지 않음
                 return result
         
@@ -2759,6 +2760,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
