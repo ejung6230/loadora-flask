@@ -8,8 +8,9 @@ import json
 import time
 import re
 import logging
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, TimeoutError, as_completed
 from collections import defaultdict
+from functools import wraps
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -20,6 +21,9 @@ logger.info("여기출력2: %s", "여기출력2")
 
 app = Flask(__name__)
 CORS(app)  # 모든 도메인 허용
+
+# 동시에 처리할 스레드 수
+executor = ThreadPoolExecutor(max_workers=4)
 
 # 🔑 발급받은 JWT 토큰
 JWT_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyIsImtpZCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyJ9.eyJpc3MiOiJodHRwczovL2x1ZHkuZ2FtZS5vbnN0b3ZlLmNvbSIsImF1ZCI6Imh0dHBzOi8vbHVkeS5nYW1lLm9uc3RvdmUuY29tL3Jlc291cmNlcyIsImNsaWVudF9pZCI6IjEwMDAwMDAwMDA1ODU3OTMifQ.pGbLttyxM_QTAJxMGW2XeMYQ1TSfArJiyLv-TK4yxZJDes4nhnMfAlyJ6nSmVMHT6q2P_YqGkavwhCkfYAylI94FR74G47yeQuWLu3abw76wzBGN9pVRtCLu6OJ4RcIexr0rpQLARZhIiuNUrr3LLN_sbV7cNUQfQGVr0v9x77cbxVI5hPgSgAWAIcMX4Z7a6wj4QSnl7qi9HBZG1CH8PQ7ftGuBgFG7Htbh2ABj3xyza44vrwPN5VL-S3SUQtnJ1azOTfXvjCTJjPZv8rOmCllK9dMNoPFRjj7bsjeooYHfhK1rF9yiCJb9tdVcTa2puxs3YKQlZpN9UvaVhqquQg"
@@ -354,7 +358,24 @@ def organize_characters_by_server(char_list):
         organized.setdefault(server, []).append(c)
     return organized
 
+
+def timeout_handler(seconds):
+    """
+    함수 실행 시간을 제한하는 데코레이터 (Windows에서도 사용 가능)
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            future = executor.submit(func, *args, **kwargs)
+            try:
+                return future.result(timeout=seconds)
+            except TimeoutError:
+                return jsonify({"error": f"Function timed out after {seconds} seconds"}), 504
+        return wrapper
+    return decorator
+
 @app.route("/fallback", methods=["POST"])
+@timeout_handler(4.5)
 def fallback():
     from datetime import datetime, timezone, timedelta
     from collections import defaultdict
@@ -1822,6 +1843,17 @@ PVP: {pvp_grade_name}
                 }
 
         return jsonify(response)
+    except TimeoutError:
+        # 타임아웃 전용 응답
+        response_text = "⚠️ \n처리 시간이 너무 길어 응답하지 못했습니다. 잠시 후 다시 시도해주세요."
+        response = {
+            "version": "2.0",
+            "template": {
+                "outputs": [{"simpleText": {"text": response_text}}],
+                "quickReplies": []
+            }
+        }
+        return jsonify(response)
     except Exception as e:
         # 1️⃣ 로그 기록 (stack trace 포함)
         logger.exception("예외 발생: %s", e)
@@ -2761,6 +2793,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
