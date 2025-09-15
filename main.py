@@ -2825,7 +2825,7 @@ def get_remaining_time_text(remaining_text=""):
 # ------------------ Flask endpoints ------------------
 @app.route("/")
 def home():
-    return "KorLark API Flask 서버 실행 중"
+    return "LoaDora API Flask 서버 실행 중"
 
 @app.route("/korlark_summary", methods=["GET", "POST"])
 def korlark_summary():
