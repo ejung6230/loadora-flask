@@ -1727,19 +1727,19 @@ PVP: {pvp_grade_name}
                 
                     tooltip_json = ark.get("ToolTip", "")
                     clean_text = ""
+                    
                     try:
                         tooltip_data = json.loads(tooltip_json)
-                        if isinstance(tooltip_data, dict):
-                            raw_text = tooltip_data.get("Element_002", {}).get("value", "")
-                            clean_text = re.sub(r"<.*?>", "", raw_text)
-                            clean_text = re.sub(r"\s+", " ", clean_text).strip()
-                        else:
-                            clean_text = re.sub(r"<.*?>", "", tooltip_json)
-                            clean_text = re.sub(r"\s+", " ", clean_text).strip()
+                        element_2 = tooltip_data.get("Element_002", {})
+                        raw_text = element_2.get("value", "")
+                        clean_text = re.sub(r"<.*?>", "", raw_text)  # HTML 제거
+                        clean_text = re.sub(r"\s+", " ", clean_text).strip()  # 공백 정리
                     except json.JSONDecodeError:
+                        # 만약 JSON이 아니면 그대로 HTML 제거
                         clean_text = re.sub(r"<.*?>", "", tooltip_json)
                         clean_text = re.sub(r"\s+", " ", clean_text).strip()
-                
+                    
+                    # 시너지 패턴 확인
                     if any(p in clean_text for p in patterns):
                         synergy_skills.append({
                             "type": "아크패시브",
@@ -1747,6 +1747,7 @@ PVP: {pvp_grade_name}
                             "tripod_name": "",
                             "tooltip": clean_text
                         })
+                
                 
                 # 3️⃣ preview_text 생성
                 lines = ["❙ 시너지 정보\n"]
@@ -2838,6 +2839,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
