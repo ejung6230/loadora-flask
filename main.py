@@ -1698,7 +1698,7 @@ PVP: {pvp_grade_name}
                 
                 # 시너지 관련 스킬만 필터링
                 synergy_skills = []
-                patterns = ["자신 및 파티원", "파티원에게", "적중된 적들의"]
+                patterns = ["자신 및 파티원", "파티원에게", "적중된 적들의", "아군의"]
                 
                 for skill in armory_skills:
                     for tripod in skill.get("Tripods", []):
@@ -2802,6 +2802,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
