@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # 정보 출력
-# logger.info("남은 시간 목록: %s", future_times)
+logger.info("여기출력2: %s", "여기출력2")
 
 app = Flask(__name__)
 CORS(app)  # 모든 도메인 허용
@@ -662,7 +662,6 @@ def fallback():
 
                 selected_island = None  # 접두사만 입력한 경우 전체 표시
                             
-                logger.info("카게 목록: %s", chaos_gates)
             
                 result = "◕ᴗ◕🌸\n오늘의 카오스게이트 정보를 알려드릴게요.\n"
                 result += "――――――――――――――\n\n"
@@ -961,9 +960,6 @@ def fallback():
                             # 남은 시간 계산
                             future_times = [datetime.fromisoformat(t) for t in all_today_times if datetime.fromisoformat(t) > NOW_KST]
 
-                            logger.info("남은 시간 목록: %s", future_times)
-                            logger.info("현재 시간: %s", NOW_KST)
-                            logger.info("모든 시간: %s", all_today_times)
                             
                             if future_times:
                                 next_time = min(future_times)  # 가장 가까운 시작 시간
@@ -1186,9 +1182,7 @@ def fallback():
                         response_text += "✅ 오늘 일정이 모두 종료되었습니다.\n"
 
         
-            logger.info("response_text: %s", response_text)
             if len(response_text) < 400:
-                logger.info("400자이내: %s", "400자 이내다!")
                 use_share_button = True
 
 
@@ -1458,7 +1452,6 @@ def fallback():
             else:
                 # 사사게 API 호출
                 status_code, data = fetch_sasage_html(search_keyword)
-                logger.info("data: %s", data)
         
                 if status_code != 200 or not data.get("posts"):
                     response_text = f"◕ᴗ◕👍\n❛{search_keyword}❜의 사사게 검색 결과가 없습니다"
@@ -1505,15 +1498,12 @@ def fallback():
                         f"직업: {kloa_ranking['job']['value']}위 "
                         f"(상위 {kloa_ranking['job']['position']*100:.2f}%)"
                     )
-
-                logger.info("여기출력1: %s", "여기출력1")
                 
                 # 로펙 점수 POST
                 lopec_score = fetch_lopec_character(info_char_name, character_class)
                 lopec_total_sum = lopec_score.get("totalSum", None)  # totalSum 없으면 None 반환
                 lopec_total_sum_text = f"{lopec_total_sum:,.2f}" if lopec_total_sum is not None else "정보 없음"
 
-                logger.info("여기출력2: %s", "여기출력2")
 
                 # 로펙 랭킹 GET
                 lopec_ranking = fetch_lopec_ranking(info_char_name, character_class)
@@ -1561,7 +1551,6 @@ def fallback():
                 honor_point = armory.get("HonorPoint") or "정보 없음"
                 pvp_grade_name = armory.get("PvpGradeName") or "정보 없음"
 
-                logger.info("여기출력3: %s", "여기출력3")
 
                 # 캐릭터 장비 정보
                 armory_equipment = (data or {}).get("ArmoryEquipment", [])
@@ -1623,7 +1612,6 @@ PVP: {pvp_grade_name}
 # 4티어 고대 하의 [+5][+5]: 00
 # 4티어 고대 장갑 [+5][+5]: 100
 # 4티어 고대 어깨 [+5][+5]: 00
-                logger.info("여기출력4: %s", "여기출력4")
                 
                 if data:
                     
@@ -2690,6 +2678,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
