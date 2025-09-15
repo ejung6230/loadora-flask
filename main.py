@@ -1692,34 +1692,56 @@ PVP: {pvp_grade_name}
                 # Bottom = 
                 # Gloves = 
                 # Shoulder = 
-
+                
+                # 캐릭터 아크패시브 정보
+                armory_arkpassive = (data or {}).get("ArkPassive", [])
+                
                 # 캐릭터 스킬 정보
                 armory_skills = (data or {}).get("ArmorySkills", [])
                 
-                # 시너지 관련 스킬만 필터링
-                synergy_skills = []
                 patterns = ["자신 및 파티원", "파티원에게", "적중된 적들의", "아군의"]
+                synergy_skills = []
                 
+                # 1️⃣ 일반 스킬(ArmorySkills)에서 시너지 필터링
                 for skill in armory_skills:
                     for tripod in skill.get("Tripods", []):
                         tooltip = tripod.get("Tooltip", "")
-                        # 1️⃣ HTML 태그 제거
                         clean_tooltip = re.sub(r"<.*?>", "", tooltip)
-                        # 2️⃣ 불필요한 공백 정리
                         clean_tooltip = re.sub(r"\s+", " ", clean_tooltip).strip()
-                        # 3️⃣ 선택된 스킬 & 패턴 매칭
                         if tripod.get("IsSelected") and any(p in clean_tooltip for p in patterns):
                             synergy_skills.append({
+                                "type": "스킬",
                                 "skill_name": skill.get("Name"),
                                 "tripod_name": tripod.get("Name"),
                                 "tooltip": clean_tooltip
                             })
                 
-                # preview_text 생성
+                # 2️⃣ 아크패시브에서 시너지 필터링
+                for ark in armory_arkpassive:
+                    tooltip_json = ark.get("ToolTip", "")
+                    try:
+                        tooltip_data = json.loads(tooltip_json)
+                        raw_text = tooltip_data.get("Element_002", {}).get("value", "")
+                        clean_text = re.sub(r"<.*?>", "", raw_text)
+                        clean_text = re.sub(r"\s+", " ", clean_text).strip()
+                        if any(p in clean_text for p in patterns):
+                            synergy_skills.append({
+                                "type": "아크패시브",
+                                "skill_name": ark.get("Name"),
+                                "tripod_name": "",
+                                "tooltip": clean_text
+                            })
+                    except json.JSONDecodeError:
+                        continue
+                
+                # 3️⃣ preview_text 생성
                 lines = ["❙ 시너지 정보\n"]
                 if synergy_skills:
                     for s in synergy_skills:
-                        lines.append(f"• {s['skill_name']} - {s['tripod_name']}")
+                        if s['type'] == "스킬":
+                            lines.append(f"• {s['skill_name']} - {s['tripod_name']}")
+                        else:
+                            lines.append(f"• {s['skill_name']} (아크패시브)")
                         lines.append(f"  {s['tooltip']}\n")
                 else:
                     lines.append("• 시너지 관련 스킬 없음")
@@ -2802,6 +2824,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
