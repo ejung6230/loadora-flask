@@ -1693,40 +1693,36 @@ PVP: {pvp_grade_name}
                 # Gloves = 
                 # Shoulder = 
                 
-                def extract_text_recursive(obj):
-                    """
-                    JSON 객체에서 모든 문자열(value, desc 등)을 재귀적으로 추출
-                    """
-                    texts = []
-                    if isinstance(obj, dict):
-                        for k, v in obj.items():
-                            if k in ["value", "desc"] and isinstance(v, str):
-                                texts.append(v)
-                            else:
-                                texts.extend(extract_text_recursive(v))
-                    elif isinstance(obj, list):
-                        for item in obj:
-                            texts.extend(extract_text_recursive(item))
-                    elif isinstance(obj, str):
-                        texts.append(obj)
-                    return texts
                 
-                # --------------------------
-                # 데이터 로드
-                # --------------------------
+                # -----------------------------
+                # 데이터 가져오기
+                # -----------------------------
                 armory_arkpassive = (data or {}).get("ArkPassive", [])
-                effects = []
-                for ap in armory_arkpassive:
-                    effects.extend(ap.get("Effects", []))
-                
                 armory_skills = (data or {}).get("ArmorySkills", [])
                 
+                # -----------------------------
+                # 아크패시브 Effects 가져오기
+                # -----------------------------
+                effects = []
+                for ap in armory_arkpassive:
+                    if isinstance(ap, str):
+                        try:
+                            ap = json.loads(ap)
+                        except json.JSONDecodeError:
+                            continue
+                    if not isinstance(ap, dict):
+                        continue
+                    effects.extend(ap.get("Effects", []))
+                
+                # -----------------------------
+                # 시너지 패턴 정의
+                # -----------------------------
                 patterns = ["자신 및 파티원", "파티원에게", "적중된 적들의", "아군의", "파티원의"]
                 synergy_skills = []
                 
-                # --------------------------
-                # 1️⃣ 일반 스킬(ArmorySkills) 필터링
-                # --------------------------
+                # -----------------------------
+                # 1️⃣ ArmorySkills에서 시너지 필터링
+                # -----------------------------
                 for skill in armory_skills:
                     tooltip_str = skill.get("Tooltip", "")
                     if not tooltip_str:
@@ -1736,34 +1732,45 @@ PVP: {pvp_grade_name}
                     except json.JSONDecodeError:
                         continue
                 
-                    all_texts = extract_text_recursive(tooltip_json)
-                    merged_text = " ".join(all_texts)
+                    # Tooltip 안의 모든 value 모으기
+                    texts = []
+                    for element in tooltip_json.values():
+                        value = element.get("value", "")
+                        if isinstance(value, str):
+                            texts.append(value)
+                        elif isinstance(value, dict):
+                            texts.extend(v for v in value.values() if isinstance(v, str))
+                
+                        # TripodSkillCustom 처리
+                        if element.get("type") == "TripodSkillCustom" and isinstance(element.get("value"), dict):
+                            for tripod_elem in element["value"].values():
+                                desc = tripod_elem.get("desc", "")
+                                if desc:
+                                    texts.append(desc)
+                
+                    merged_text = " ".join(texts)
+                
+                    # HTML 제거 + 공백 정리
                     clean_tooltip = re.sub(r"<.*?>", "", merged_text)
                     clean_tooltip = re.sub(r"\s+", " ", clean_tooltip).strip()
                 
+                    # 시너지 패턴 체크
                     if any(p in clean_tooltip for p in patterns):
-                        # 트라이포드 이름까지 같이 가져오기
-                        tripod_names = []
-                        tripods = skill.get("Tripods", [])
-                        for tripod_tier in tripods:
-                            name = tripod_tier.get("Name") or tripod_tier.get("name")
-                            if name:
-                                tripod_names.append(re.sub(r"<.*?>", "", name))
                         synergy_skills.append({
                             "type": "스킬",
                             "skill_name": skill.get("Name"),
-                            "tripod_name": " / ".join(tripod_names) if tripod_names else "",
                             "tooltip": clean_tooltip
                         })
                 
-                # --------------------------
-                # 2️⃣ 아크패시브 필터링
-                # --------------------------
+                # -----------------------------
+                # 2️⃣ 아크패시브 Effects에서 시너지 필터링
+                # -----------------------------
                 for effect in effects:
                     desc = effect.get("Description", "")
                     name = effect.get("Name", "")
                     tooltip_json_str = effect.get("ToolTip", "")
                 
+                    # Description 정리
                     clean_desc = re.sub(r"<.*?>", "", desc).strip()
                     parts = clean_desc.split()
                     tripod_name = " ".join(parts[0:2]) if len(parts) >= 2 else name
@@ -1774,9 +1781,11 @@ PVP: {pvp_grade_name}
                     except json.JSONDecodeError:
                         continue
                 
-                    all_texts = extract_text_recursive(tooltip_json)
-                    merged_text = " ".join(all_texts)
-                    clean_tooltip = re.sub(r"<.*?>", "", merged_text)
+                    tooltip_text = tooltip_json.get("Element_002", {}).get("value", "")
+                    if not tooltip_text:
+                        continue
+                
+                    clean_tooltip = re.sub(r"<.*?>", "", tooltip_text)
                     clean_tooltip = re.sub(r"\s+", " ", clean_tooltip).strip()
                 
                     if any(p in clean_tooltip for p in patterns):
@@ -1787,24 +1796,22 @@ PVP: {pvp_grade_name}
                             "tooltip": clean_tooltip
                         })
                 
-                # --------------------------
+                # -----------------------------
                 # 3️⃣ preview_text 생성
-                # --------------------------
+                # -----------------------------
                 lines = ["❙ 시너지 정보\n"]
                 if synergy_skills:
                     for s in synergy_skills:
                         if s['type'] == "스킬":
-                            if s['tripod_name']:
-                                lines.append(f"• {s['skill_name']} - {s['tripod_name']}")
-                            else:
-                                lines.append(f"• {s['skill_name']}")
-                        else:  # 아크패시브
+                            lines.append(f"• {s['skill_name']}")
+                        else:
                             lines.append(f"• {s['skill_name']} - {s['tripod_name']}")
                         lines.append(f"  {s['tooltip']}\n")
                 else:
                     lines.append("• 시너지 관련 스킬 없음")
                 
                 preview_text = "\n".join(lines)
+
 
 
                 
@@ -2884,6 +2891,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
