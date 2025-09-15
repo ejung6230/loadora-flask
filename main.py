@@ -146,6 +146,11 @@ def get_shop():
         "status_code": status_code,
         "content": content
     })
+    
+
+@app.route("/health")
+def health():
+    return "OK", 200
 
 # --- 사사게 API 호출 함수 ---
 def fetch_sasage_html(keyword):
