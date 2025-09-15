@@ -1738,7 +1738,7 @@ PVP: {pvp_grade_name}
                             "skill_name": skill.get("Name"),
                             "tooltip": clean_tooltip
                         })
-                                
+                
                 # 2️⃣ 아크패시브에서 시너지 필터링
                 for effect in effects:
                     desc = effect.get("Description", "")
@@ -1779,14 +1779,15 @@ PVP: {pvp_grade_name}
                 if synergy_skills:
                     for s in synergy_skills:
                         if s['type'] == "스킬":
-                            lines.append(f"• {s['skill_name']} - {s['tripod_name']}")
-                        else:
+                            lines.append(f"• {s['skill_name']}")
+                        else:  # 아크패시브
                             lines.append(f"• {s['skill_name']} - {s['tripod_name']}")
                         lines.append(f"  {s['tooltip']}\n")
                 else:
                     lines.append("• 시너지 관련 스킬 없음")
                 
                 preview_text = "\n".join(lines)
+
                 
                 if data:
                     
@@ -2864,6 +2865,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
