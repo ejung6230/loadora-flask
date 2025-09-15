@@ -1633,18 +1633,6 @@ def fallback():
                 pvp_grade_name = armory.get("PvpGradeName") or "정보 없음"
 
 
-                # 캐릭터 장비 정보
-                armory_equipment = (data or {}).get("ArmoryEquipment", [])
-                # 무기 = armory_equipment
-                # 투구 = 
-                # 상의 = 
-                # 하의 = 
-                # 장갑 = 
-                # 어깨 = 
-
-# ❙ 클로아 랭킹
-# {kloa_ranking_text}
-
                 card_text = f"""# {character_class}
 
 ❙ 정보
@@ -1665,34 +1653,40 @@ PVP: {pvp_grade_name}
 
 💡캐선창 이동 후 재시도 시 최신 데이터 확인 가능
 """
+                # 캐릭터 장비 정보
+                armory_equipment = (data or {}).get("ArmoryEquipment", [])
+                # Weapon = armory_equipment
+                # Helmet = 
+                # Top = 
+                # Bottom = 
+                # Gloves = 
+                # Shoulder = 
 
-                preview_text = f"""❙ 장비 정보
-*추가예정
+                # 캐릭터 스킬 정보
+                armory_skills = (data or {}).get("ArmorySkills", [])
+                
+                # 시너지 관련 스킬만 필터링
+                synergy_skills = []
+                for skill in armory_skills:
+                    for tripod in skill.get("Tripods", []):
+                        if tripod.get("IsSelected") and "자신 및 파티원에게" in tripod.get("Tooltip", ""):
+                            synergy_skills.append({
+                                "skill_name": skill.get("Name"),
+                                "tripod_name": tripod.get("Name"),
+                                "tooltip": tripod.get("Tooltip")
+                            })
+                
+                # preview_text에 추가
+                preview_text = f"""❙ 시너지 정보
+
 """
-
-# 4티어 고대 무기 +21 [+40]: 92
-# 4티어 고대 투구 +19 [+40]: 92
-# 4티어 고대 상의 +20 [+40]: 93
-# 4티어 고대 하의 +20 [+40]: 95
-# 4티어 고대 장갑 +20 [+40]: 100
-# 4티어 고대 어깨 +20 [+40]: 97
-# • 아이템 레벨: 1,730.00
-# • 평균 품질: 94.83
-
-# ❙ 악세 정보
-# 4티어 고대 목걸이 [중][상][중]: 00
-# 4티어 고대 귀걸이 [상][중][하]: 00
-# 4티어 고대 귀걸이 [상][중][하]: 100
-# 4티어 고대 반지    [중][상][중]: 00
-# 4티어 고대 반지    [중][상][중]: 00
-
-# ❙ 엘릭서 정보
-# 4티어 고대 무기 [+5][+5]: 00
-# 4티어 고대 투구 [+5][+5]: 00
-# 4티어 고대 상의 [+5][+5]: 00
-# 4티어 고대 하의 [+5][+5]: 00
-# 4티어 고대 장갑 [+5][+5]: 100
-# 4티어 고대 어깨 [+5][+5]: 00
+                
+                if synergy_skills:
+                    for s in synergy_skills:
+                        preview_text += f"• {s['skill_name']} - {s['tripod_name']}\n"
+                        preview_text += f"  {s['tooltip']}\n\n"
+                else:
+                    preview_text += "• 시너지 관련 스킬 없음\n"
                 
                 if data:
                     
@@ -1722,12 +1716,12 @@ PVP: {pvp_grade_name}
                                 ]
                             }
                         },
-                        # {
-                        #     "simpleText": {
-                        #         "text": preview_text,
-                        #         "extra": {}
-                        #     }
-                        # },
+                        {
+                            "simpleText": {
+                                "text": preview_text,
+                                "extra": {}
+                            }
+                        },
                     ]
                 else:
                     # 데이터 없으면 텍스트 카드만
@@ -2759,6 +2753,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
