@@ -1719,20 +1719,30 @@ PVP: {pvp_grade_name}
                 # 2️⃣ 아크패시브에서 시너지 필터링
                 for ark in armory_arkpassive:
                     tooltip_json = ark.get("ToolTip", "")
+                    clean_text = ""
                     try:
                         tooltip_data = json.loads(tooltip_json)
-                        raw_text = tooltip_data.get("Element_002", {}).get("value", "")
-                        clean_text = re.sub(r"<.*?>", "", raw_text)
-                        clean_text = re.sub(r"\s+", " ", clean_text).strip()
-                        if any(p in clean_text for p in patterns):
-                            synergy_skills.append({
-                                "type": "아크패시브",
-                                "skill_name": ark.get("Name"),
-                                "tripod_name": "",
-                                "tooltip": clean_text
-                            })
+                        # JSON 파싱이 dict인지 확인
+                        if isinstance(tooltip_data, dict):
+                            raw_text = tooltip_data.get("Element_002", {}).get("value", "")
+                            clean_text = re.sub(r"<.*?>", "", raw_text)
+                            clean_text = re.sub(r"\s+", " ", clean_text).strip()
+                        else:
+                            # tooltip_json이 그냥 문자열인 경우
+                            clean_text = re.sub(r"<.*?>", "", tooltip_json)
+                            clean_text = re.sub(r"\s+", " ", clean_text).strip()
                     except json.JSONDecodeError:
-                        continue
+                        # 잘못된 JSON이면 문자열 그대로 처리
+                        clean_text = re.sub(r"<.*?>", "", tooltip_json)
+                        clean_text = re.sub(r"\s+", " ", clean_text).strip()
+                
+                    if any(p in clean_text for p in patterns):
+                        synergy_skills.append({
+                            "type": "아크패시브",
+                            "skill_name": ark.get("Name"),
+                            "tripod_name": "",
+                            "tooltip": clean_text
+                        })
                 
                 # 3️⃣ preview_text 생성
                 lines = ["❙ 시너지 정보\n"]
@@ -2824,6 +2834,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
