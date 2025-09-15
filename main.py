@@ -384,7 +384,7 @@ def timeout_handler(seconds):
     return decorator
 
 @app.route("/fallback", methods=["POST"])
-@timeout_handler(4.5)
+@timeout_handler(4.8)
 def fallback():
     from datetime import datetime, timezone, timedelta
     from collections import defaultdict
@@ -2802,6 +2802,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
