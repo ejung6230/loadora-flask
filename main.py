@@ -1718,6 +1718,7 @@ PVP: {pvp_grade_name}
                                 
                 # 2️⃣ 아크패시브에서 시너지 필터링
                 for ark in armory_arkpassive:
+                    logger.info("여기출력ark: %s", ark)
                     if isinstance(ark, str):
                         try:
                             ark = json.loads(ark)
@@ -2830,6 +2831,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
