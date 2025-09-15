@@ -1669,7 +1669,7 @@ PVP: {pvp_grade_name}
                 synergy_skills = []
                 for skill in armory_skills:
                     for tripod in skill.get("Tripods", []):
-                        if tripod.get("IsSelected") and "자신 및 파티원에게" in tripod.get("Tooltip", ""):
+                        if tripod.get("IsSelected") and "자신 및 파티원" in tripod.get("Tooltip", ""):
                             synergy_skills.append({
                                 "skill_name": skill.get("Name"),
                                 "tripod_name": tripod.get("Name"),
@@ -2753,6 +2753,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
