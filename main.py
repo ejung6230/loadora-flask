@@ -1547,9 +1547,9 @@ def fallback():
                 response_text = get_full_synergy_info()
             else:
                 # 매칭 성공 → 해당 직업 시너지 정보
-                response_text = f"""◕ᴗ◕🌸\n[{matched_class}]'{matched_job}' 직업의 시너지 정보를 알려드릴게요\n\njob_data[matched_class][matched_job]['synergy_info']}"""
+                response_text = f"◕ᴗ◕🌸\n[{matched_class}]'{matched_job}' 직업의 시너지 정보를 알려드릴게요\n\n{job_data[matched_class][matched_job]['synergy_info']}"
 
-                
+        
         # ---------- 9. 특정 캐릭터 정보 관련 패턴 ----------
         match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ)\s*(.*)$", user_input)
         if match_info:
@@ -2759,6 +2759,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
