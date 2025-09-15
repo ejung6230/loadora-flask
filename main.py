@@ -1718,35 +1718,26 @@ PVP: {pvp_grade_name}
                                 
                 # 2️⃣ 아크패시브에서 시너지 필터링
                 for ark in armory_arkpassive:
-                    # ark가 str이면 dict로 변환 시도
                     if isinstance(ark, str):
                         try:
                             ark = json.loads(ark)
                         except json.JSONDecodeError:
-                            ark = {"Name": "", "ToolTip": ark}  # 최소한의 dict 구조로 변환
+                            ark = {"Name": "", "Effects": []}
                 
-                    tooltip_json = ark.get("ToolTip", "")
-                    clean_text = ""
-                    
-                    try:
-                        tooltip_data = json.loads(tooltip_json)
-                        element_2 = tooltip_data.get("Element_002", {})
-                        raw_text = element_2.get("value", "")
-                        clean_text = re.sub(r"<.*?>", "", raw_text)  # HTML 제거
-                        clean_text = re.sub(r"\s+", " ", clean_text).strip()  # 공백 정리
-                    except json.JSONDecodeError:
-                        # 만약 JSON이 아니면 그대로 HTML 제거
-                        clean_text = re.sub(r"<.*?>", "", tooltip_json)
-                        clean_text = re.sub(r"\s+", " ", clean_text).strip()
-                    
-                    # 시너지 패턴 확인
-                    if any(p in clean_text for p in patterns):
-                        synergy_skills.append({
-                            "type": "아크패시브",
-                            "skill_name": ark.get("Name", ""),
-                            "tripod_name": "",
-                            "tooltip": clean_text
-                        })
+                    effects = ark.get("Effects", [])
+                    for effect in effects:
+                        # Description이나 ToolTip 필드에서 시너지 찾기
+                        tooltip_text = effect.get("ToolTip") or effect.get("Description", "")
+                        if tooltip_text:
+                            clean_text = re.sub(r"<.*?>", "", tooltip_text)  # HTML 제거
+                            clean_text = re.sub(r"\s+", " ", clean_text).strip()  # 공백 정리
+                            if any(p in clean_text for p in patterns):
+                                synergy_skills.append({
+                                    "type": "아크패시브",
+                                    "skill_name": ark.get("Name", ""),
+                                    "tripod_name": "",
+                                    "tooltip": clean_text
+                                })
                 
                 
                 # 3️⃣ preview_text 생성
@@ -2839,6 +2830,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
