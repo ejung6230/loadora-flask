@@ -1706,17 +1706,38 @@ PVP: {pvp_grade_name}
                 
                 # 1️⃣ 일반 스킬(ArmorySkills)에서 시너지 필터링
                 for skill in armory_skills:
-                    for tripod in skill.get("Tripods", []):
-                        tooltip = tripod.get("Tooltip", "")
-                        clean_tooltip = re.sub(r"<.*?>", "", tooltip)
-                        clean_tooltip = re.sub(r"\s+", " ", clean_tooltip).strip()
-                        if tripod.get("IsSelected") and any(p in clean_tooltip for p in patterns):
-                            synergy_skills.append({
-                                "type": "스킬",
-                                "skill_name": skill.get("Name"),
-                                "tripod_name": tripod.get("Name"),
-                                "tooltip": clean_tooltip
-                            })
+                    tooltip_str = skill.get("Tooltip", "")
+                    if not tooltip_str:
+                        continue
+                
+                    try:
+                        tooltip_json = json.loads(tooltip_str)
+                    except json.JSONDecodeError:
+                        continue
+                
+                    # Tooltip JSON의 모든 Element_* 중 value를 모아서 검사
+                    texts = []
+                    for element in tooltip_json.values():
+                        value = element.get("value", "")
+                        if isinstance(value, str):
+                            texts.append(value)
+                        elif isinstance(value, dict):
+                            # nested 구조가 들어올 경우도 대비
+                            texts.extend(v for v in value.values() if isinstance(v, str))
+                
+                    merged_text = " ".join(texts)
+                
+                    # HTML 태그 제거 + 공백 정리
+                    clean_tooltip = re.sub(r"<.*?>", "", merged_text)
+                    clean_tooltip = re.sub(r"\s+", " ", clean_tooltip).strip()
+                
+                    # 시너지 패턴 체크
+                    if any(p in clean_tooltip for p in patterns):
+                        synergy_skills.append({
+                            "type": "스킬",
+                            "skill_name": skill.get("Name"),
+                            "tooltip": clean_tooltip
+                        })
                                 
                 # 2️⃣ 아크패시브에서 시너지 필터링
                 for effect in effects:
@@ -2843,6 +2864,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
