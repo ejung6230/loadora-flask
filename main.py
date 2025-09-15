@@ -1,6 +1,8 @@
 # flask_korlark.py
-from flask import Flask, jsonify, request
+from flask import Flask, request, jsonify, copy_current_request_context
 from flask_cors import CORS
+from functools import wraps
+from concurrent.futures import ThreadPoolExecutor, TimeoutError, as_completed
 import requests
 from datetime import datetime, timezone, timedelta
 import os
@@ -8,9 +10,7 @@ import json
 import time
 import re
 import logging
-from concurrent.futures import ThreadPoolExecutor, TimeoutError, as_completed
 from collections import defaultdict
-from functools import wraps
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -360,17 +360,26 @@ def organize_characters_by_server(char_list):
 
 
 def timeout_handler(seconds):
-    """
-    함수 실행 시간을 제한하는 데코레이터 (Windows에서도 사용 가능)
-    """
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            future = executor.submit(func, *args, **kwargs)
+            # 현재 요청 컨텍스트 복사
+            @copy_current_request_context
+            def run_func():
+                return func(*args, **kwargs)
+
+            future = executor.submit(run_func)
             try:
                 return future.result(timeout=seconds)
             except TimeoutError:
-                return jsonify({"error": f"Function timed out after {seconds} seconds"}), 504
+                response_text = "⚠️ 처리 시간이 너무 길어 응답하지 못했습니다. 잠시 후 다시 시도해주세요."
+                return jsonify({
+                    "version": "2.0",
+                    "template": {
+                        "outputs": [{"simpleText": {"text": response_text}}],
+                        "quickReplies": []
+                    }
+                })
         return wrapper
     return decorator
 
@@ -2793,6 +2802,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
