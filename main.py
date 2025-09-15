@@ -1720,13 +1720,17 @@ PVP: {pvp_grade_name}
                                 
                 # 2️⃣ 아크패시브에서 시너지 필터링
                 for effect in effects:
-                    # 아크패시브 이름
-                    ark_name = effect.get("Element_000", {}).get("value", "")
-
-                    logger.info("여기출력ark_name: %s", ark_name)
+                    ark_name = effect.get("Name", "")
+                    tooltip_json_str = effect.get("ToolTip", "")
+                    if not tooltip_json_str:
+                        continue
                 
-                    # 효과 텍스트
-                    tooltip_text = effect.get("Element_002", {}).get("value", "")
+                    try:
+                        tooltip_json = json.loads(tooltip_json_str)
+                    except json.JSONDecodeError:
+                        continue  # 잘못된 JSON이면 건너뜀
+                
+                    tooltip_text = tooltip_json.get("Element_002", {}).get("value", "")
                     if not tooltip_text:
                         continue
                 
@@ -2833,6 +2837,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
