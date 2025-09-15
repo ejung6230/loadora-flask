@@ -1680,11 +1680,14 @@ PVP: {pvp_grade_name}
                 preview_text = f"""❙ 시너지 정보
 
 """
-                
                 if synergy_skills:
                     for s in synergy_skills:
+                        # HTML 태그 제거
+                        clean_tooltip = re.sub(r"<.*?>", "", s['tooltip'])
+                        # 불필요한 공백 제거
+                        clean_tooltip = clean_tooltip.replace("\r", "").replace("\n", " ").strip()
                         preview_text += f"• {s['skill_name']} - {s['tripod_name']}\n"
-                        preview_text += f"  {s['tooltip']}\n\n"
+                        preview_text += f"  {clean_tooltip}\n\n"
                 else:
                     preview_text += "• 시너지 관련 스킬 없음\n"
                 
@@ -2753,6 +2756,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
