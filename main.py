@@ -1701,7 +1701,7 @@ PVP: {pvp_grade_name}
                 # 캐릭터 스킬 정보
                 armory_skills = (data or {}).get("ArmorySkills", [])
                 
-                patterns = ["자신 및 파티원", "파티원에게", "적중된 적들의", "아군의"]
+                patterns = ["자신 및 파티원", "파티원에게", "적중된 적들의", "아군의", "파티원의"]
                 synergy_skills = []
                 
                 # 1️⃣ 일반 스킬(ArmorySkills)에서 시너지 필터링
@@ -2843,6 +2843,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
