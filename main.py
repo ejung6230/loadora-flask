@@ -1722,6 +1722,8 @@ PVP: {pvp_grade_name}
                 for effect in effects:
                     # 아크패시브 이름
                     ark_name = effect.get("Element_000", {}).get("value", "")
+
+                    logger.info("여기출력ark_name: %s", ark_name)
                 
                     # 효과 텍스트
                     tooltip_text = effect.get("Element_002", {}).get("value", "")
@@ -2831,6 +2833,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
