@@ -1668,7 +1668,7 @@ PVP: {pvp_grade_name}
                 
                 # 시너지 관련 스킬만 필터링
                 synergy_skills = []
-                patterns = ["자신 및 파티원", "파티원에게", "적중된 적"]
+                patterns = ["자신 및 파티원", "파티원에게", "적중된 적들의"]
                 
                 for skill in armory_skills:
                     for tripod in skill.get("Tripods", []):
