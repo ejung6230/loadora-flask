@@ -148,9 +148,12 @@ def get_shop():
     })
     
 
-@app.route("/health")
+@app.route("/health", methods=["GET"])
 def health():
-    return "OK", 200
+    return "OK", 200  # 항상 200 OK를 반환
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)  # Render에서 지정한 포트 사용
 
 # --- 사사게 API 호출 함수 ---
 def fetch_sasage_html(keyword):
