@@ -1750,14 +1750,9 @@ PVP: {pvp_grade_name}
                             context = sentence  # 문장 전체를 문맥으로 사용 (필요시 범위 축소 가능)
                 
                             for key, words in synergy_patterns.items():
-                                if key == "백헤드":
-                                    # 백헤드: OR 조건 (헤드 어택 또는 백 어택 중 하나라도 있으면)
-                                    if any(word in context for word in words):
-                                        results.append(f"{key} {val}%")
-                                else:
-                                    # 그 외: 모든 키워드(부분 문자열)가 문맥에 존재하면 매칭
-                                    if all(re.search(word, context) for word in words):
-                                        results.append(f"{key} {val}%")
+                                if all(re.search(word, context) for word in words):
+                                    results.append(f"{key} {val}%")
+
                 
                     # 중복 제거(등장 순서 유지)
                     results = list(dict.fromkeys(results))
@@ -2803,6 +2798,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
