@@ -1710,6 +1710,22 @@ PVP: {pvp_grade_name}
                 # 시너지 패턴 정의
                 patterns = ["자신 및 파티원", "파티원에게", "적중된 적의", "적중된 적들의", "아군의", "파티원의"]
                 synergy_skills = []
+
+                def clean_html_tooltip(tooltip_text: str) -> str:
+                    """
+                    HTML 태그 제거 후 연속 공백을 정리하고 양쪽 공백을 제거합니다.
+                    
+                    Args:
+                        tooltip_text (str): HTML 태그가 포함된 스킬/트리포드 툴팁 문자열.
+                    
+                    Returns:
+                        str: HTML 태그가 제거되고 공백이 정리된 문자열.
+                    """
+                    # HTML 태그 제거
+                    clean_text = re.sub(r"<.*?>", "", tooltip_text)
+                    # 연속 공백 정리 및 양쪽 공백 제거
+                    clean_text = re.sub(r"\s+", " ", clean_text).strip()
+                    return clean_text
                     
                 # -----------------------------
                 # 스킬
@@ -1730,10 +1746,7 @@ PVP: {pvp_grade_name}
                         if tripod.get("IsSelected", False):
                             tripod_tooltip_text = tripod.get("Tooltip", "")
                             
-                            # HTML 태그 제거
-                            clean_tooltip = re.sub(r"<.*?>", "", tripod_tooltip_text)
-                            # 연속 공백 정리
-                            clean_tooltip = re.sub(r"\s+", " ", clean_tooltip).strip()
+                            clean_tooltip = clean_html_tooltip(tripod_tooltip_text)
                             
                             # 시너지 패턴이 포함되어 있는지 확인
                             if any(pattern in clean_tooltip for pattern in patterns):
@@ -1741,8 +1754,6 @@ PVP: {pvp_grade_name}
                                     "Name": skill_name,
                                     "Tooltip": clean_tooltip
                                 })
-
-                logger.info("synergy_skills: %s", synergy_skills)
                 
                 # -----------------------------
                 # 2️⃣ 아크패시브 Effects에서 시너지 필터링
@@ -1753,33 +1764,19 @@ PVP: {pvp_grade_name}
                 effects = armory_arkpassive.get("Effects", [])
                 
                 for effect in effects:
-                    desc = effect.get("Description", "")
-                    name = effect.get("Name", "")
-                    tooltip_json_str = effect.get("ToolTip", "")
-                
-                    # Description 정리
-                    clean_desc = re.sub(r"<.*?>", "", desc).strip()
-                    parts = clean_desc.split()
-                    tripod_name = " ".join(parts[0:2]) if len(parts) >= 2 else name
-                    skill_name = " ".join(parts[2:]) if len(parts) > 2 else ""
-                
-                    try:
-                        tooltip_json = json.loads(tooltip_json_str)
-                    except json.JSONDecodeError:
-                        continue
-                
-                    tooltip_text = tooltip_json.get("Element_002", {}).get("value", "")
-                    if not tooltip_text:
-                        continue
-                
-                    clean_tooltip = re.sub(r"<.*?>", "", tooltip_text)
-                    clean_tooltip = re.sub(r"\s+", " ", clean_tooltip).strip()
-                
-                    if any(p in clean_tooltip for p in patterns):
+                    skill_name = effect.get("Description", "")
+                    skill_tooltip = effect.get("ToolTip", "")
+                    
+                    clean_name = clean_html_tooltip(skill_name)
+                    clean_tooltip = clean_html_tooltip(skill_tooltip)
+                    
+                    # 시너지 패턴이 포함되어 있는지 확인
+                    if any(pattern in clean_tooltip for pattern in patterns):
                         synergy_skills.append({
-                            "Name": skill_name,
+                            "Name": clean_name,
                             "Tooltip": clean_tooltip
                         })
+                    
                 
                 # -----------------------------
                 # 3️⃣ preview_text 생성
@@ -2748,6 +2745,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
