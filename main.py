@@ -1689,9 +1689,11 @@ PVP: {pvp_grade_name}
 💡캐선창 이동 후 재시도 시 최신 데이터 확인 가능
 """
 
-                logger.info("여기출력card_text: %s", card_text)
+                logger.info("card_text정보: %s", card_text)
                 
+                # -----------------------------
                 # 캐릭터 장비 정보
+                # -----------------------------
                 armory_equipment = (data or {}).get("ArmoryEquipment", [])
                 # Weapon = armory_equipment
                 # Helmet = 
@@ -1700,42 +1702,31 @@ PVP: {pvp_grade_name}
                 # Gloves = 
                 # Shoulder = 
                 
+                # -----------------------------
+                # 캐릭터 시너지 정보
+                # -----------------------------
                 
-                # -----------------------------
-                # 데이터 가져오기
-                # -----------------------------
-                armory_arkpassive = (data or {}).get("ArkPassive", [])
-                armory_skills = (data or {}).get("ArmorySkills", [])
-                
-                # -----------------------------
-                # 아크패시브 Effects 가져오기
-                # -----------------------------
-                effects = []
-                for ap in armory_arkpassive:
-                    if isinstance(ap, str):
-                        try:
-                            ap = json.loads(ap)
-                        except json.JSONDecodeError:
-                            continue
-                    if not isinstance(ap, dict):
-                        continue
-                    effects.extend(ap.get("Effects", []))
-                
-                # -----------------------------
                 # 시너지 패턴 정의
-                # -----------------------------
                 patterns = ["자신 및 파티원", "파티원에게", "적중된 적들의", "아군의", "파티원의"]
                 synergy_skills = []
+                    
+                # -----------------------------
+                # 스킬
+                armory_skills = (data or {}).get("ArmorySkills", [])
                 
                 # -----------------------------
                 # 1️⃣ ArmorySkills에서 시너지 필터링
                 # -----------------------------
                 for skill in armory_skills:
-                    tooltip_str = skill.get("Tooltip", "")
-                    if not tooltip_str:
+                    skill_name= skill.get("Name", "")
+                    skill_tooltip = skill.get("Tooltip", "")
+
+                    logger.info("스킬툴팁: %s", skill_tooltip)
+                    
+                    if not skill_tooltip:
                         continue
                     try:
-                        tooltip_json = json.loads(tooltip_str)
+                        tooltip_json = json.loads(skill_tooltip)
                     except json.JSONDecodeError:
                         continue
                 
@@ -1772,6 +1763,11 @@ PVP: {pvp_grade_name}
                 # -----------------------------
                 # 2️⃣ 아크패시브 Effects에서 시너지 필터링
                 # -----------------------------
+
+                # 아크패시브 및 Effects 가져오기
+                armory_arkpassive = (data or {}).get("ArkPassive", [])
+                effects = armory_arkpassive.get("Effects", [])
+                
                 for effect in effects:
                     desc = effect.get("Description", "")
                     name = effect.get("Name", "")
@@ -2773,6 +2769,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
