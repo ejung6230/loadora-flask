@@ -1736,6 +1736,8 @@ PVP: {pvp_grade_name}
                 
                         if not any(pat in sentence for pat in patterns):
                             continue
+
+                        logger.info("여기출력sentences: %s", sentences)
                 
                         # 수치별로 개별 매핑
                         matches = re.finditer(r'(\d+\.?\d*)%', sentence)
@@ -2795,6 +2797,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
