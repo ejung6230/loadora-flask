@@ -83,20 +83,23 @@ def fetch_lopec_ranking(nickname: str, character_class: str):
     }
 
     try:
-        response = requests.get(url, headers=headers, params=params)
+        response = requests.get(url, headers=headers, params=params, timeout=3)
         response.raise_for_status()
         return response.json()
+
+    except requests.exceptions.Timeout:
+        return {"error": "로펙 응답이 지연되고 있습니다."}
 
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 400:
             return {"error": "잘못된 요청입니다. nickname과 characterClass를 확인하세요."}
         elif e.response.status_code == 503:
-            return {"error": "LOPEC 서버 점검 중입니다. 잠시 후 다시 시도해주세요."}
+            return {"error": "로펙 서버가 점검 중입니다. 잠시 후 다시 시도해주세요."}
         else:
             return {"error": "랭킹 정보를 불러올 수 없습니다."}
 
     except requests.exceptions.RequestException as e:
-        raise Exception(f"LOPEC 서버와 통신 중 오류가 발생했습니다. ({e})") from e
+        return {"error": f"로펙 서버와 통신 중 오류가 발생했습니다. ({e})"}
 
 # 로펙 점수 post
 def fetch_lopec_character(nickname: str, character_class: str):
@@ -118,20 +121,23 @@ def fetch_lopec_character(nickname: str, character_class: str):
     }
 
     try:
-        response = requests.post(url, json=payload, headers=headers)
+        response = requests.post(url, json=payload, headers=headers, timeout=3)
         response.raise_for_status()
         return response.json()
+
+    except requests.exceptions.Timeout:
+        return {"error": "로펙 응답이 지연되고 있습니다."}
 
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 400:
             return {"error": "잘못된 요청입니다. nickname과 characterClass를 확인하세요."}
         elif e.response.status_code == 503:
-            return {"error": "LOPEC 서버 점검 중입니다. 잠시 후 다시 시도해주세요."}
+            return {"error": "로펙 서버가 점검 중입니다. 잠시 후 다시 시도해주세요."}
         else:
-            return {"error": "캐릭터 정보를 불러올 수 없습니다."}
+            return {"error": "로펙 정보를 불러올 수 없습니다."}
 
     except requests.exceptions.RequestException as e:
-        raise Exception(f"LOPEC 서버와 통신 중 오류가 발생했습니다. ({e})") from e
+        return {"error": f"LOPEC 서버와 통신 중 오류가 발생했습니다. ({e})"}
 
 
 def fetch_shop_html():
@@ -1618,18 +1624,26 @@ def fallback():
                         f"직업: {kloa_ranking['job']['value']}위 "
                         f"(상위 {kloa_ranking['job']['position']*100:.2f}%)"
                     )
-                
+
                 # 로펙 점수 POST
                 lopec_score = fetch_lopec_character(info_char_name, character_class)
-                lopec_total_sum = lopec_score.get("totalSum", None)  # totalSum 없으면 None 반환
-                lopec_total_sum_text = f"{lopec_total_sum:,.2f}" if lopec_total_sum is not None else "정보 없음"
+                
+                if "error" in lopec_score:
+                    lopec_total_sum_text = lopec_score["error"]  # 에러 메시지 직접 출력
+                else:
+                    lopec_total_sum = lopec_score.get("totalSum")
+                    lopec_total_sum_text = f"{lopec_total_sum:,.2f}" if lopec_total_sum is not None else "정보 없음"
+
 
 
                 # 로펙 랭킹 GET
                 lopec_ranking = fetch_lopec_ranking(info_char_name, character_class)
                 lopec_ranking_text = ""
+
+                if "error" in lopec_ranking:
+                    lopec_ranking_text = lopec_ranking["error"]
                 
-                if "totalRank" in lopec_ranking and "classRank" in lopec_ranking:
+                elif "totalRank" in lopec_ranking and "classRank" in lopec_ranking:
                     total_rank = lopec_ranking["totalRank"]["rank"]
                     total_count = lopec_ranking["totalRank"]["total"]
                     total_percentage = lopec_ranking["totalRank"]["percentage"]
@@ -1638,12 +1652,12 @@ def fallback():
                     class_count = lopec_ranking["classRank"]["total"]
                     class_percentage = lopec_ranking["classRank"]["percentage"]
                 
-                    lopec_ranking_text += (
+                    lopec_ranking_text = (
                         f"전체: {total_rank:,}위/{total_count:,} ({total_percentage:.2f}%)\n"
                         f"직업: {class_rank:,}위/{class_count:,} ({class_percentage:.2f}%)"
                     )
                 else:
-                    lopec_ranking_text += "랭킹 정보를 불러오지 못했습니다."
+                    lopec_ranking_text = "랭킹 정보를 불러오지 못했습니다."
                 
                 # 데이터를 보기좋게 텍스트로 정제하기 (참조 : https://flask-production-df81.up.railway.app/armories/아도라o/summary)
                 # response_text = match_info_to_text(data)
@@ -1668,17 +1682,16 @@ def fallback():
                 town_name = "이름 없는 영지" if armory.get("TownName") == "컨텐츠 개방 필요" else armory.get("TownName", "정보 없음")
                 expedition_level = armory.get("ExpeditionLevel") or "정보 없음"
                 title = armory.get("Title") or "정보 없음"
-                honor_point = armory.get("HonorPoint") or "정보 없음"
+                honor_point = f"{armory.get('HonorPoint')}점" if armory.get("HonorPoint") else "정보 없음"
                 pvp_grade_name = armory.get("PvpGradeName") or "정보 없음"
-
-
+                
                 card_text = f"""# {character_class}
 
 ❙ 정보
 원정대: Lv.{expedition_level}
 영지: Lv.{town_level} {town_name}
 PVP: {pvp_grade_name}
-명예: {honor_point}점
+명예: {honor_point}
 칭호: {title}
 길드: {guild_name} ({guild_member_grade})
 템렙: {item_avg_level}
@@ -2899,6 +2912,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
