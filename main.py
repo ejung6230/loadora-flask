@@ -1747,18 +1747,23 @@ PVP: {pvp_grade_name}
                 
                         # 공백 정리
                         context = re.sub(r'\s+', ' ', sentence)
+                        logger.info("문장 처리 context: %s", context)
                 
                         # 문장 내 % 수치들을 순서대로 찾아서, 각 수치의 문맥(여기선 문장 전체)을 기준으로 매핑
                         for m in re.finditer(r'(\d+(?:\.\d+)?)\s*%', context):
                             val = m.group(1)
+                            logger.info("발견된 수치: %s", val)
                 
                             for key, words in synergy_patterns_ordered:
                                 # 키워드 내 공백을 \s+로 처리하여 공백 수 차이 문제 해결
                                 if all(re.search(r'\s+'.join(word.split()), context) for word in words):
+                                    logger.info("매칭된 시너지: %s", key)
                                     results.append(f"{key} {val}%")
                 
                     # 중복 제거(등장 순서 유지)
                     results = list(dict.fromkeys(results))
+                    logger.info("최종 results: %s", results)
+                
                     return " / ".join(results) if results else None
 
 
@@ -2802,6 +2807,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
