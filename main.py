@@ -1734,7 +1734,7 @@ PVP: {pvp_grade_name}
                         if not sentence:
                             continue
                         # 시너지 패턴 필터
-                        if not any(pat in sentence for pat in pattern_texts):
+                        if not any(pat in sentence for pat in patterns):
                             continue
                 
                         keywords = []
@@ -2793,6 +2793,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
