@@ -1736,7 +1736,7 @@ PVP: {pvp_grade_name}
                 
                 def summarize_synergy_full(text):
                     sentences = split_into_sentences(text)
-                    # 디버깅용(원하면 활성화): print("여기출력sentences:", sentences)
+                    logger.info("여기출력sentences: %s", sentences)
                 
                     results = []
                     for sentence in sentences:
@@ -2803,6 +2803,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
