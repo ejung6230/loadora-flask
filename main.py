@@ -1769,8 +1769,14 @@ PVP: {pvp_grade_name}
                     
                     clean_name = clean_html_tooltip(skill_name)
                     
-                    # ToolTip 안의 모든 Element를 순회
-                    for element in skill_tooltip.values():
+                    # ToolTip이 dict인지 확인
+                    if isinstance(skill_tooltip, dict):
+                        elements = skill_tooltip.values()
+                    else:
+                        # str이면 그냥 하나의 요소로 처리
+                        elements = [{"value": skill_tooltip}]
+                    
+                    for element in elements:
                         value = element.get("value", "")
                         if isinstance(value, str):
                             clean_tooltip = clean_html_tooltip(value)
@@ -2748,6 +2754,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
