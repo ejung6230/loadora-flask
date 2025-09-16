@@ -1743,14 +1743,15 @@ PVP: {pvp_grade_name}
                         # 선택된 Tripod만 처리
                         if tripod.get("IsSelected", False):
                             tripod_tooltip_text = tripod.get("Tooltip", "")
-                            
                             clean_tooltip = clean_html_tooltip(tripod_tooltip_text)
                             
                             # 시너지 패턴이 포함되어 있는지 확인
                             if any(pattern in clean_tooltip for pattern in patterns):
+                                summary_text = "요약"
                                 synergy_skills.append({
                                     "Name": skill_name,
-                                    "Tooltip": clean_tooltip
+                                    "Tooltip": clean_tooltip,
+                                    "Summary": summary_text
                                 })
                 
                 # -----------------------------
@@ -1773,9 +1774,11 @@ PVP: {pvp_grade_name}
                         if isinstance(value, str):
                             clean_tooltip = clean_html_tooltip(value)
                             if any(pattern in clean_tooltip for pattern in patterns):
+                                summary_text = "요약"
                                 synergy_skills.append({
                                     "Name": clean_name,
-                                    "Tooltip": clean_tooltip
+                                    "Tooltip": clean_tooltip,
+                                    "Summary": summary_text
                                 })
                     
                 
@@ -1785,7 +1788,7 @@ PVP: {pvp_grade_name}
                 lines = ["❙ 시너지 정보\n"]
                 if synergy_skills:
                     for s in synergy_skills:
-                        lines.append(f"• {s['Name']}")
+                        lines.append(f"• {s['Name']} : s['Summary']")
                         lines.append(f"  {s['Tooltip']}\n")
                 else:
                     lines.append("• 시너지 관련 스킬 없음")
@@ -2746,6 +2749,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
