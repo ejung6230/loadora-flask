@@ -1734,7 +1734,7 @@ PVP: {pvp_grade_name}
                     # 한글(가-힣) 바로 뒤에 나오는 . ! ? 로만 분리 (뒤에 공백 또는 문자열 끝)
                     parts = re.split(r'(?<=[가-힣])[.!?]+(?=\s|$)', text)
                     return [p.strip() for p in parts if p.strip()]
-                
+
                 def summarize_synergy_full(text):
                     sentences = split_into_sentences(text)
                     logger.info("여기출력sentences: %s", sentences)
@@ -1745,19 +1745,22 @@ PVP: {pvp_grade_name}
                         if not any(pat in sentence for pat in patterns):
                             continue
                 
+                        # 공백 정리
+                        context = re.sub(r'\s+', ' ', sentence)
+                
                         # 문장 내 % 수치들을 순서대로 찾아서, 각 수치의 문맥(여기선 문장 전체)을 기준으로 매핑
-                        for m in re.finditer(r'(\d+(?:\.\d+)?)\s*%', sentence):
+                        for m in re.finditer(r'(\d+(?:\.\d+)?)\s*%', context):
                             val = m.group(1)
-                            context = sentence  # 문장 전체를 문맥으로 사용 (필요시 범위 축소 가능)
                 
                             for key, words in synergy_patterns_ordered:
-                                if all(re.search(word, context) for word in words):
-                                    results.append(f"{key} {val}%")
-
-
+                                # 키워드 내 공백을 \s+로 처리하여 공백 수 차이 문제 해결
+                                if all(re.search(r'\s+'.join(word.split()), context) for word in words):
+                                    results.append(f"{key} {val}%')
+                
                     # 중복 제거(등장 순서 유지)
                     results = list(dict.fromkeys(results))
                     return " / ".join(results) if results else None
+
 
 
 
@@ -2799,6 +2802,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
