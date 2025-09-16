@@ -1741,33 +1741,46 @@ PVP: {pvp_grade_name}
                 
                     results = []
                     for sentence in sentences:
+                        # 시너지 패턴 필터(파티원 관련 문장만 처리)
                         if not any(pat in sentence for pat in patterns):
                             continue
                 
+                        # 공백 정리
                         context = re.sub(r'\s+', ' ', sentence)
                         logger.info("문장 처리 context: %s", context)
                 
-                        remaining_context = context  # 남은 텍스트에서만 매칭
-                        for key, words in synergy_patterns_ordered:
-                            # 키워드 매칭
-                            if all(re.search(r'\s+'.join(word.split()), remaining_context) for word in words):
-                                # 문장 내 % 수치 추출 (첫 번째 %만 사용 가능)
-                                m = re.search(r'(\d+(?:\.\d+)?)\s*%', remaining_context)
-                                if m:
-                                    val = m.group(1)
-                                    results.append(f"{key} {val}%")
-                                    logger.info("매칭된 시너지: %s", key)
+                        # 문장 단위로 이미 처리한 키는 중복 방지
+                        seen_keys = set()
                 
-                                    # 이미 매칭한 부분 제거 (문장 전체에서 해당 키워드 포함 문자열 제거)
-                                    # 이렇게 하면 다음 키워드 매칭 시 중복 방지
-                                    pattern_to_remove = r'.*' + r'\s+'.join(words[0].split()) + r'.*'
-                                    remaining_context = re.sub(pattern_to_remove, '', remaining_context, flags=re.IGNORECASE)
+                        for key, words in synergy_patterns_ordered:
+                            if key in seen_keys:
+                                continue
+                
+                            # 모든 키워드가 문장에 있는지 확인
+                            if all(re.search(r'\s+'.join(word.split()), context) for word in words):
+                                # 키워드 위치
+                                keyword_match = re.search(r'\s+'.join(words[0].split()), context)
+                                if not keyword_match:
+                                    continue
+                                keyword_pos = (keyword_match.start(), keyword_match.end())
+                
+                                # 문장 내 모든 % 수치 위치
+                                percents = [(m.group(1), m.start()) for m in re.finditer(r'(\d+(?:\.\d+)?)\s*%', context)]
+                                if not percents:
+                                    continue
+                
+                                # 키워드와 가장 가까운 % 선택
+                                val, val_pos = min(percents, key=lambda x: abs((keyword_pos[0] + keyword_pos[1]) // 2 - x[1]))
+                                results.append(f"{key} {val}%")
+                                logger.info("매칭된 시너지: %s", key)
+                                seen_keys.add(key)
                 
                     # 중복 제거(등장 순서 유지)
                     results = list(dict.fromkeys(results))
                     logger.info("최종 results: %s", results)
                 
                     return " / ".join(results) if results else None
+
 
 
 
@@ -2810,6 +2823,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
