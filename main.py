@@ -1739,8 +1739,6 @@ PVP: {pvp_grade_name}
                     skill_tooltip = skill.get("Tooltip", "")
                     skill_tripods = skill.get("Tripods", [])
                 
-                    logger.info("스킬툴팁: %s", skill_tooltip)
-                
                     for tripod in skill_tripods:
                         # 선택된 Tripod만 처리
                         if tripod.get("IsSelected", False):
@@ -1768,6 +1766,10 @@ PVP: {pvp_grade_name}
                     skill_tooltip = effect.get("ToolTip", "")
                     
                     clean_name = clean_html_tooltip(skill_name)
+
+                    
+                    test = skill_tooltip.get("Element_000", "")
+                    logger.info("test: %s", test)
                     
                     # ToolTip이 dict인지 확인
                     if isinstance(skill_tooltip, dict):
@@ -2754,6 +2756,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
