@@ -1741,24 +1741,27 @@ PVP: {pvp_grade_name}
                 
                     results = []
                     for sentence in sentences:
-                        # 시너지 패턴 필터(파티원 관련 문장만 처리)
                         if not any(pat in sentence for pat in patterns):
                             continue
                 
-                        # 공백 정리
                         context = re.sub(r'\s+', ' ', sentence)
                         logger.info("문장 처리 context: %s", context)
                 
-                        # 문장 내 % 수치들을 순서대로 찾아서, 각 수치의 문맥(여기선 문장 전체)을 기준으로 매핑
-                        for m in re.finditer(r'(\d+(?:\.\d+)?)\s*%', context):
-                            val = m.group(1)
-                            logger.info("발견된 수치: %s", val)
-                
-                            for key, words in synergy_patterns_ordered:
-                                # 키워드 내 공백을 \s+로 처리하여 공백 수 차이 문제 해결
-                                if all(re.search(r'\s+'.join(word.split()), context) for word in words):
-                                    logger.info("매칭된 시너지: %s", key)
+                        remaining_context = context  # 남은 텍스트에서만 매칭
+                        for key, words in synergy_patterns_ordered:
+                            # 키워드 매칭
+                            if all(re.search(r'\s+'.join(word.split()), remaining_context) for word in words):
+                                # 문장 내 % 수치 추출 (첫 번째 %만 사용 가능)
+                                m = re.search(r'(\d+(?:\.\d+)?)\s*%', remaining_context)
+                                if m:
+                                    val = m.group(1)
                                     results.append(f"{key} {val}%")
+                                    logger.info("매칭된 시너지: %s", key)
+                
+                                    # 이미 매칭한 부분 제거 (문장 전체에서 해당 키워드 포함 문자열 제거)
+                                    # 이렇게 하면 다음 키워드 매칭 시 중복 방지
+                                    pattern_to_remove = r'.*' + r'\s+'.join(words[0].split()) + r'.*'
+                                    remaining_context = re.sub(pattern_to_remove, '', remaining_context, flags=re.IGNORECASE)
                 
                     # 중복 제거(등장 순서 유지)
                     results = list(dict.fromkeys(results))
@@ -2807,6 +2810,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
