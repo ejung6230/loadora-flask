@@ -1724,38 +1724,44 @@ PVP: {pvp_grade_name}
                 }
 
                 # 3️⃣ 문장 단위로 분리 후 요약
+                def split_into_sentences(text):
+                    """
+                    한글 바로 뒤에 오는 문장종결(.!?)만 기준으로 분리한다.
+                    이렇게 하면 6.0, 12.8 같은 소수점은 분리되지 않음.
+                    """
+                    text = re.sub(r'\s+', ' ', text).strip()
+                    # 한글(가-힣) 바로 뒤에 나오는 . ! ? 로만 분리 (뒤에 공백 또는 문자열 끝)
+                    parts = re.split(r'(?<=[가-힣])[.!?]+(?=\s|$)', text)
+                    return [p.strip() for p in parts if p.strip()]
+                
                 def summarize_synergy_full(text):
-                    # 문장 분리 (숫자 안의 '.' 무시)
-                    sentences = re.split(r'(?<=[가-힣0-9])\s*(?=[.!?])', text)
+                    sentences = split_into_sentences(text)
+                    # 디버깅용(원하면 활성화): print("여기출력sentences:", sentences)
+                
                     results = []
-                
                     for sentence in sentences:
-                        sentence = sentence.strip()
-                        if not sentence:
-                            continue
-                
+                        # 시너지 패턴 필터(파티원 관련 문장만 처리)
                         if not any(pat in sentence for pat in patterns):
                             continue
-
-                        logger.info("여기출력sentences: %s", sentences)
                 
-                        # 수치별로 개별 매핑
-                        matches = re.finditer(r'(\d+\.?\d*)%', sentence)
-                        for m in matches:
+                        # 문장 내 % 수치들을 순서대로 찾아서, 각 수치의 문맥(여기선 문장 전체)을 기준으로 매핑
+                        for m in re.finditer(r'(\d+(?:\.\d+)?)\s*%', sentence):
                             val = m.group(1)
-                            context = sentence[max(0, m.start()-20):m.end()+20]
+                            context = sentence  # 문장 전체를 문맥으로 사용 (필요시 범위 축소 가능)
                 
                             for key, words in synergy_patterns.items():
                                 if key == "백헤드":
-                                    # OR 조건
+                                    # 백헤드: OR 조건 (헤드 어택 또는 백 어택 중 하나라도 있으면)
                                     if any(word in context for word in words):
                                         results.append(f"{key} {val}%")
                                 else:
-                                    # AND 조건
-                                    if all(word in context for word in words):
+                                    # 그 외: 모든 키워드(부분 문자열)가 문맥에 존재하면 매칭
+                                    if all(re.search(word, context) for word in words):
                                         results.append(f"{key} {val}%")
                 
-                    return " / ".join(sorted(set(results))) if results else None
+                    # 중복 제거(등장 순서 유지)
+                    results = list(dict.fromkeys(results))
+                    return " / ".join(results) if results else None
 
 
 
@@ -2797,6 +2803,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
