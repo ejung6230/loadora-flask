@@ -1741,12 +1741,20 @@ PVP: {pvp_grade_name}
                         matches = re.finditer(r'(\d+\.?\d*)%', sentence)
                         for m in matches:
                             val = m.group(1)
-                            context = sentence[max(0, m.start()-20):m.end()+20]  # 수치 앞뒤 문맥 확인
+                            context = sentence[max(0, m.start()-20):m.end()+20]
+                
                             for key, words in synergy_patterns.items():
-                                if all(word in context for word in words):
-                                    results.append(f"{key} {val}%")
+                                if key == "백헤드":
+                                    # OR 조건
+                                    if any(word in context for word in words):
+                                        results.append(f"{key} {val}%")
+                                else:
+                                    # AND 조건
+                                    if all(word in context for word in words):
+                                        results.append(f"{key} {val}%")
                 
                     return " / ".join(sorted(set(results))) if results else None
+
 
 
                 def clean_html_tooltip(tooltip_text: str) -> str:
@@ -2787,6 +2795,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
