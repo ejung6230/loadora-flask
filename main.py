@@ -1732,8 +1732,8 @@ PVP: {pvp_grade_name}
                             # 시너지 패턴이 포함되어 있는지 확인
                             if any(pattern in tripod_tooltip_text for pattern in patterns):
                                 synergy_skills.append({
-                                    "SkillName": skill_name,
-                                    "TripodTooltip": tripod_tooltip_text
+                                    "Name": skill_name,
+                                    "Tooltip": tripod_tooltip_text
                                 })
 
                 logger.info("synergy_skills: %s", synergy_skills)
@@ -1771,10 +1771,8 @@ PVP: {pvp_grade_name}
                 
                     if any(p in clean_tooltip for p in patterns):
                         synergy_skills.append({
-                            "type": "아크패시브",
-                            "skill_name": skill_name,
-                            "tripod_name": tripod_name,
-                            "tooltip": clean_tooltip
+                            "Name": skill_name,
+                            "Tooltip": clean_tooltip
                         })
                 
                 # -----------------------------
@@ -1783,8 +1781,8 @@ PVP: {pvp_grade_name}
                 lines = ["❙ 시너지 정보\n"]
                 if synergy_skills:
                     for s in synergy_skills:
-                        lines.append(f"• {s['skill_name']}")
-                        lines.append(f"  {s['tooltip']}\n")
+                        lines.append(f"• {s['Name']}")
+                        lines.append(f"  {s['Tooltip']}\n")
                 else:
                     lines.append("• 시너지 관련 스킬 없음")
                 
@@ -2744,6 +2742,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
