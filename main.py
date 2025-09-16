@@ -1755,7 +1755,7 @@ PVP: {pvp_grade_name}
                             for key, words in synergy_patterns_ordered:
                                 # 키워드 내 공백을 \s+로 처리하여 공백 수 차이 문제 해결
                                 if all(re.search(r'\s+'.join(word.split()), context) for word in words):
-                                    results.append(f"{key} {val}%')
+                                    results.append(f"{key} {val}%")
                 
                     # 중복 제거(등장 순서 유지)
                     results = list(dict.fromkeys(results))
@@ -2802,6 +2802,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
