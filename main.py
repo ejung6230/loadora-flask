@@ -1647,6 +1647,7 @@ def fallback():
 
                 # 전투정보실 바로가기 URL
                 armory_url = f"https://lostark.game.onstove.com/Profile/Character/{info_char_name}"
+                
                 # 로펙(LOPEC) 바로가기 URL
                 lopec_url = f"https://lopec.kr/mobile/search/search.html?headerCharacterName={info_char_name}"
 
@@ -1729,11 +1730,16 @@ PVP: {pvp_grade_name}
                         if tripod.get("IsSelected", False):
                             tripod_tooltip_text = tripod.get("Tooltip", "")
                             
+                            # HTML 태그 제거
+                            clean_tooltip = re.sub(r"<.*?>", "", tripod_tooltip_text)
+                            # 연속 공백 정리
+                            clean_tooltip = re.sub(r"\s+", " ", clean_tooltip).strip()
+                            
                             # 시너지 패턴이 포함되어 있는지 확인
-                            if any(pattern in tripod_tooltip_text for pattern in patterns):
+                            if any(pattern in clean_tooltip for pattern in patterns):
                                 synergy_skills.append({
                                     "Name": skill_name,
-                                    "Tooltip": tripod_tooltip_text
+                                    "Tooltip": clean_tooltip
                                 })
 
                 logger.info("synergy_skills: %s", synergy_skills)
@@ -2742,6 +2748,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
