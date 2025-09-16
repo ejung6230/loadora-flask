@@ -1741,9 +1741,10 @@ PVP: {pvp_grade_name}
                         keywords = []
                         for key, words in synergy_patterns.items():
                             if all(re.search(word, sentence) for word in words):
-                                # % 수치 추출
+                                # 수치 추출
                                 match = re.findall(r'(\d+\.?\d*)%', sentence)
                                 if match:
+                                    # 백헤드는 수치 여러 개도 다 반영
                                     for val in match:
                                         keywords.append(f"{key} {val}%")
                                 else:
@@ -2792,6 +2793,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
