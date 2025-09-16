@@ -1710,18 +1710,19 @@ PVP: {pvp_grade_name}
                 # 시너지 패턴 및 키워드 정의
                 patterns = ["자신 및 파티원", "파티원에게", "적중된 적의", "적중된 적들의", "아군의", "파티원의"]
                 synergy_skills = []
-                synergy_patterns = {
-                    "방감": ["방어력", "감소"],
-                    "백헤드": ["백 어택", "헤드 어택", "받는", "피해", "증가"],
-                    "치명타 시 받피증": ["치명타", "받는", "피해", "증가"],
-                    "받피증": ["받는", "피해", "증가"],
-                    "치적": ["치명타", "적중"],
-                    "공속": ["공격", "속도"],
-                    "이속": ["이동", "속도"],
-                    "공증": ["공격력", "증가"],
-                    "공감": ["공격력", "감소"],
-                    "마나회복": ["마나", "회복"],
-                }
+
+                synergy_patterns_ordered = [
+                    ("백헤드", ["백 어택", "헤드 어택", "받는", "피해", "증가"]),
+                    ("치명타 시 받피증", ["치명타", "받는", "피해", "증가"]),
+                    ("받피증", ["받는", "피해", "증가"]),
+                    ("방감", ["방어력", "감소"]),
+                    ("치적", ["치명타", "적중"]),
+                    ("공속", ["공격", "속도"]),
+                    ("이속", ["이동", "속도"]),
+                    ("공증", ["공격력", "증가"]),
+                    ("공감", ["공격력", "감소"]),
+                    ("마나회복", ["마나", "회복"]),
+                ]
 
                 # 3️⃣ 문장 단위로 분리 후 요약
                 def split_into_sentences(text):
@@ -1749,11 +1750,11 @@ PVP: {pvp_grade_name}
                             val = m.group(1)
                             context = sentence  # 문장 전체를 문맥으로 사용 (필요시 범위 축소 가능)
                 
-                            for key, words in synergy_patterns.items():
+                            for key, words in synergy_patterns_ordered:
                                 if all(re.search(word, context) for word in words):
                                     results.append(f"{key} {val}%")
 
-                
+
                     # 중복 제거(등장 순서 유지)
                     results = list(dict.fromkeys(results))
                     return " / ".join(results) if results else None
@@ -2798,6 +2799,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
