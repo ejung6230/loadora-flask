@@ -1725,36 +1725,34 @@ PVP: {pvp_grade_name}
 
                 # 3️⃣ 문장 단위로 분리 후 요약
                 def summarize_synergy_full(text):
-                    # 문장 단위로 분리 (마침표, 느낌표, 물음표, 쉼표까지)
-                    sentences = re.split(r'[.!?,]', text)
+                    # 한국어 문장 단위 분리 (숫자 소수점은 제외)
+                    sentences = re.split(r'(?<=[가-힣])\.', text)
                     results = []
                 
                     for sentence in sentences:
                         sentence = sentence.strip()
                         if not sentence:
                             continue
+                
                         # 시너지 패턴 필터
                         if not any(pat in sentence for pat in patterns):
                             continue
                 
                         keywords = []
                         for key, words in synergy_patterns.items():
-                            # 모든 키워드가 문장 안에 있으면 시너지로 인식
                             if all(re.search(word, sentence) for word in words):
-                                # 수치 추출
+                                # % 수치 추출
                                 match = re.findall(r'(\d+\.?\d*)%', sentence)
                                 if match:
                                     for val in match:
                                         keywords.append(f"{key} {val}%")
                                 else:
                                     keywords.append(key)
+                
                         if keywords:
                             results.append(" / ".join(sorted(set(keywords))))
                 
-                    # 여러 문장 요약 연결 (중복 제거)
                     return " / ".join(sorted(set(results))) if results else None
-
-
 
                 def clean_html_tooltip(tooltip_text: str) -> str:
                     """
@@ -2794,6 +2792,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
