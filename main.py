@@ -1766,9 +1766,9 @@ PVP: {pvp_grade_name}
                     skill_tooltip = effect.get("ToolTip", "")
                     
                     clean_name = clean_html_tooltip(skill_name)
-
                     
-                    test = skill_tooltip.get("Element_000", "")
+                    skill_tooltip_json = json.loads(skill_tooltip)
+                    test = skill_tooltip_json.get("Element_000", "")
                     logger.info("test: %s", test)
                     
                     # ToolTip이 dict인지 확인
@@ -2756,6 +2756,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
