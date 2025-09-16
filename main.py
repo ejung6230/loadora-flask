@@ -1725,8 +1725,8 @@ PVP: {pvp_grade_name}
 
                 # 3️⃣ 문장 단위로 분리 후 요약
                 def summarize_synergy_full(text):
-                    # 한국어 문장 단위 분리
-                    sentences = re.split(r'(?<=[가-힣])\.', text)
+                    # 문장 단위 분리 (숫자 안의 '.' 무시)
+                    sentences = re.split(r'(?<=[가-힣0-9])\s*(?=[.!?])', text)
                     results = []
                 
                     for sentence in sentences:
@@ -1734,23 +1734,19 @@ PVP: {pvp_grade_name}
                         if not sentence:
                             continue
                 
+                        # 시너지 조건이 없으면 무시
                         if not any(pat in sentence for pat in patterns):
                             continue
                 
-                        # 문장에서 등장하는 % 수치들
-                        values = re.findall(r'(\d+\.?\d*)%', sentence)
-                
-                        keywords = []
                         for key, words in synergy_patterns.items():
                             if all(re.search(word, sentence) for word in words):
+                                # 해당 키워드에 대응되는 수치만 뽑기
+                                values = re.findall(r'(\d+\.?\d*)%', sentence)
                                 if values:
                                     for val in values:
-                                        keywords.append(f"{key} {val}%")
+                                        results.append(f"{key} {val}%")
                                 else:
-                                    keywords.append(key)
-                
-                        if keywords:
-                            results.append(" / ".join(sorted(set(keywords))))
+                                    results.append(key)
                 
                     return " / ".join(sorted(set(results))) if results else None
 
@@ -2793,6 +2789,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
