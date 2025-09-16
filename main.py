@@ -1709,6 +1709,27 @@ PVP: {pvp_grade_name}
                 # 시너지 패턴 정의
                 patterns = ["자신 및 파티원", "파티원에게", "적중된 적들의", "아군의", "파티원의"]
                 synergy_skills = []
+
+                # -----------------------------
+                # HTML 제거 함수
+                def clean_html(raw_html):
+                    cleanr = re.compile('<.*?>')
+                    return re.sub(cleanr, '', raw_html)
+                
+                # Tooltip에서 모든 텍스트 추출 함수
+                def extract_text_from_tooltip(tooltip_json):
+                    texts = []
+                    for key, element in tooltip_json.items():
+                        value = element.get("value", "")
+                        if isinstance(value, dict):
+                            # TripodSkillCustom 등 내부 dict 처리
+                            for subkey, subel in value.items():
+                                desc = subel.get("desc", "")
+                                if desc:
+                                    texts.append(desc)
+                        elif isinstance(value, str):
+                            texts.append(value)
+                    return texts
                     
                 # -----------------------------
                 # 스킬
@@ -1718,47 +1739,24 @@ PVP: {pvp_grade_name}
                 # 1️⃣ ArmorySkills에서 시너지 필터링
                 # -----------------------------
                 for skill in armory_skills:
-                    skill_name= skill.get("Name", "")
-                    skill_tooltip = skill.get("Tooltip", "")
-
+                    skill_name = skill.get("Name", "")
+                    skill_tooltip = skill.get("Tooltip", {})
+                
                     logger.info("스킬툴팁: %s", skill_tooltip)
-                    
-                    if not skill_tooltip:
-                        continue
-                    try:
-                        tooltip_json = json.loads(skill_tooltip)
-                    except json.JSONDecodeError:
-                        continue
                 
-                    # Tooltip 안의 모든 value 모으기
-                    texts = []
-                    for element in tooltip_json.values():
-                        value = element.get("value", "")
-                        if isinstance(value, str):
-                            texts.append(value)
-                        elif isinstance(value, dict):
-                            texts.extend(v for v in value.values() if isinstance(v, str))
+                    # tooltip에서 텍스트 추출
+                    all_texts = extract_text_from_tooltip(skill_tooltip)
                 
-                        # TripodSkillCustom 처리
-                        if element.get("type") == "TripodSkillCustom" and isinstance(element.get("value"), dict):
-                            for tripod_elem in element["value"].values():
-                                desc = tripod_elem.get("desc", "")
-                                if desc:
-                                    texts.append(desc)
+                    # HTML 제거 후 시너지 패턴 매칭
+                    for text in all_texts:
+                        plain_text = clean_html(text)
+                        if any(pattern in plain_text for pattern in patterns):
+                            synergy_skills.append({
+                                "Name": skill_name,
+                                "Text": plain_text
+                            })
                 
-                    merged_text = " ".join(texts)
-                
-                    # HTML 제거 + 공백 정리
-                    clean_tooltip = re.sub(r"<.*?>", "", merged_text)
-                    clean_tooltip = re.sub(r"\s+", " ", clean_tooltip).strip()
-                
-                    # 시너지 패턴 체크
-                    if any(p in clean_tooltip for p in patterns):
-                        synergy_skills.append({
-                            "type": "스킬",
-                            "skill_name": skill.get("Name"),
-                            "tooltip": clean_tooltip
-                        })
+                logger.info("시너지 스킬 리스트: %s", synergy_skills)
                 
                 # -----------------------------
                 # 2️⃣ 아크패시브 Effects에서 시너지 필터링
@@ -2769,6 +2767,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
