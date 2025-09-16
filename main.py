@@ -1707,9 +1707,53 @@ PVP: {pvp_grade_name}
                 # 캐릭터 시너지 정보
                 # -----------------------------
                 
-                # 시너지 패턴 정의
+                # 시너지 패턴 및 키워드 정의
                 patterns = ["자신 및 파티원", "파티원에게", "적중된 적의", "적중된 적들의", "아군의", "파티원의"]
                 synergy_skills = []
+                synergy_patterns = {
+                    "방감": ["방어력", "감소"],
+                    "받피증": ["받는", "피해", "증가"],
+                    "백헤드": ["백 어택", "헤드 어택"],
+                    "치명타 시 받피증": ["치명타", "받는", "피해", "증가"],
+                    "치적": ["치명타", "적중"],
+                    "공속": ["공격", "속도"],
+                    "이속": ["이동", "속도"],
+                    "공증": ["공격력", "증가"],
+                    "마나회복": ["마나", "회복"],
+                    "공감": ["공격력", "감소"],
+                }
+
+                # 3️⃣ 문장 단위로 분리 후 요약
+                def summarize_synergy_full(text):
+                    # 문장 단위로 분리 (마침표 기준, 필요 시 !, ?도 추가 가능)
+                    sentences = re.split(r'\.|\!|\?', text)
+                    results = []
+                
+                    for sentence in sentences:
+                        sentence = sentence.strip()
+                        if not sentence:
+                            continue
+                        # 시너지 패턴 필터
+                        if not any(pat in sentence for pat in pattern_texts):
+                            continue
+                
+                        keywords = []
+                        for key, words in synergy_patterns.items():
+                            if all(word in sentence for word in words):
+                                # 수치 추출
+                                match = re.findall(r'(\d+\.?\d*)%', sentence)
+                                if match:
+                                    for val in match:
+                                        keywords.append(f"{key} {val}%")
+                                else:
+                                    keywords.append(key)
+                        if keywords:
+                            results.append(" / ".join(sorted(set(keywords))))
+                
+                    # 여러 문장 요약 연결
+                    return " / ".join(results) if results else None
+
+
 
                 def clean_html_tooltip(tooltip_text: str) -> str:
                     """
@@ -1747,7 +1791,7 @@ PVP: {pvp_grade_name}
                             
                             # 시너지 패턴이 포함되어 있는지 확인
                             if any(pattern in clean_tooltip for pattern in patterns):
-                                summary_text = "요약"
+                                summary_text = summarize_synergy_full(clean_tooltip)
                                 synergy_skills.append({
                                     "Name": skill_name,
                                     "Tooltip": clean_tooltip,
@@ -1774,7 +1818,7 @@ PVP: {pvp_grade_name}
                         if isinstance(value, str):
                             clean_tooltip = clean_html_tooltip(value)
                             if any(pattern in clean_tooltip for pattern in patterns):
-                                summary_text = "요약"
+                                summary_text = summarize_synergy_full(clean_tooltip)
                                 synergy_skills.append({
                                     "Name": clean_name,
                                     "Tooltip": clean_tooltip,
@@ -2749,6 +2793,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
