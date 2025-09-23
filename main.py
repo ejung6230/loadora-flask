@@ -1832,6 +1832,8 @@ PVP: {pvp_grade_name}
                     skill_name = skill.get("Name", "")
                     skill_tooltip = skill.get("Tooltip", "")
                     skill_tripods = skill.get("Tripods", [])
+                    
+                    logger.info("스킬스보기%s", skill)
                 
                     for tripod in skill_tripods:
                         # 선택된 Tripod만 처리
@@ -1839,7 +1841,6 @@ PVP: {pvp_grade_name}
                             tripod_tooltip_text = tripod.get("Tooltip", "")
                             clean_tooltip = clean_html_tooltip(tripod_tooltip_text)
                             
-                            logger.info("트라포드보기%s", tripod)
                             
                             # 시너지 패턴이 포함되어 있는지 확인
                             if any(pattern in clean_tooltip for pattern in patterns):
