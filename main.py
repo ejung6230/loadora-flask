@@ -1839,6 +1839,8 @@ PVP: {pvp_grade_name}
                             tripod_tooltip_text = tripod.get("Tooltip", "")
                             clean_tooltip = clean_html_tooltip(tripod_tooltip_text)
                             
+                            logger.info("트라포드보기%s", tripod)
+                            
                             # 시너지 패턴이 포함되어 있는지 확인
                             if any(pattern in clean_tooltip for pattern in patterns):
                                 summary_text = summarize_synergy_full(clean_tooltip)
@@ -1862,7 +1864,7 @@ PVP: {pvp_grade_name}
                     
                     clean_name = clean_html_tooltip(skill_name)
                     skill_tooltip_json = json.loads(skill_tooltip)
-                    logger.info("앜패보기%s", effect)
+                    
                     
                     for element in skill_tooltip_json.values():
                         value = element.get("value", "")
