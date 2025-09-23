@@ -1735,8 +1735,6 @@ PVP: {pvp_grade_name}
                     ("공증", ["공격력", "증가"]),
                     ("공감", ["공격력", "감소"]),
                     ("마나회복", ["마나", "회복"]),
-                    ("공격", ["공격"]),
-                    
                 ]
 
                 # 3️⃣ 문장 단위로 분리 후 요약
@@ -2832,6 +2830,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
