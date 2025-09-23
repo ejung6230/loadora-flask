@@ -1869,6 +1869,7 @@ PVP: {pvp_grade_name}
                             clean_tooltip = clean_html_tooltip(value)
                             if any(pattern in clean_tooltip for pattern in patterns):
                                 summary_text = summarize_synergy_full(clean_tooltip)
+                                logger.info("아크패시브보기%s", clean_tooltip)
                                 synergy_skills.append({
                                     "Name": clean_name,
                                     "Tooltip": clean_tooltip,
