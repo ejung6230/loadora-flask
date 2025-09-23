@@ -1526,7 +1526,7 @@ def fallback():
                     "버서커(사멸)": {"codes": ["버서커", "ㅂㅅㅋ"], "synergy_info": "받피증 6"},
                     "슬레이어(사멸)": {"codes": ["슬레이어", "ㅅㄹㅇㅇ", "슬레", "ㅅㄹ"], "synergy_info": "받피증 6"},
                     "홀리나이트(서폿)": {"codes": ["홀리나이트", "ㅎㄹㄴㅇㅌ", "홀나", "ㅎㄴ"], "synergy_info": "서포터 업데이트 필요"},
-                    "발키리(서폿)": {"codes": ["발키리", "ㅂㅋㄹ"], "synergy_info": "서포터 업데이트 필요"},
+                    "발키리(타대)": {"codes": ["발키리", "ㅂㅋㄹ"], "synergy_info": "치명타 시 받피증 8"},
                 },
                 "무도가 (애니츠)": {
                     "창술사(사멸)": {"codes": ["창술사", "ㅊㅅㅅ", "창술", "ㅊㅅ"], "synergy_info": "치명타 시 받피증 8"},
@@ -2839,6 +2839,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
