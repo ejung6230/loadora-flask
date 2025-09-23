@@ -1866,25 +1866,6 @@ PVP: {pvp_grade_name}
                         except Exception as e:
                             logger.warning("Tooltip JSON 파싱 실패: %s", e)
                 
-                    # -----------------------------
-                    # (B) 선택된 Tripod에서 시너지 찾기
-                    # -----------------------------
-                    for tripod in skill_tripods:
-                        # 선택된 Tripod만 처리
-                        if tripod.get("IsSelected", False):
-                            tripod_tooltip_text = tripod.get("Tooltip", "")
-                            clean_tooltip = clean_html_tooltip(tripod_tooltip_text)
-                            
-                            
-                            # 시너지 패턴이 포함되어 있는지 확인
-                            if any(pattern in clean_tooltip for pattern in patterns):
-                                summary_text = summarize_synergy_full(clean_tooltip)
-                                synergy_skills.append({
-                                    "Name": skill_name,
-                                    "Tooltip": clean_tooltip,
-                                    "Summary": summary_text
-                                })
-                
                 # -----------------------------
                 # 2️⃣ 아크패시브 Effects에서 시너지 필터링
                 # -----------------------------
@@ -2882,6 +2863,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
