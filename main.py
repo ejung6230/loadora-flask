@@ -1712,7 +1712,7 @@ PVP: {pvp_grade_name}
                 # -----------------------------
                 
                 # 시너지 패턴 및 키워드 정의
-                patterns = ["자신 및 파티원", "파티원에게", "적중된 적의 모든", "적중된 적들의 모든", "아군의", "파티원의", "헤드 어택 및 백 어택"]
+                patterns = ["자신 및 파티원", "파티원에게", "파티원은", "적중된 적의 모든", "적중된 적들의 모든", "아군의", "파티원의", "헤드 어택 및 백 어택"]
                 without_patterns = [""]
                 synergy_skills = []
 
@@ -2843,6 +2843,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
