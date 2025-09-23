@@ -1839,17 +1839,31 @@ PVP: {pvp_grade_name}
                     # (A) 스킬 자체 툴팁에서 시너지 찾기
                     # -----------------------------
                     if skill_tooltip and skill_level >= 2:
-                        clean_tooltip = clean_html_tooltip(skill_tooltip)
-
-                        logger.info("스킬스clean_tooltip보기%s", clean_tooltip)
-                        
-                        if any(pattern in clean_tooltip for pattern in patterns):
-                            summary_text = summarize_synergy_full(clean_tooltip)
-                            synergy_skills.append({
-                                "Name": skill_name,
-                                "Tooltip": clean_tooltip,
-                                "Summary": summary_text
-                            })
+                        try:
+                            tooltip_json = json.loads(skill_tooltip)
+                
+                            def search_values(obj):
+                                if isinstance(obj, dict):
+                                    for v in obj.values():
+                                        search_values(v)
+                                elif isinstance(obj, list):
+                                    for v in obj:
+                                        search_values(v)
+                                elif isinstance(obj, str):
+                                    clean_text = clean_html_tooltip(obj)
+                                    if any(pattern in clean_text for pattern in patterns):
+                                        summary_text = summarize_synergy_full(clean_text)
+                                        synergy_skills.append({
+                                            "Name": skill_name,
+                                            "Tooltip": clean_text,
+                                            "Summary": summary_text,
+                                            "Level": skill_level
+                                        })
+                
+                            search_values(tooltip_json)
+                
+                        except Exception as e:
+                            logger.warning("Tooltip JSON 파싱 실패: %s", e)
                 
                     # -----------------------------
                     # (B) 선택된 Tripod에서 시너지 찾기
@@ -2867,6 +2881,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
