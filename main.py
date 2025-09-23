@@ -1875,7 +1875,7 @@ PVP: {pvp_grade_name}
                 # -----------------------------
                 # 3️⃣ preview_text 생성
                 # -----------------------------
-                lines = ["❙ 시너지 정보\n"]
+                lines = [f"❙ {character_class} 시너지 정보\n"]
                 if synergy_skills:
                     for s in synergy_skills:
                         lines.append(f"• {s['Name']} : {s['Summary']}")
@@ -2839,6 +2839,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
