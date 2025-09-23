@@ -1829,12 +1829,31 @@ PVP: {pvp_grade_name}
                 # 1️⃣ ArmorySkills에서 시너지 필터링
                 # -----------------------------
                 for skill in armory_skills:
+                    
                     skill_name = skill.get("Name", "")
                     skill_tooltip = skill.get("Tooltip", "")
                     skill_tripods = skill.get("Tripods", [])
-                    
-                    logger.info("스킬스보기%s", skill)
+                    skill_level = skill.get("Level", 0)
+
+                    # -----------------------------
+                    # (A) 스킬 자체 툴팁에서 시너지 찾기
+                    # -----------------------------
+                    if skill_tooltip and skill_level >= 2:
+                        clean_tooltip = clean_html_tooltip(skill_tooltip)
+
+                        logger.info("스킬스clean_tooltip보기%s", clean_tooltip)
+                        
+                        if any(pattern in clean_tooltip for pattern in patterns):
+                            summary_text = summarize_synergy_full(clean_tooltip)
+                            synergy_skills.append({
+                                "Name": skill_name,
+                                "Tooltip": clean_tooltip,
+                                "Summary": summary_text
+                            })
                 
+                    # -----------------------------
+                    # (B) 선택된 Tripod에서 시너지 찾기
+                    # -----------------------------
                     for tripod in skill_tripods:
                         # 선택된 Tripod만 처리
                         if tripod.get("IsSelected", False):
@@ -2848,6 +2867,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
