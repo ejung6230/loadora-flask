@@ -1862,12 +1862,12 @@ PVP: {pvp_grade_name}
                     
                     clean_name = clean_html_tooltip(skill_name)
                     skill_tooltip_json = json.loads(skill_tooltip)
+                    logger.info("앜패보기%s", effect)
                     
                     for element in skill_tooltip_json.values():
                         value = element.get("value", "")
                         if isinstance(value, str):
                             clean_tooltip = clean_html_tooltip(value)
-                            logger.info("아크패시브보기%s", clean_tooltip)
                             if any(pattern in clean_tooltip for pattern in patterns):
                                 summary_text = summarize_synergy_full(clean_tooltip)
                                 
