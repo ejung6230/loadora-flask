@@ -1850,6 +1850,7 @@ PVP: {pvp_grade_name}
                                     for v in obj:
                                         search_values(v)
                                 elif isinstance(obj, str):
+                                    logger.info("스킬스결과%s", obj)
                                     clean_text = clean_html_tooltip(obj)
                                     if any(pattern in clean_text for pattern in patterns):
                                         summary_text = summarize_synergy_full(clean_text)
@@ -2881,6 +2882,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
