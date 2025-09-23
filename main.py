@@ -1713,7 +1713,7 @@ PVP: {pvp_grade_name}
                 synergy_skills = []
 
                 synergy_patterns_ordered = [
-                    ("백헤드", ["백 어택", "헤드 어택", "받는", "피해", "증가"]),
+                    ("백헤드 받피증", ["백 어택", "헤드 어택", "받는", "피해", "증가"]),
                     ("치명타 시 받피증", ["치명타", "받는", "피해", "증가"]),
                     ("낙인력", ["낙인력"]),
                     ("낙인 받피증", ["낙인", "받는", "피해", "증가"]),
@@ -2839,6 +2839,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
