@@ -1653,8 +1653,7 @@ def fallback():
                 armory_url = f"https://lostark.game.onstove.com/Profile/Character/{info_char_name}"
                 
                 # 로펙(LOPEC) 바로가기 URL
-                lopec_url = f"https://lopec.kr/mobile/search/search.html?headerCharacterName={info_char_name}"
-
+                lopec_url = f"https://legacy.lopec.kr/mobile/search/search.html?headerCharacterName={info_char_name}"
                 # 캐릭터 프로필 정보 ArmoryProfile
                 armory = (data or {}).get("ArmoryProfile", {})
                 
