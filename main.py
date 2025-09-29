@@ -1706,19 +1706,23 @@ def fallback():
             
             logger.info("유각정보출력%s", data)
             
-            # 예쁘게 출력
             lines = ["◕ᴗ◕🌸\n상위 10개의 유물 각인서 가격을 알려드릴게요\n\n"]
             
             items = data.get("Items", [])
             if items:
+                # 이름 최대 길이 계산
+                max_name_len = max(len(item['Name'].replace('유물 ', '').replace(' 각인서', '')) for item in items)
+                
                 for idx, item in enumerate(items, start=1):
-                    lines.append(
-                        f"❙ {item['Name'].replace('유물 ', '').replace(' 각인서', '')}: {item['CurrentMinPrice']:,} 골드"
-                    )
+                    name = item['Name'].replace('유물 ', '').replace(' 각인서', '')
+                    price = f"{item['CurrentMinPrice']:,} 골드"
+                    # 이름은 왼쪽 정렬, 가격은 오른쪽 정렬
+                    lines.append(f"❙ {name.ljust(max_name_len)} : {price.rjust(10)}")
             else:
                 lines.append("❙ 조회된 유물 각인서가 없습니다. 이름을 다시 확인해주세요.")
             
             response_text = "\n".join(lines)
+            print(response_text)
             
 
         
@@ -2985,6 +2989,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
