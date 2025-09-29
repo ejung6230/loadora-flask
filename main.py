@@ -1716,19 +1716,21 @@ def fallback():
 
             data_items = data.get("Items", [])
             if data_items:
-                # 이름 최대 폭 계산 (한글 폭 반영)
+                # 이름 최대 폭 계산
                 max_name_width = max(wcswidth(x.get('Name', '').replace('유물 ', '').replace(' 각인서', '')) for x in data_items)
                 
-                # 헤더
-                lines.append(f"{'번호':<3} {'이름'.ljust(max_name_width)} | {'현재 최소가격':>12} | {'전일 대비':>10}")
-                lines.append("-" * (5 + max_name_width + 3 + 12 + 3 + 10))
+                # 헤더 폭 맞춤
+                header = f"{'번호':<3} {'이름'.ljust(max_name_width)} | {'현재 최소가격':>12} | {'전일 대비':>10}"
+                separator = "-" * (3 + 1 + max_name_width + 3 + 12 + 3 + 10)  # 번호 + 공백 + 이름 + 공백 + 가격 + 공백 + 대비
+                lines.append(header)
+                lines.append(separator)
                 
                 for idx, entry in enumerate(data_items, start=1):
                     name = entry.get('Name', '').replace('유물 ', '').replace(' 각인서', '')
                     current_price = entry.get('CurrentMinPrice', 0)
                     avg_price = entry.get('YDayAvgPrice', 0)
                     
-                    # 전일 대비 증감률 계산
+                    # 전일 대비 계산
                     if avg_price:
                         change_percent = (current_price - avg_price) / avg_price * 100
                         change_text = f"{change_percent:+.1f}%"
@@ -1738,6 +1740,7 @@ def fallback():
                     # 이름 폭 맞춤
                     space_padding = max_name_width - wcswidth(name)
                     lines.append(f"{idx:<3} {name}{' ' * space_padding} | {current_price:>12,} | {change_text:>10}")
+            
             else:
                 lines.append("❙ 조회된 유물 각인서가 없습니다. 이름을 다시 확인해주세요.")
             
@@ -3008,6 +3011,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
