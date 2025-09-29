@@ -1697,6 +1697,18 @@ def fallback():
                 # 매칭 성공 → 해당 직업 시너지 정보
                 response_text = f"◕ᴗ◕🌸\n'{matched_job}' 직업의 시너지 정보를 알려드릴게요\n\n✤ {matched_class}\n{matched_job}: {job_data[matched_class][matched_job]['synergy_info']}"
 
+        # ---------- 9. 유각 거래소 조회 관련 패턴 ----------
+        relic_match = re.match(r"^(\.유각|유각|\.ㅇㄱ|ㅇㄱ)\s*(.*)$", user_input)
+        if relic_match:
+            item_name = relic_match.group(2).strip()  # 사용자가 입력한 이름
+            
+            data = fetch_relic_engraving(item_name)
+            
+            logger.info("유각정보출력%s", data)
+
+            response_text = f"◕ᴗ◕🌸\n전체 유물 각인서 정보를 알려드릴게요\n\n업데이트 예정"
+            
+
         
         # ---------- 9. 특정 캐릭터 정보 관련 패턴 ----------
         match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ)\s*(.*)$", user_input)
@@ -2961,6 +2973,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
