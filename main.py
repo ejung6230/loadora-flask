@@ -1725,32 +1725,42 @@ def fallback():
         
             data_cnt = len(all_items)
             
-            lines = []
-            lines.append(f"◕ᴗ◕🌸\n유물 각인서 가격을 알려드릴게요 ({data_cnt}개)\n")
+            lines = [f"◕ᴗ◕🌸\n유물 각인서 가격을 알려드릴게요 ({data_cnt}개)\n"]
             
             if all_items:
+                up_count = down_count = 0
                 for entry in all_items:
                     name = entry.get('Name', '').replace('유물 ', '').replace(' 각인서', '')
-                    current_price = entry.get('CurrentMinPrice', 0)
-                    avg_price = entry.get('YDayAvgPrice', 0)
-                    
-                    # 전일 대비 계산
-                    if avg_price:
-                        change_percent = (current_price - avg_price) / avg_price * 100
+                    current = entry.get('CurrentMinPrice', 0)
+                    avg = entry.get('YDayAvgPrice', 0)
+        
+                    # 전일 대비 변화
+                    if avg:
+                        change_percent = (current - avg) / avg * 100
                         if change_percent > 0:
                             arrow = "🔺"
+                            up_count += 1
                         elif change_percent < 0:
                             arrow = "📉"
+                            down_count += 1
                         else:
                             arrow = "➖"
                         change_text = f"{change_percent:+.1f}%{arrow}"
                     else:
                         change_text = "N/A"
-                    
-                    lines.append(f"❙ {current_price:,}💰 : {name} ({change_text})")
+        
+                    lines.append(f"❙ {current:,}💰 : {name} ({change_text})")
+        
+                # 상승/하락 메시지
+                if up_count > down_count:
+                    lines.insert(1, "📢 대부분의 유각이 상승했어요")
+                elif down_count > up_count:
+                    lines.insert(1, "📢 대부분의 유각이 하락했어요")
+                else:
+                    lines.insert(1, "📢 가격 변동이 크지 않아요")
             else:
                 lines.append(f"'{item_name}' 조회된 유물 각인서가 없습니다.\n이름을 다시 확인해주세요.")
-    
+
             
             response_text = "\n".join(lines)
             
@@ -3023,6 +3033,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
