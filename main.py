@@ -324,6 +324,7 @@ def get_calendar():
             "message": str(e)
         }), 500
 
+# 거래소 마켓 옵션 조회
 @app.route('/markets_option', methods=['GET'])
 def get_markets_option():
     try:
@@ -349,7 +350,90 @@ def fetch_markets_option():
     except requests.exceptions.RequestException as e:
         # 연결 시간 초과, DNS 오류 등
         raise Exception(f"서버와 통신 중 오류가 발생했습니다. ({e})") from e
+
+# 거래소 아이템 조회
+@app.route('/markets_items', methods=['POST'])
+def get_markets_items():
+    try:
+        request_data = request.get_json()  # 클라이언트에서 전달한 검색 옵션(JSON body)
+        data = fetch_markets_items(request_data)
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({
+            "error": True,
+            "message": str(e)
+        }), 500
+
+
+
+
+@app.route('/markets/relic_engraving', methods=['GET'])
+def search_relic_engraving():
+    """
+    유물 각인서 검색 함수
+    쿼리 파라미터 ?item_name=원한
+    https://loadora-flask.onrender.com/markets/relic_engraving?item_name=아드
+    """
+    try:
+        # GET 파라미터에서 ItemName 가져오기
+        item_name = request.args.get("item_name", "")
+
+        payload = {
+            "Sort": "CURRENT_MIN_PRICE",
+            "CategoryCode": 40000,
+            "CharacterClass": "",
+            "ItemTier": 0,
+            "ItemGrade": "유물",
+            "ItemName": item_name,  # 사용자 입력 반영
+            "PageNo": 0,
+            "SortCondition": "DESC"
+        }
+
+        data = fetch_markets_items(payload)
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({
+            "error": True,
+            "message": str(e)
+        }), 500
     
+
+def fetch_markets_items(payload: dict):
+    """
+    Lost Ark 경매장 아이템 조회
+    :param payload: 검색 조건 (dict)
+    :return: API 응답 (json)
+    """
+    url = "https://developer-lostark.game.onstove.com/markets/items"
+
+    # [ GRADE, YDAY_AVG_PRICE, RECENT_PRICE, CURRENT_MIN_PRICE ]
+    # [ ASC, DESC ]
+    
+    # {
+    #   "Sort": "CURRENT_MIN_PRICE",
+    #   "CategoryCode": 40000,
+    #   "CharacterClass": "",
+    #   "ItemTier": 0,
+    #   "ItemGrade": "유물",
+    #   "ItemName": "",
+    #   "PageNo": 0,
+    #   "SortCondition": "DESC"
+    # }
+    
+    try:
+        response = requests.post(url, headers=HEADERS, json=payload, timeout=3.5)
+        response.raise_for_status()  # HTTP 오류 발생 시 예외 발생
+        return response.json()
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 503:
+            raise Exception("서비스 점검 중입니다. 잠시 후 다시 시도해주세요.") from e
+        else:
+            raise Exception(f"마켓 아이템 정보를 불러올 수 없습니다. (오류 코드: {e.response.status_code})") from e
+    except requests.exceptions.RequestException as e:
+        # 연결 시간 초과, DNS 오류 등
+        raise Exception(f"서버와 통신 중 오류가 발생했습니다. ({e})") from e
+
+
 
 # ---------- 원정대 API 요청 함수 ----------
 def fetch_expedition(character_name: str, timeout: float = 5) -> dict:
@@ -2888,6 +2972,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
