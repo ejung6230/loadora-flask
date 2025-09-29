@@ -1705,13 +1705,16 @@ def fallback():
                 response_text = f"◕ᴗ◕🌸\n'{matched_job}' 직업의 시너지 정보를 알려드릴게요\n\n✤ {matched_class}\n{matched_job}: {job_data[matched_class][matched_job]['synergy_info']}"
 
         # ---------- 9. 유각 거래소 조회 관련 패턴 ----------
-        relic_match = re.match(r"^(\.유각|유각|\.ㅇㄱ|ㅇㄱ)\s*(.*)$", user_input)
+        relic_match = re.match(r"^(\.유각|유각|\.ㅇㄱ|ㅇㄱ|\.유물각인서|유물각인서|\.ㅇㅁㄱㅇㅅ|ㅇㅁㄱㅇㅅ)\s*(.*)$", user_input)
         if relic_match:
-            item_name = relic_match.group(2).strip()  # 사용자가 입력한 이름
+            raw_input = relic_match.group(2).strip()  # 예: "유각10" 또는 "유각 10"
         
             # 숫자 추출: 예를 들어 "유각10"이면 max_count=10
-            num_match = re.search(r"(\d+)$", item_name)
+            num_match = re.search(r"(\d+)", raw_input)
             max_count = int(num_match.group(1)) if num_match else None
+        
+            # 모든 숫자 제거 후 item_name 사용
+            item_name = re.sub(r"\d+", "", raw_input).strip()  # "유각10" -> "유각"
         
             all_items = []
             page_no = 1
@@ -1725,7 +1728,7 @@ def fallback():
         
                 # 최대 조회 개수 지정 시 체크
                 if max_count and len(all_items) >= max_count:
-                    all_items = all_items[:max_count]  # 지정 개수만 남김
+                    all_items = all_items[:max_count]
                     break
         
                 # 전체 데이터 개수보다 더 가져오지 않도록
@@ -1735,9 +1738,8 @@ def fallback():
                 page_no += 1
         
             data_cnt = len(all_items)
-            
             lines = [f"◕ᴗ◕🌸\n유물 각인서 가격을 알려드릴게요 ({data_cnt}개)\n"]
-            
+        
             if all_items:
                 up_count = down_count = 0
                 for entry in all_items:
@@ -1771,14 +1773,15 @@ def fallback():
                     lines.insert(1, "📢 변동이 비슷해요")
             else:
                 lines.append(f"'{item_name}' 조회된 유물 각인서가 없습니다.\n이름을 다시 확인해주세요.")
-
-            
+        
             response_text = "\n".join(lines)
-            
+    
             if len(response_text) < 400:
                 use_share_button = True
             
             print(response_text)
+            
+
 
         
         # ---------- 9. 특정 캐릭터 정보 관련 패턴 ----------
@@ -3044,6 +3047,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
