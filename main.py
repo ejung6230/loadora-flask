@@ -372,36 +372,41 @@ def get_markets_items():
 def search_relic_engraving():
     """
     유물 각인서 검색 함수
-    쿼리 파라미터 ?item_name=원한
-    https://loadora-flask.onrender.com/markets/relic_engraving?item_name=아드
+    쿼리 파라미터:
+      - item_name: 검색할 각인서 이름
+      - page_no: 조회할 페이지 번호 (선택, 기본값 0)
+    예시: 
+      https://loadora-flask.onrender.com/markets/relic_engraving?item_name=아드&page_no=1
     """
     try:
         item_name = request.args.get("item_name", "")
-        data = fetch_relic_engraving(item_name)  # 👈 분리된 함수 호출
+        page_no = int(request.args.get("page_no", 0))  # 기본값 0
+        data = fetch_relic_engraving(item_name, page_no)  # 페이지 번호 인자로 전달
         return jsonify(data)
     except Exception as e:
         return jsonify({"error": True, "message": str(e)}), 500
 
 # 유각 조회 함수
-def fetch_relic_engraving(item_name: str):
+def fetch_relic_engraving(item_name: str, page_no: int = 0):
     """
     유물 각인서 마켓 조회
     :param item_name: 검색할 각인서 이름
+    :param page_no: 조회할 페이지 번호 (기본값 0)
     :return: API 응답 데이터
     """
     
     payload = {
-        "Sort": "CURRENT_MIN_PRICE", # [ GRADE, YDAY_AVG_PRICE, RECENT_PRICE, CURRENT_MIN_PRICE ]
+        "Sort": "CURRENT_MIN_PRICE",  # [GRADE, YDAY_AVG_PRICE, RECENT_PRICE, CURRENT_MIN_PRICE]
         "CategoryCode": 40000,
         "CharacterClass": "",
         "ItemTier": 0,
         "ItemGrade": "유물",
         "ItemName": item_name,
-        "PageNo": 0,
-        "SortCondition": "DESC" # [ ASC, DESC ]
+        "PageNo": page_no,
+        "SortCondition": "DESC"  # [ASC, DESC]
     }
 
-    return fetch_markets_items(payload)  # 기존 fetch_markets_items 함수 사용
+    return fetch_markets_items(payload)
 
 def fetch_markets_items(payload: dict):
     """
@@ -1703,19 +1708,28 @@ def fallback():
         relic_match = re.match(r"^(\.유각|유각|\.ㅇㄱ|ㅇㄱ)\s*(.*)$", user_input)
         if relic_match:
             item_name = relic_match.group(2).strip()  # 사용자가 입력한 이름
-            
-            data = fetch_relic_engraving(item_name)
-            logger.info("유각정보출력%s", data)
         
+            all_items = []
+            page_no = 0
+            while True:
+                data = fetch_relic_engraving(item_name, page_no)
+                data_items = data.get("Items", [])
+                if not data_items:
+                    break
+                all_items.extend(data_items)
+                
+                # 페이지 계산: 한 페이지당 10개라 가정
+                if len(all_items) >= data.get("TotalCount", 0):
+                    break
+                page_no += 1
+        
+            data_cnt = len(all_items)
+            
             lines = []
-        
-            data_items = data.get("Items", [])
-            data_cnt = data.get("TotalCount", 0)
+            lines.append(f"◕ᴗ◕🌸\n{item_name} 유물 각인서 가격을 알려드릴게요 ({data_cnt}개)\n")
             
-            lines.append(f"◕ᴗ◕🌸\n{item_name+" "}유물 각인서 가격을 알려드릴게요 ({data_cnt}개)\n")
-            
-            if data_items:
-                for entry in data_items:
+            if all_items:
+                for entry in all_items:
                     name = entry.get('Name', '').replace('유물 ', '').replace(' 각인서', '')
                     current_price = entry.get('CurrentMinPrice', 0)
                     avg_price = entry.get('YDayAvgPrice', 0)
@@ -1724,11 +1738,11 @@ def fallback():
                     if avg_price:
                         change_percent = (current_price - avg_price) / avg_price * 100
                         if change_percent > 0:
-                            arrow = "🔺"  # 상승 빨강
+                            arrow = "🔺"
                         elif change_percent < 0:
-                            arrow = "🔽"  # 하락 파랑 느낌
+                            arrow = "🔽"
                         else:
-                            arrow = "➖"  # 변동 없음
+                            arrow = "➖"
                         change_text = f"{change_percent:+.1f}%{arrow}"
                     else:
                         change_text = "N/A"
@@ -3004,6 +3018,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
