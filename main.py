@@ -1726,7 +1726,7 @@ def fallback():
             data_cnt = len(all_items)
             
             lines = []
-            lines.append(f"◕ᴗ◕🌸\n{item_name} 유물 각인서 가격을 알려드릴게요 ({data_cnt}개)\n")
+            lines.append(f"◕ᴗ◕🌸\n유물 각인서 가격을 알려드릴게요 ({data_cnt}개)\n")
             
             if all_items:
                 for entry in all_items:
@@ -1749,7 +1749,7 @@ def fallback():
                     
                     lines.append(f"❙ {current_price:,}💰 : {name} ({change_text})")
             else:
-                lines.append("조회된 유물 각인서가 없습니다. 이름을 다시 확인해주세요.")
+                lines.append(f"'{item_name}' 조회된 유물 각인서가 없습니다.\n이름을 다시 확인해주세요.")
     
             
             response_text = "\n".join(lines)
@@ -3019,6 +3019,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
