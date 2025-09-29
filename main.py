@@ -1740,7 +1740,7 @@ def fallback():
                         if change_percent > 0:
                             arrow = "🔺"
                         elif change_percent < 0:
-                            arrow = "🔽"
+                            arrow = "🔻"
                         else:
                             arrow = "➖"
                         change_text = f"{change_percent:+.1f}%{arrow}"
@@ -3023,6 +3023,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
