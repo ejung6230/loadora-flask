@@ -1710,26 +1710,17 @@ def fallback():
             item_name = relic_match.group(2).strip()  # 사용자가 입력한 이름
         
             all_items = []
-            seen_ids = set()  # 중복 체크용
-            page_no = 1  # 1페이지부터 시작
+            page_no = 1
             while True:
                 data = fetch_relic_engraving(item_name, page_no)
                 data_items = data.get("Items", [])
                 if not data_items:
                     break
+                all_items.extend(data_items)
                 
-                # 중복 제거 후 합치기
-                new_items = []
-                for entry in data_items:
-                    item_id = entry.get("Id")
-                    if item_id not in seen_ids:
-                        seen_ids.add(item_id)
-                        new_items.append(entry)
-                
-                if not new_items:
-                    break  # 더 이상 새로운 아이템이 없으면 종료
-                
-                all_items.extend(new_items)
+                # 페이지 계산: 한 페이지당 10개라 가정
+                if len(all_items) >= data.get("TotalCount", 0):
+                    break
                 page_no += 1
         
             data_cnt = len(all_items)
@@ -1756,9 +1747,10 @@ def fallback():
                     else:
                         change_text = "N/A"
                     
-                    lines.append(f"❙ {current_price:,}💰 : {name} ({change_text})")
+                    lines.append(f"❙ {current_price:,}🪙 : {name} ({change_text})")
             else:
                 lines.append("조회된 유물 각인서가 없습니다. 이름을 다시 확인해주세요.")
+    
             
             response_text = "\n".join(lines)
             print(response_text)
@@ -3027,6 +3019,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
