@@ -324,6 +324,32 @@ def get_calendar():
             "message": str(e)
         }), 500
 
+@app.route('/markets_option', methods=['GET'])
+def get_markets_option():
+    try:
+        data = fetch_markets_option()
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({
+            "error": True,
+            "message": str(e)
+        }), 500
+
+def fetch_markets_option():
+    url = "https://developer-lostark.game.onstove.com/markets/options"
+    try:
+        response = requests.get(url, headers=HEADERS, timeout=3.5)
+        response.raise_for_status()  # HTTP 오류 발생 시 예외 발생
+        return response.json()
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 503:
+            raise Exception("서비스 점검 중입니다. 잠시 후 다시 시도해주세요.") from e
+        else:
+            raise Exception(f"마켓 옵션 정보를 불러올 수 없습니다. (오류 코드: {e.response.status_code})") from e
+    except requests.exceptions.RequestException as e:
+        # 연결 시간 초과, DNS 오류 등
+        raise Exception(f"서버와 통신 중 오류가 발생했습니다. ({e})") from e
+    
 
 # ---------- 원정대 API 요청 함수 ----------
 def fetch_expedition(character_name: str, timeout: float = 5) -> dict:
@@ -2862,6 +2888,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
