@@ -366,7 +366,6 @@ def get_markets_items():
 
 
 
-
 @app.route('/markets/relic_engraving', methods=['GET'])
 def search_relic_engraving():
     """
@@ -375,28 +374,32 @@ def search_relic_engraving():
     https://loadora-flask.onrender.com/markets/relic_engraving?item_name=아드
     """
     try:
-        # GET 파라미터에서 ItemName 가져오기
         item_name = request.args.get("item_name", "")
-
-        payload = {
-            "Sort": "CURRENT_MIN_PRICE",
-            "CategoryCode": 40000,
-            "CharacterClass": "",
-            "ItemTier": 0,
-            "ItemGrade": "유물",
-            "ItemName": item_name,  # 사용자 입력 반영
-            "PageNo": 0,
-            "SortCondition": "DESC"
-        }
-
-        data = fetch_markets_items(payload)
+        data = fetch_relic_engraving(item_name)  # 👈 분리된 함수 호출
         return jsonify(data)
     except Exception as e:
-        return jsonify({
-            "error": True,
-            "message": str(e)
-        }), 500
+        return jsonify({"error": True, "message": str(e)}), 500
+
+# 유각 조회 함수
+def fetch_relic_engraving(item_name: str):
+    """
+    유물 각인서 마켓 조회
+    :param item_name: 검색할 각인서 이름
+    :return: API 응답 데이터
+    """
     
+    payload = {
+        "Sort": "CURRENT_MIN_PRICE", # [ GRADE, YDAY_AVG_PRICE, RECENT_PRICE, CURRENT_MIN_PRICE ]
+        "CategoryCode": 40000,
+        "CharacterClass": "",
+        "ItemTier": 0,
+        "ItemGrade": "유물",
+        "ItemName": item_name,
+        "PageNo": 0,
+        "SortCondition": "DESC" # [ ASC, DESC ]
+    }
+
+    return fetch_markets_items(payload)  # 기존 fetch_markets_items 함수 사용
 
 def fetch_markets_items(payload: dict):
     """
@@ -405,20 +408,6 @@ def fetch_markets_items(payload: dict):
     :return: API 응답 (json)
     """
     url = "https://developer-lostark.game.onstove.com/markets/items"
-
-    # [ GRADE, YDAY_AVG_PRICE, RECENT_PRICE, CURRENT_MIN_PRICE ]
-    # [ ASC, DESC ]
-    
-    # {
-    #   "Sort": "CURRENT_MIN_PRICE",
-    #   "CategoryCode": 40000,
-    #   "CharacterClass": "",
-    #   "ItemTier": 0,
-    #   "ItemGrade": "유물",
-    #   "ItemName": "",
-    #   "PageNo": 0,
-    #   "SortCondition": "DESC"
-    # }
     
     try:
         response = requests.post(url, headers=HEADERS, json=payload, timeout=3.5)
@@ -2972,6 +2961,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
