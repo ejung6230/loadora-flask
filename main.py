@@ -1770,7 +1770,7 @@ def fallback():
                 elif down_count > up_count:
                     lines.insert(1, "📢 전체적으로 하락했어요")
                 else:
-                    lines.insert(1, "📢 변동이 비슷해요")
+                    lines.insert(1, "📢 변동 개수가 비슷해요")
             else:
                 lines.append(f"'{item_name}' 조회된 유물 각인서가 없습니다.\n이름을 다시 확인해주세요.")
         
@@ -3047,6 +3047,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
