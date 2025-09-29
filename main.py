@@ -1708,10 +1708,15 @@ def fallback():
             
             # 예쁘게 출력
             lines = ["◕ᴗ◕🌸\n상위 10개의 유물 각인서 가격을 알려드릴게요\n\n"]
-            for idx, item in enumerate(data.get("Items", []), start=1):
-                lines.append(
-                    f"❙ {item['Name'].replace("유물 ", "").replace(" 각인서", "")}: {item['CurrentMinPrice']:,}"
-                )
+            
+            items = data.get("Items", [])
+            if items:
+                for idx, item in enumerate(items, start=1):
+                    lines.append(
+                        f"❙ {item['Name'].replace('유물 ', '').replace(' 각인서', '')}: {item['CurrentMinPrice']:,} 골드"
+                    )
+            else:
+                lines.append("❙ 조회된 유물 각인서가 없습니다. 이름을 다시 확인해주세요.")
             
             response_text = "\n".join(lines)
             
@@ -2980,6 +2985,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
