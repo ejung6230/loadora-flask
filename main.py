@@ -1747,7 +1747,7 @@ def fallback():
                     else:
                         change_text = "N/A"
                     
-                    lines.append(f"❙ {current_price:,}🪙 : {name} ({change_text})")
+                    lines.append(f"❙ {current_price:,}💰 : {name} ({change_text})")
             else:
                 lines.append("조회된 유물 각인서가 없습니다. 이름을 다시 확인해주세요.")
     
@@ -3019,6 +3019,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
