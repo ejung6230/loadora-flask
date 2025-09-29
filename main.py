@@ -1710,8 +1710,7 @@ def fallback():
             lines = ["◕ᴗ◕🌸\n상위 10개의 유물 각인서 가격을 알려드릴게요\n\n"]
             for idx, item in enumerate(data.get("Items", []), start=1):
                 lines.append(
-                    f"{idx}. {item['Name']}\n"
-                    f"   가격: {item['CurrentMinPrice']:,} 골드\n"
+                    f"❙ {item['Name']}: {item['CurrentMinPrice']:,} 골드\n"
                 )
             
             response_text = "\n".join(lines)
@@ -2981,6 +2980,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
