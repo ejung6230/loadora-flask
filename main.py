@@ -11,6 +11,8 @@ import time
 import re
 import logging
 from collections import defaultdict
+from wcwidth import wcswidth
+
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -1711,22 +1713,24 @@ def fallback():
                 lines.append(f"◕ᴗ◕🌸\n'{item_name}' 유물 각인서 가격을 알려드릴게요\n")
             else:
                 lines.append("◕ᴗ◕🌸\n상위 10개의 유물 각인서 가격을 알려드릴게요\n")
-        
+
             data_items = data.get("Items", [])
             if data_items:
-                # 이름 최대 길이 계산
-                max_name_len = max(len(x.get('Name', '').replace('유물 ', '').replace(' 각인서', '')) for x in data_items)
-                
-                # 헤더 추가
-                lines.append(f"{'번호':<3} {'이름'.ljust(max_name_len)} | {'현재 최소가격':>12} | {'최근 가격':>10} | {'1일 평균가격':>12}")
-                lines.append("-" * (5 + max_name_len + 3 + 12 + 3 + 10 + 3 + 12))  # 구분선
-        
+                # 이름 최대 폭 계산 (한글 폭 반영)
+                max_name_width = max(wcswidth(x.get('Name', '').replace('유물 ', '').replace(' 각인서', '')) for x in data_items)
+            
+                # 헤더
+                lines.append(f"{'번호':<3} {'이름'.ljust(max_name_width)} | {'현재 최소가격':>12} | {'최근 가격':>12} | {'1일 평균가격':>12}")
+                lines.append("-" * (5 + max_name_width + 3 + 12 + 3 + 12 + 3 + 12))
+            
                 for idx, entry in enumerate(data_items, start=1):
                     name = entry.get('Name', '').replace('유물 ', '').replace(' 각인서', '')
                     current_price = f"{entry.get('CurrentMinPrice', 0):,}"
                     recent_price = f"{entry.get('RecentPrice', 0):,}"
                     avg_price = f"{int(entry.get('YDayAvgPrice', 0)):,}"
-                    lines.append(f"{str(idx):<3} {name.ljust(max_name_len)} | {current_price:>12} | {recent_price:>10} | {avg_price:>12}")
+                    # ljust 대신 폭 지정하여 정렬
+                    space_padding = max_name_width - wcswidth(name)
+                    lines.append(f"{idx:<3} {name}{' ' * space_padding} | {current_price:>12} | {recent_price:>12} | {avg_price:>12}")
             else:
                 lines.append("❙ 조회된 유물 각인서가 없습니다. 이름을 다시 확인해주세요.")
         
@@ -2997,6 +3001,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
