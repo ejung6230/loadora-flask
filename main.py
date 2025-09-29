@@ -1716,27 +1716,7 @@ def fallback():
 
             data_items = data.get("Items", [])
             if data_items:
-                # 이름 최대 폭 계산
-                max_name_width = max(wcswidth(x.get('Name', '').replace('유물 ', '').replace(' 각인서', '')) for x in data_items)
-                
-                # 번호 컬럼 최대 폭
-                max_no_width = len(str(len(data_items)))  # 1~10자리까지
-                
-                # 컬럼 폭
-                col_name = max_name_width
-                col_price = 12
-                col_change = 10
-                sep = " | "
-            
-                # 헤더
-                header_no = "번호".ljust(max_no_width)
-                header_name = "이름".ljust(col_name)
-                header_price = "현재 최소가격".rjust(col_price)
-                header_change = "전일 대비".rjust(col_change)
-                lines.append(f"{header_no} {header_name}{sep}{header_price}{sep}{header_change}")
-                lines.append("-" * (max_no_width + 1 + col_name + len(sep) + col_price + len(sep) + col_change))
-            
-                for idx, entry in enumerate(data_items, start=1):
+                for entry in data_items:
                     name = entry.get('Name', '').replace('유물 ', '').replace(' 각인서', '')
                     current_price = entry.get('CurrentMinPrice', 0)
                     avg_price = entry.get('YDayAvgPrice', 0)
@@ -1744,14 +1724,17 @@ def fallback():
                     # 전일 대비 계산
                     if avg_price:
                         change_percent = (current_price - avg_price) / avg_price * 100
-                        change_text = f"{change_percent:+.1f}%"
+                        if change_percent > 0:
+                            arrow = "🔺"  # 상승 빨강
+                        elif change_percent < 0:
+                            arrow = "🔽"  # 하락 파랑 느낌
+                        else:
+                            arrow = "➖"  # 변동 없음
+                        change_text = f"{change_percent:+.1f}%{arrow}"
                     else:
                         change_text = "N/A"
                     
-                    # 이름 폭 맞춤
-                    space_padding = col_name - wcswidth(name)
-                    no_str = str(idx).ljust(max_no_width)
-                    lines.append(f"{no_str} {name}{' ' * space_padding}{sep}{current_price:>{col_price},}{sep}{change_text:>{col_change}}")
+                    lines.append(f"{name} : {current_price:,} ({change_text})")
             else:
                 lines.append("❙ 조회된 유물 각인서가 없습니다. 이름을 다시 확인해주세요.")
             
@@ -3022,6 +3005,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
