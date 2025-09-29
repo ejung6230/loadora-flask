@@ -1705,8 +1705,8 @@ def fallback():
             data = fetch_relic_engraving(item_name)
             
             logger.info("유각정보출력%s", data)
-
-            response_text = f"◕ᴗ◕🌸\n전체 유물 각인서 정보를 알려드릴게요\n\n업데이트 예정"
+            
+            response_text = f"◕ᴗ◕🌸\n상위 10개의 유물 각인서 가격을 알려드릴게요\n\n업데이트 예정"
             
 
         
@@ -2973,6 +2973,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
