@@ -1709,6 +1709,10 @@ def fallback():
         if relic_match:
             item_name = relic_match.group(2).strip()  # 사용자가 입력한 이름
         
+            # 숫자 추출: 예를 들어 "유각10"이면 max_count=10
+            num_match = re.search(r"(\d+)$", item_name)
+            max_count = int(num_match.group(1)) if num_match else None
+        
             all_items = []
             page_no = 1
             while True:
@@ -1716,11 +1720,18 @@ def fallback():
                 data_items = data.get("Items", [])
                 if not data_items:
                     break
+        
                 all_items.extend(data_items)
-                
-                # 페이지 계산: 한 페이지당 10개라 가정
+        
+                # 최대 조회 개수 지정 시 체크
+                if max_count and len(all_items) >= max_count:
+                    all_items = all_items[:max_count]  # 지정 개수만 남김
+                    break
+        
+                # 전체 데이터 개수보다 더 가져오지 않도록
                 if len(all_items) >= data.get("TotalCount", 0):
                     break
+        
                 page_no += 1
         
             data_cnt = len(all_items)
@@ -1753,11 +1764,11 @@ def fallback():
         
                 # 상승/하락 메시지
                 if up_count > down_count:
-                    lines.insert(1, "📢 대부분의 유각이 상승했어요")
+                    lines.insert(1, "📢 전체적으로 상승했어요")
                 elif down_count > up_count:
-                    lines.insert(1, "📢 대부분의 유각이 하락했어요")
+                    lines.insert(1, "📢 전체적으로 하락했어요")
                 else:
-                    lines.insert(1, "📢 가격 변동이 크지 않아요")
+                    lines.insert(1, "📢 변동이 비슷해요")
             else:
                 lines.append(f"'{item_name}' 조회된 유물 각인서가 없습니다.\n이름을 다시 확인해주세요.")
 
@@ -3033,6 +3044,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
