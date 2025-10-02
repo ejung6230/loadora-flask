@@ -1176,16 +1176,24 @@ def fallback():
             # ---------- 오늘 일정 필터링 ----------
             def filter_today_times(it):
                 print('it 값이 뭘까요: ', it)
-                if not it:  # None 또는 빈 값이면 바로 반환
+            
+                if not it or not isinstance(it, dict):
                     return []
+            
                 times = []
-                for t in it.get("StartTimes", []):
-                    dt = datetime.fromisoformat(t)
-                    if dt.tzinfo:
-                        dt = dt.astimezone(KST).replace(tzinfo=None)
-                    if DAY_START <= dt <= DAY_END:
-                        times.append(dt)
+                start_times = it.get("StartTimes") or []   # None 방지
+                for t in start_times:
+                    try:
+                        dt = datetime.fromisoformat(t)
+                        if dt.tzinfo:
+                            dt = dt.astimezone(KST).replace(tzinfo=None)
+                        if DAY_START <= dt <= DAY_END:
+                            times.append(dt)
+                    except Exception as e:
+                        print("시간 파싱 오류:", t, e)
+            
                 return sorted(times)
+
         
             # ---------- 반복 일정 요약 ----------
             def summarize_times(times):
@@ -3050,6 +3058,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
