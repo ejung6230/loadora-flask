@@ -1175,8 +1175,8 @@ def fallback():
             
             # ---------- 오늘 일정 필터링 ----------
             def filter_today_times(it):
+                print('it 값이 뭘까요: ', it)
                 if not it:  # None 또는 빈 값이면 바로 반환
-                    print('it 값이 뭘까요: ', it)
                     return []
                 times = []
                 for t in it.get("StartTimes", []):
@@ -3050,6 +3050,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
