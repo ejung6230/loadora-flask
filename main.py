@@ -933,7 +933,7 @@ def fallback():
                     if item.get("CategoryName") == "모험 섬"
                     and item.get("ContentsName") == selected_island
                 ]
-
+                
                 if selected_island_items:
                     result = f"◕ᴗ◕🌸\n❛{selected_island}❜ 정보를 알려드릴게요.\n"
                     result += f"――――――――――――――\n\n"
@@ -945,23 +945,31 @@ def fallback():
                         contents_icon = island.get("ContentsIcon", "")
                         
                         result += f"❚ 최소 입장 레벨: {min_item_level}\n\n"
-                    
+
+
                         # ---------- 입장 시간 처리 ----------
+                        start_times_raw = island.get("StartTimes")  # None 그대로 받음
                         date_dict = defaultdict(list)
                         result += "❚ 모험섬 입장 시간\n"
-                        for t in start_times:
-                            dt = datetime.fromisoformat(t)
-                            weekday = WEEKDAY_KO[dt.strftime("%A")]  # 영어 요일 → 한글 요일
-                            date_key = dt.strftime(f"%Y년 %m월 %d일") + f"({weekday})"
-                            hour_str = dt.strftime("%H시")
-                            date_dict[date_key].append(hour_str)
-                    
-                        if date_dict:
-                            for date_key in sorted(date_dict.keys()):
-                                hours = sorted(set(date_dict[date_key]), key=lambda x: int(x.replace("시", "")))
-                                result += f"- {date_key} : {', '.join(hours)}\n"
+                        
+                        if start_times_raw is None:
+                            # null 그대로 표시
+                            result += "- null\n"
                         else:
-                            result += "- 없음\n"
+                            start_times = start_times_raw or []  # 빈 리스트 방어
+                            for t in start_times:
+                                dt = datetime.fromisoformat(t)
+                                weekday = WEEKDAY_KO[dt.strftime("%A")]  # 영어 요일 → 한글 요일
+                                date_key = dt.strftime(f"%Y년 %m월 %d일") + f"({weekday})"
+                                hour_str = dt.strftime("%H시")
+                                date_dict[date_key].append(hour_str)
+                        
+                            if date_dict:
+                                for date_key in sorted(date_dict.keys()):
+                                    hours = sorted(set(date_dict[date_key]), key=lambda x: int(x.replace("시", "")))
+                                    result += f"- {date_key} : {', '.join(hours)}\n"
+                            else:
+                                result += "- 없음\n"
                         result += "\n"
                         
                         # ---------- 아이템 목록 처리 ----------
@@ -3046,6 +3054,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
