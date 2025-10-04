@@ -1003,8 +1003,9 @@ def fallback():
                 adventure_islands = [
                     item for item in data
                     if item.get("CategoryName") == "모험 섬"
-                    and any(datetime.fromisoformat(t).date() == today for t in item.get("StartTimes", []))
+                    and any(datetime.fromisoformat(t).date() == today for t in (item.get("StartTimes") or []))
                 ]
+
                 
                 cards = []
                 all_today_times = []
@@ -3058,6 +3059,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
