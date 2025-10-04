@@ -933,8 +933,6 @@ def fallback():
                     if item.get("CategoryName") == "모험 섬"
                     and item.get("ContentsName") == selected_island
                 ]
-
-                print(selected_island_items)
                 
                 if selected_island_items:
                     result = f"◕ᴗ◕🌸\n❛{selected_island}❜ 정보를 알려드릴게요.\n"
@@ -1011,6 +1009,8 @@ def fallback():
                     if item.get("CategoryName") == "모험 섬"
                     and any(datetime.fromisoformat(t).date() == today for t in (item.get("StartTimes") or []))
                 ]
+
+                print('모험섬정보', adventure_islands)
 
                 cards = []
                 all_today_times = []
@@ -3056,6 +3056,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
