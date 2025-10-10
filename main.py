@@ -1524,46 +1524,64 @@ def fallback():
         match_command_list = re.match(r"^(\.명령어|명령어|\.도움말|도움말|\.ㅁㄹㅇ|ㅁㄹㅇ|\.ㄷㅇㅁ|ㄷㅇㅁ)$", user_input)
         if match_command_list:
 
-            cards = []
+            # 전체 응답 담을 리스트
+            items = []
         
-            # 예시 메뉴 카드들
+            # 예시 메뉴 목록
             menu_list = [
                 {"title": "로아 일정", "desc": "오늘 모험섬, 필드보스 등 일정 보기", "msg": ".일정", "img": "https://example.com/loaschedule.png"},
                 {"title": "유물 각인서", "desc": "유물 각인서 거래소 시세 조회", "msg": ".유각", "img": "https://example.com/relic.png"},
                 {"title": "모험섬", "desc": "오늘의 모험섬 정보 보기", "msg": ".모험섬", "img": "https://example.com/island.png"},
                 {"title": "기타 기능", "desc": "다른 유용한 명령어 보기", "msg": ".도움말", "img": "https://example.com/help.png"},
-                {"title": "로아 일정", "desc": "오늘 모험섬, 필드보스 등 일정 보기", "msg": ".일정", "img": "https://example.com/loaschedule.png"},
-                {"title": "유물 각인서", "desc": "유물 각인서 거래소 시세 조회", "msg": ".유각", "img": "https://example.com/relic.png"},
-                {"title": "모험섬", "desc": "오늘의 모험섬 정보 보기", "msg": ".모험섬", "img": "https://example.com/island.png"},
-                {"title": "기타 기능", "desc": "다른 유용한 명령어 보기", "msg": ".도움말", "img": "https://example.com/help.png"},
+                {"title": "항해 지도", "desc": "항해 콘텐츠 위치 보기", "msg": ".항해", "img": "https://example.com/sailing.png"},
+                {"title": "주간 레이드", "desc": "주간 콘텐츠 일정 확인", "msg": ".주간", "img": "https://example.com/raid.png"},
+                {"title": "카드 각성", "desc": "각성 조합 계산기", "msg": ".카드", "img": "https://example.com/card.png"},
+                {"title": "전투 통계", "desc": "내 전투 데이터 분석", "msg": ".전투", "img": "https://example.com/stats.png"},
             ]
         
-            # 카드 구성
-            for menu in menu_list:
-                cards.append({
-                    "title": menu["title"],
-                    "imageUrl": menu["img"],
-                    "link": {"web": ""},
-                    "description": menu["desc"],
-                    "messageText": menu["msg"],
-                    "action": "message"
-                })
+            # 1. 상단 안내 문구
+            items.append({
+                "simpleText": {
+                    "text": "◕ᴗ◕🌸\n전체 명령어를 알려드릴게요.\n💡원하는 메뉴를 클릭하세요."
+                }
+            })
         
-            # 전체 응답 구조
-            items = [
-                {"simpleText": {"text": "◕ᴗ◕🌸\n전체 명령어를 알려드릴게요.\n💡원하는 메뉴를 클릭하세요.", "extra": {}}},
-                {
+            # 2. 5개씩 나누어 캐러셀 구성
+            cards = []
+            cards_per_page = 5
+            for i in range(0, len(menu_list), cards_per_page):
+                chunk = menu_list[i:i + cards_per_page]
+        
+                list_items = []
+                for menu in chunk:
+                    list_items.append({
+                        "title": menu["title"],
+                        "description": menu["desc"],
+                        "imageUrl": menu["img"],
+                        "action": "message",
+                        "messageText": menu["msg"]
+                    })
+        
+                list_card = {
                     "listCard": {
                         "header": {"title": "명령어 목록"},
-                        "items": cards,
+                        "items": list_items,
                         "buttons": [
-                            {"label": "공유하기", "highlight": False, "action": "share"}
-                        ],
-                        "lock": False,
-                        "forwardable": False
+                            {"label": "전체 명령어 보기", "action": "message", "messageText": ".명령어"}
+                        ]
                     }
                 }
-            ]
+                cards.append(list_card)
+        
+            # 3. 캐러셀 형태로 묶기
+            carousel = {
+                "carousel": {
+                    "type": "listCard",
+                    "items": cards
+                }
+            }
+        
+            items.append(carousel)
         
         # ---------- 6. 전체 서버 떠상 관련 패턴 ----------
         match_merchant = re.match(r"^(\.떠상|떠상|\.ㄸㅅ|ㄸㅅ|떠돌이상인)$", user_input)
@@ -3100,6 +3118,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
