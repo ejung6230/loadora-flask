@@ -1716,14 +1716,14 @@ def fallback():
                 {"title": ".마리샵", "desc": "마리샵 아이템 조회", "msg": ".마리샵", "img": 카트_icon},
                 {"title": ".모험섬", "desc": "오늘의 모험섬 정보 조회", "msg": ".모험섬", "img": 망원경_icon},
                 {"title": ".보석", "desc": "보석 경매장 최저가 조회", "msg": ".보석", "img": 크리스탈_icon},
-                {"title": ".사사게 [단어]", "desc": "인벤 사건사고게시판 검색", "msg": ".사사게", "img": 위험꼬깔_icon},
+                {"title": ".사사게", "desc": "인벤 사건사고게시판 검색", "msg": ".사사게", "img": 위험꼬깔_icon},
                 {"title": ".시너지", "desc": "시너지 정보 조회", "msg": ".시너지", "img": 사람들_icon},
                 {"title": ".유각", "desc": "유물 각인서 거래소 시세 조회", "msg": ".유각", "img": 유각_icon},
                 {"title": ".이벤트", "desc": "진행중인 이벤트 조회", "msg": ".이벤트", "img": 이벤트_icon},
                 {"title": ".일정", "desc": "오늘의 컨텐츠 일정 확인", "msg": ".일정", "img": 일정_icon},
-                {"title": ".원정대 [단어]", "desc": "원정대 캐릭터 정보 조회", "msg": ".원정대", "img": 로아_icon},
+                {"title": ".원정대", "desc": "원정대 캐릭터 정보 조회", "msg": ".원정대", "img": 로아_icon},
                 {"title": ".주급", "desc": "원정대 주급 조회", "msg": ".주급", "img": 코인_icon},
-                {"title": ".정보 [단어]", "desc": "캐릭터 정보 조회", "msg": ".정보", "img": 정보_icon},
+                {"title": ".정보", "desc": "캐릭터 정보 조회", "msg": ".정보", "img": 정보_icon},
                 {"title": ".카게", "desc": "카오스게이트 일정 조회", "msg": ".카게", "img": 카게_icon},
                 {"title": ".클골", "desc": "레이드 클리어 골드 조회", "msg": ".클골", "img": 골드_icon},
             ]
@@ -3382,6 +3382,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
