@@ -510,8 +510,8 @@ def fetch_jewelry_engraving(item_name: str, page_no: int = 0):
         "CharacterClass": "",
         "ItemTier": null,
         "ItemGrade": "",
-        "ItemName": "",
-        "PageNo": 0,
+        "ItemName": item_name,
+        "PageNo": page_no,
         "SortCondition": "DESC"  # [ ASC, DESC ]
     }
 
@@ -3396,6 +3396,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
