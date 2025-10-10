@@ -392,6 +392,132 @@ def get_calendar():
             "message": str(e)
         }), 500
 
+# 경매(auctions) 마켓 옵션 조회
+@app.route('/auctions_option', methods=['GET'])
+def get_auctions_option():
+    try:
+        data = fetch_auctions_option()
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({
+            "error": True,
+            "message": str(e)
+        }), 500
+
+
+
+def fetch_auctions_option():
+    url = "https://developer-lostark.game.onstove.com/auctions/options"
+    try:
+        response = requests.get(url, headers=HEADERS, timeout=3.5)
+        response.raise_for_status()  # HTTP 오류 발생 시 예외 발생
+        return response.json()
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 503:
+            raise Exception("서비스 점검 중입니다. 잠시 후 다시 시도해주세요.") from e
+        else:
+            raise Exception(f"경매 옵션 정보를 불러올 수 없습니다. (오류 코드: {e.response.status_code})") from e
+    except requests.exceptions.RequestException as e:
+        # 연결 시간 초과, DNS 오류 등
+        raise Exception(f"서버와 통신 중 오류가 발생했습니다. ({e})") from e
+
+# 거래소 아이템 조회
+@app.route('/auctions_items', methods=['POST'])
+def get_markets_items():
+    try:
+        request_data = request.get_json()  # 클라이언트에서 전달한 검색 옵션(JSON body)
+        data = fetch_auctions_items(request_data)
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({
+            "error": True,
+            "message": str(e)
+        }), 500
+
+def fetch_auctions_items(payload: dict):
+    """
+    Lost Ark 경매장 아이템 조회
+    :param payload: 검색 조건 (dict)
+    :return: API 응답 (json)
+    """
+    url = "https://developer-lostark.game.onstove.com/auctions/items"
+    
+    try:
+        response = requests.post(url, headers=HEADERS, json=payload, timeout=3.5)
+        response.raise_for_status()  # HTTP 오류 발생 시 예외 발생
+        return response.json()
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 503:
+            raise Exception("서비스 점검 중입니다. 잠시 후 다시 시도해주세요.") from e
+        else:
+            raise Exception(f"마켓 아이템 정보를 불러올 수 없습니다. (오류 코드: {e.response.status_code})") from e
+    except requests.exceptions.RequestException as e:
+        # 연결 시간 초과, DNS 오류 등
+        raise Exception(f"서버와 통신 중 오류가 발생했습니다. ({e})") from e
+
+
+@app.route('/markets/jewelry_engraving', methods=['GET'])
+def search_jewelry_engraving():
+    """
+    보석 검색 함수
+    쿼리 파라미터:
+      - item_name: 검색할 보석 이름
+      - page_no: 조회할 페이지 번호 (선택, 기본값 0)
+    예시: 
+      https://loadora-flask.onrender.com/markets/jewelry_engraving?item_name=7레벨&page_no=1
+    """
+    try:
+        item_name = request.args.get("item_name", "")
+        page_no = int(request.args.get("page_no", 0))  # 기본값 0
+        data = fetch_jewelry_engraving(item_name, page_no)  # 페이지 번호 인자로 전달
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": True, "message": str(e)}), 500
+
+# 보석 조회 함수
+def fetch_jewelry_engraving(item_name: str, page_no: int = 0):
+    """
+    보석 마켓 조회
+    :param item_name: 검색할 보석 이름
+    :param page_no: 조회할 페이지 번호 (기본값 0)
+    :return: API 응답 데이터
+    """
+    # 여기 수정해야함
+    payload = {
+        "ItemLevelMin": 0,
+        "ItemLevelMax": 0,
+        "ItemGradeQuality": null,
+        "ItemUpgradeLevel": null,
+        "ItemTradeAllowCount": null,
+        "SkillOptions": [
+            {
+                "FirstOption": null,
+                "SecondOption": null,
+                "MinValue": null,
+                "MaxValue": null
+            }
+        ],
+        "EtcOptions": [
+            {
+                "FirstOption": null,
+                "SecondOption": null,
+                "MinValue": null,
+                "MaxValue": null
+            }
+        ],
+        "Sort": "BIDSTART_PRICE", # [ BIDSTART_PRICE, BUY_PRICE, EXPIREDATE, ITEM_GRADE, ITEM_LEVEL, ITEM_QUALITY ]
+        "CategoryCode": 0,
+        "CharacterClass": "string",
+        "ItemTier": null,
+        "ItemGrade": "string",
+        "ItemName": "string",
+        "PageNo": 0,
+        "SortCondition": "DESC"  # [ ASC, DESC ]
+    }
+
+    return fetch_auctions_items(payload)
+
+
 # 거래소 마켓 옵션 조회
 @app.route('/markets_option', methods=['GET'])
 def get_markets_option():
@@ -431,48 +557,6 @@ def get_markets_items():
             "error": True,
             "message": str(e)
         }), 500
-
-@app.route('/markets/jewelry_engraving', methods=['GET'])
-def search_jewelry_engraving():
-    """
-    보석 검색 함수
-    쿼리 파라미터:
-      - item_name: 검색할 보석 이름
-      - page_no: 조회할 페이지 번호 (선택, 기본값 0)
-    예시: 
-      https://loadora-flask.onrender.com/markets/jewelry_engraving?item_name=7레벨&page_no=1
-    """
-    try:
-        item_name = request.args.get("item_name", "")
-        page_no = int(request.args.get("page_no", 0))  # 기본값 0
-        data = fetch_jewelry_engraving(item_name, page_no)  # 페이지 번호 인자로 전달
-        return jsonify(data)
-    except Exception as e:
-        return jsonify({"error": True, "message": str(e)}), 500
-
-# 보석 조회 함수
-def fetch_jewelry_engraving(item_name: str, page_no: int = 0):
-    """
-    보석 마켓 조회
-    :param item_name: 검색할 보석 이름
-    :param page_no: 조회할 페이지 번호 (기본값 0)
-    :return: API 응답 데이터
-    """
-    # 여기 수정해야함
-    payload = {
-        "Sort": "CURRENT_MIN_PRICE",  # [GRADE, YDAY_AVG_PRICE, RECENT_PRICE, CURRENT_MIN_PRICE]
-        "CategoryCode": 220000,
-        "CharacterClass": "",
-        "ItemTier": 0,
-        "ItemGrade": "",
-        "ItemName": item_name,
-        "PageNo": page_no,
-        "SortCondition": "DESC"  # [ASC, DESC]
-    }
-
-    return fetch_markets_items(payload)
-
-
 
 @app.route('/markets/relic_engraving', methods=['GET'])
 def search_relic_engraving():
@@ -3312,6 +3396,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
