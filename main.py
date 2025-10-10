@@ -450,7 +450,7 @@ def fetch_auctions_items(payload: dict):
         if e.response.status_code == 503:
             raise Exception("서비스 점검 중입니다. 잠시 후 다시 시도해주세요.") from e
         else:
-            raise Exception(f"마켓 아이템 정보를 불러올 수 없습니다. (오류 코드: {e.response.status_code})") from e
+            raise Exception(f"경매장 아이템 정보를 불러올 수 없습니다. (오류 코드: {e.response.status_code})") from e
     except requests.exceptions.RequestException as e:
         # 연결 시간 초과, DNS 오류 등
         raise Exception(f"서버와 통신 중 오류가 발생했습니다. ({e})") from e
@@ -3396,6 +3396,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
