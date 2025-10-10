@@ -1521,8 +1521,8 @@ def fallback():
                 raise
 
         # ---------- 6. 메뉴 선택 관련 패턴 ----------
-        match_menu = re.match(r"^(\.메뉴|메뉴|\.ㅁㄴ|ㅁㄴ)$", user_input)
-        if match_menu:
+        match_command_list = re.match(r"^(\.명령어|명령어|\.도움말|도움말|\.ㅁㄹㅇ|ㅁㄹㅇ|\.ㄷㅇㅁ|ㄷㅇㅁ)$", user_input)
+        if match_command_list:
 
             cards = []
         
@@ -3096,6 +3096,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
