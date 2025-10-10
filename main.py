@@ -107,32 +107,28 @@ def fetch_lopec_ranking(nickname: str, character_class: str):
 # -----------------------------
 # SVG → PNG 변환 함수
 # -----------------------------
-def ensure_png(icon_url, save_dir="icons_png"):
+def ensure_png(icon_url):
     """
-    URL이 SVG이면 PNG로 변환 후 로컬 경로 반환.
-    PNG이면 그대로 반환.
+    SVG URL이면 메모리에서 PNG로 변환 후 base64 데이터 URL 반환.
+    PNG URL이면 그대로 반환.
     """
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-
     if icon_url.lower().endswith(".svg"):
-        # SVG 파일 이름 추출
-        file_name = icon_url.split("/")[-1].split("?")[0].replace(".svg", ".png")
-        save_path = os.path.join(save_dir, file_name)
+        try:
+            # 1️⃣ SVG 다운로드
+            response = requests.get(icon_url)
+            response.raise_for_status()
+            svg_content = response.content
 
-        if not os.path.exists(save_path):
-            try:
-                # 1️⃣ 먼저 SVG 다운로드
-                response = requests.get(icon_url)
-                response.raise_for_status()
-                svg_content = response.content
+            # 2️⃣ SVG -> PNG 바이트
+            png_bytes = cairosvg.svg2png(bytestring=svg_content)
 
-                # 2️⃣ SVG 문자열 → PNG
-                cairosvg.svg2png(bytestring=svg_content, write_to=save_path)
-            except Exception as e:
-                print(f"SVG 변환 실패: {icon_url} -> {e}")
-                return icon_url  # 실패 시 원래 URL 반환
-        return save_path
+            # 3️⃣ base64 인코딩
+            b64 = base64.b64encode(png_bytes).decode()
+            data_url = f"data:image/png;base64,{b64}"
+            return data_url
+        except Exception as e:
+            print(f"SVG 처리 실패: {icon_url} -> {e}")
+            return icon_url  # 실패 시 원래 URL 반환
     else:
         return icon_url  # PNG 등은 그대로 반환
 
@@ -3195,6 +3191,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
