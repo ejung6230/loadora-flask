@@ -1523,8 +1523,6 @@ def fallback():
         # ---------- 6. 메뉴 선택 관련 패턴 ----------
         match_command_list = re.match(r"^(\.명령어|명령어|\.도움말|도움말|\.ㅁㄹㅇ|ㅁㄹㅇ|\.ㄷㅇㅁ|ㄷㅇㅁ)$", user_input)
         if match_command_list:
-
-            # 전체 응답 담을 리스트
             items = []
         
             # 예시 메뉴 목록
@@ -1539,15 +1537,15 @@ def fallback():
                 {"title": "전투 통계", "desc": "내 전투 데이터 분석", "msg": ".전투", "img": "https://example.com/stats.png"},
             ]
         
-            # 1. 상단 안내 문구
+            # 상단 안내문
             items.append({
                 "simpleText": {
                     "text": "◕ᴗ◕🌸\n전체 명령어를 알려드릴게요.\n💡원하는 메뉴를 클릭하세요."
                 }
             })
         
-            # 2. 5개씩 나누어 캐러셀 구성
-            cards = []
+            # 5개씩 나누어 캐러셀용 리스트 카드 생성
+            list_cards = []
             cards_per_page = 5
             for i in range(0, len(menu_list), cards_per_page):
                 chunk = menu_list[i:i + cards_per_page]
@@ -1562,22 +1560,26 @@ def fallback():
                         "messageText": menu["msg"]
                     })
         
+                # header 필수값 명시 (페이지별로 제목 다르게)
+                page_no = (i // cards_per_page) + 1
+                header_title = f"명령어 목록 {page_no}"
+        
                 list_card = {
                     "listCard": {
-                        "header": {"title": "명령어 목록"},
+                        "header": {"title": header_title},
                         "items": list_items,
                         "buttons": [
                             {"label": "전체 명령어 보기", "action": "message", "messageText": ".명령어"}
                         ]
                     }
                 }
-                cards.append(list_card)
+                list_cards.append(list_card)
         
-            # 3. 캐러셀 형태로 묶기
+            # 캐러셀 구조로 묶기
             carousel = {
                 "carousel": {
                     "type": "listCard",
-                    "items": cards
+                    "items": list_cards
                 }
             }
         
@@ -3118,6 +3120,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
