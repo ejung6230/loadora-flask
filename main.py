@@ -915,7 +915,7 @@ def fallback():
                             dt = datetime.fromisoformat(t)
                             date = dt.date()
                             hour = dt.hour
-                            if 0 <= hour <= 5:
+                            if 0 <= hour <= 6:
                                 date -= timedelta(days=1)
                             date_hours[date].append(hour)
         
@@ -923,32 +923,34 @@ def fallback():
                     now = NOW_KST
                     remaining_time = None
                     next_hour_display = None
+
                     for date_key in sorted(date_hours.keys()):
                         for h in sorted(date_hours[date_key]):
                             dt_check = datetime.combine(date_key, datetime.min.time()) + timedelta(hours=h)
-                            if dt_check > now:
-                                remaining_time = dt_check - now
+                            if DAY_START <= dt_check <= DAY_END and dt_check > NOW_KST:
+                                remaining_time = dt_check - NOW_KST
                                 next_hour_display = h
                                 break
                         if remaining_time:
                             break
-        
-                    # 남은 시간 텍스트
+                    
                     if remaining_time:
                         hours_left, remainder = divmod(int(remaining_time.total_seconds()), 3600)
                         minutes_left = remainder // 60
                         remaining_text = f"{next_hour_display}시까지 {hours_left}시간 {minutes_left}분 남았습니다."
                     else:
                         remaining_text = "오늘 남은 카오스게이트가 없습니다."
-                        
-                    # ---------- 전체 일정 표시 ----------
+                    
+                    # ---------- 전체 일정 표시 (범위 형태) ----------
                     overall = []
-                    if overall_day_hours:
-                        overall.append(f"{min(overall_day_hours):02d}시~{max(overall_day_hours):02d}시")
-                    if overall_night_hours:
-                        overall.append(f"다음날 {min(overall_night_hours):02d}시~{max(overall_night_hours):02d}시")
-
-                    print('overall: ', overall)
+                    day_hours_today = [h for h in overall_day_hours if DAY_START.hour <= h <= 23]
+                    night_hours_today = [h for h in overall_night_hours if 0 <= h <= 5]
+                    
+                    if day_hours_today:
+                        overall.append(f"{min(day_hours_today):02d}시~{max(day_hours_today):02d}시")
+                    if night_hours_today:
+                        overall.append(f"다음날 {min(night_hours_today):02d}시~{max(night_hours_today):02d}시")
+                    
                     time_text = ", ".join(overall) if overall else "정보 없음"
 
                     # ---------- 카드 footer 수정 ----------
@@ -3229,6 +3231,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
