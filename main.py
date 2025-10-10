@@ -475,7 +475,7 @@ def search_jewelry_engraving():
         return jsonify({"error": True, "message": str(e)}), 500
 
 # 보석 조회 함수
-def fetch_jewelry_engraving(item_name: str, page_no: int = 0):
+def fetch_jewelry_engraving(item_name: str, page_no: int = 0, item_tier: int = None, item_grade: str):
     """
     보석 마켓 조회
     :param item_name: 검색할 보석 이름
@@ -505,14 +505,14 @@ def fetch_jewelry_engraving(item_name: str, page_no: int = 0):
                 "MaxValue": None
             }
         ],
-        "Sort": "BIDSTART_PRICE", # [ BIDSTART_PRICE, BUY_PRICE, EXPIREDATE, ITEM_GRADE, ITEM_LEVEL, ITEM_QUALITY ]
+        "Sort": "BUY_PRICE", # [ BIDSTART_PRICE(입찰 시작가), BUY_PRICE(즉시 구매가), EXPIREDATE(등록 종료일), ITEM_GRADE(아이템 등급), ITEM_LEVEL(아이템 레벨), ITEM_QUALITY(품질 수치) ]
         "CategoryCode": 210000,
         "CharacterClass": "",
-        "ItemTier": None,
-        "ItemGrade": "",
+        "ItemTier": item_tier,
+        "ItemGrade": item_grade,
         "ItemName": item_name,
         "PageNo": page_no,
-        "SortCondition": "DESC"  # [ ASC, DESC ]
+        "SortCondition": "ASC"  # [ ASC(오름차순), DESC(내림차순) ]
     }
 
     return fetch_auctions_items(payload)
@@ -3396,6 +3396,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
