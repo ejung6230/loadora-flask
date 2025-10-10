@@ -1989,14 +1989,14 @@ def fallback():
         # ---------- 9. 보석 거래소 조회 관련 패턴 ----------
         jewelry_match = re.match(r"^(\.보석|보석|\.ㅄ|ㅄ|\.ㅂㅅ|ㅂㅅ)\s*(.*)$", user_input)
         if jewelry_match:
-            raw_input = jewelry_match.group(2).strip()  # 예: "보석10" 또는 "보석 10"
+            raw_input = jewelry_match.group(2).strip()
         
             # 숫자 추출: 예를 들어 "보석10"이면 max_count=10
             num_match = re.search(r"(\d+)", raw_input)
             max_count = int(num_match.group(1)) if num_match else None
         
-            # 모든 숫자 제거 후 item_name 사용
-            item_name = re.sub(r"\d+", "", raw_input).strip()  # "보석10" -> "보석"
+            # 모든 숫자 제거 후 기본 아이템 이름
+            base_name = re.sub(r"\d+", "", raw_input).strip()  # "보석10" -> "보석"
         
             item_tiers = [4, 3]  # 4티어, 3티어 순서대로 출력
             item_levels = [10,9,8,7,6,5,4,3,2,1]  # 10→1순서
@@ -2009,6 +2009,7 @@ def fallback():
             fetch_funcs = []
             for tier in item_tiers:
                 for lv in item_levels:
+                    # lambda default arg 사용해서 lv/tier 덮어쓰기 방지
                     fetch_funcs.append(lambda lv=lv, tier=tier: fetch_jewelry_engraving(str(lv), 1, tier))
         
             # ---------------------------
@@ -2048,10 +2049,10 @@ def fallback():
                         data["Items"],
                         key=lambda x: x.get("AuctionInfo", {}).get("BuyPrice", float("inf"))
                     )
-                    name = cheapest.get("Name", f"{lv}레벨 보석")
+                    name = cheapest.get("Name", f"{lv}레벨 {base_name}")
                     price = cheapest.get("AuctionInfo", {}).get("BuyPrice", 0)
         
-                    lines.append(f"{name}: {price:,}💰 ")
+                    lines.append(f"{name}: {price:,}💰")
         
                 lines.append("")  # 티어 구분용 빈 줄
         
@@ -3403,6 +3404,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
