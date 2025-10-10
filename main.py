@@ -795,14 +795,15 @@ def fallback():
                 item for item in data
                 if item.get("CategoryName") == "카오스게이트"
             ]
-        
-            remaining_text = ""
-            time_text = ""
-            cards = []
-        
             # 항상 초기화
             overall_day_hours = []
             overall_night_hours = []
+            remaining_text = ""
+            time_text = ""
+            
+            cards = []
+        
+
         
             if match_chaos_gate.group(2):
                 text_chaos_gate = match_chaos_gate.group(2).strip()
@@ -881,8 +882,6 @@ def fallback():
                 # 오늘 카게 정보
                 today = NOW_KST.date()
                 selected_island = None  # 접두사만 입력한 경우 전체 표시
-                remaining_text = ""
-                time_text = ""
     
                 if chaos_gates:
                     icon = chaos_gates[0].get("ContentsIcon", "")
@@ -898,8 +897,7 @@ def fallback():
         
                     items_text = ""
                     if all_levels:
-                        result += f"❚ 최소 입장 레벨: {', '.join(map(str, sorted(all_levels)))}\n\n"
-                        items_text = f"입장레벨: {', '.join(map(str, sorted(all_levels)))}\n\n"
+                        items_text = f"레벨: {', '.join(map(str, sorted(all_levels)))}\n\n"
         
                     cards.append({
                         "title": "카오스게이트",
@@ -3230,6 +3228,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
