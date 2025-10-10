@@ -2054,7 +2054,7 @@ def fallback():
                         # BuyPrice 기준 최저가 아이템 선택
                         cheapest = min(
                             data["Items"],
-                            key=lambda x: x.get("AuctionInfo", {}).get("BuyPrice", float("inf"))
+                            key=lambda x: (x.get("AuctionInfo", {}) or {}).get("BuyPrice") or float("inf")
                         )
                         name = cheapest.get("Name", item_name)
                         price = cheapest.get("AuctionInfo", {}).get("BuyPrice", 0)
@@ -3411,6 +3411,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
