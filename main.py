@@ -16,10 +16,6 @@ import cairosvg
 from io import BytesIO
 from urllib.parse import unquote, quote
 from PIL import Image
-import asyncio
-import aiohttp
-from itertools import product
-
 
 
 # 로깅 설정
@@ -1986,89 +1982,61 @@ def fallback():
                 # 매칭 성공 → 해당 직업 시너지 정보
                 response_text = f"◕ᴗ◕🌸\n'{matched_job}' 직업의 시너지 정보를 알려드릴게요\n\n✤ {matched_class}\n{matched_job}: {job_data[matched_class][matched_job]['synergy_info']}"
 
+
         # ---------- 9. 보석 거래소 조회 관련 패턴 ----------
         jewelry_match = re.match(r"^(\.보석|보석|\.ㅄ|ㅄ|\.ㅂㅅ|ㅂㅅ)\s*(.*)$", user_input)
         if jewelry_match:
-            raw_input = jewelry_match.group(2).strip()
+            raw_input = jewelry_match.group(2).strip()  # 예: "보석10" 또는 "보석 10"
+        
+            # 숫자 추출: 예를 들어 "보석10"이면 max_count=10
             num_match = re.search(r"(\d+)", raw_input)
             max_count = int(num_match.group(1)) if num_match else None
-            base_name = re.sub(r"\d+", "", raw_input).strip()
         
-            item_tiers = {4: ["작열", "겁화"], 3: ["멸화", "홍염"]}
-            item_levels = [10,9,8,7,6,5,4,3,2,1]
+            # 모든 숫자 제거 후 item_name 사용
+            item_name = re.sub(r"\d+", "", raw_input).strip()  # "보석10" -> "보석"
         
-            # 요청 리스트 생성
-            requests_list = [
-                (lv, nm, tier)
-                for tier, names in item_tiers.items()
-                for lv in item_levels
-                for nm in names
-            ]
+            item_tiers = [4, 3]  # 4티어, 3티어 순서대로 출력
+            item_levels = [10,9,8,7,6,5,4,3,2,1]  # 10→1순서
         
-            # ThreadPoolExecutor로 병렬 처리
-            results = [None] * len(requests_list)
-            
-            def fetch_item(idx, lv, nm, tier):
-                try:
-                    return idx, fetch_jewelry_engraving(f"{lv}레벨 {nm}의 보석", 1, tier)
-                except:
-                    return idx, {"Items": []}
-            
-            with ThreadPoolExecutor(max_workers=30) as pool:
-                futures = [pool.submit(fetch_item, i, lv, nm, tier) 
-                          for i, (lv, nm, tier) in enumerate(requests_list)]
-                
-                for future in as_completed(futures, timeout=3.8):
-                    try:
-                        idx, result = future.result()
-                        results[idx] = result
-                    except:
-                        pass
-            
-            # None 값을 빈 데이터로 대체
-            results = [r if r is not None else {"Items": []} for r in results]
-        
-            # tier-lv-name 구조로 정리
-            results_dict = {}
-            idx = 0
-            for tier, names in item_tiers.items():
-                results_dict[tier] = {}
-                for lv in item_levels:
-                    results_dict[tier][lv] = {}
-                    for nm in names:
-                        results_dict[tier][lv][nm] = results[idx]
-                        idx += 1
-        
-            # 결과 출력
             lines = []
-            for tier, names in item_tiers.items():
+            
+            for tier in item_tiers:
                 lines.append(f"💎 {tier}티어 보석 최저가")
+        
                 for lv in item_levels:
-                    parts = []
-                    for nm in names:
-                        items_list = results_dict[tier][lv][nm].get("Items", [])
-                        
-                        if not items_list:
-                            parts.append(f"{nm} 데이터 없음")
-                            continue
-                        
-                        # 최소값 찾기
-                        min_price = None
-                        for item in items_list:
-                            price = (item.get("AuctionInfo") or {}).get("BuyPrice")
-                            if price is not None and (min_price is None or price < min_price):
-                                min_price = price
-                        
-                        if min_price is None:
-                            parts.append(f"{nm} 데이터 없음")
-                        else:
-                            parts.append(f"{nm} {min_price:,}💰")
+                    item_name = str(lv)
+                    page_no = 1
+                    item_tier = tier
+
+                    print('item_name, page_no, item_tier', item_name, page_no, item_tier)
+        
+                    data = fetch_jewelry_engraving(item_name, page_no, item_tier)
+                    data_items = data.get("Items", [])
+
+                    print(data)
                     
-                    lines.append(f"{lv}레벨 : " + " / ".join(parts))
-                lines.append("")
+                    if not data_items:
+                        lines.append(f"{lv}레벨: 데이터 없음")
+                        continue
+        
+                    # BuyPrice 기준 최저가 아이템 선택
+                    cheapest = min(
+                        data_items,
+                        key=lambda x: x.get("AuctionInfo", {}).get("BuyPrice", float("inf"))
+                    )
+        
+                    name = cheapest.get("Name", f"{lv}레벨 보석")
+                    price = cheapest.get("AuctionInfo", {}).get("BuyPrice", 0)
+        
+                    lines.append(f"{lv}레벨 {name}: {price:,}💰 ")
+        
+                lines.append("")  # 티어 구분용 빈 줄
         
             response_text = "\n".join(lines)
-            use_share_button = len(response_text) < 400
+
+            if len(response_text) < 400:
+                use_share_button = True
+                
             print(response_text)
         
         # ---------- 9. 유각 거래소 조회 관련 패턴 ----------
@@ -3414,23 +3382,6 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
