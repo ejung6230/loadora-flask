@@ -1583,8 +1583,8 @@ def fallback():
             떠상_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/person-fill.svg")
             코인_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/coin.svg")
             카트_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/cart2.svg")
-            크리스탈_icon = "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/gem.svg"
-            위치_icon = "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/geo-alt.svg"
+            크리스탈_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/gem.svg")
+            위치_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/geo-alt.svg")
             
             
             # 명령어 목록 (가나다 순)
@@ -3202,6 +3202,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
