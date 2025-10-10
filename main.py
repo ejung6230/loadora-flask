@@ -1994,69 +1994,40 @@ def fallback():
             # 모든 숫자 제거 후 item_name 사용
             item_name = re.sub(r"\d+", "", raw_input).strip()  # "보석10" -> "보석"
         
-            all_items = []
-            page_no = 1
-            while True:
-                data = fetch_relic_engraving(item_name, page_no)
-                data_items = data.get("Items", [])
-                if not data_items:
-                    break
+            item_tiers = [4, 3]  # 4티어, 3티어 순서대로 출력
+            item_levels = [10,9,8,7,6,5,4,3,2,1]  # 10→1순서
         
-                all_items.extend(data_items)
+            lines = []
         
-                # 최대 조회 개수 지정 시 체크
-                if max_count and len(all_items) >= max_count:
-                    all_items = all_items[:max_count]
-                    break
+            for tier in item_tiers:
+                lines.append(f"💎 {tier}티어 보석 최저가")
         
-                # 전체 데이터 개수보다 더 가져오지 않도록
-                if len(all_items) >= data.get("TotalCount", 0):
-                    break
+                for lv in item_levels:
+                    data = fetch_jewelry_engraving(str(lv), 1, [tier])
+                    data_items = data.get("Items", [])
+                    
+                    if not data_items:
+                        lines.append(f"{lv}레벨: 데이터 없음")
+                        continue
         
-                page_no += 1
+                    # BuyPrice 기준 최저가 아이템 선택
+                    cheapest = min(
+                        data_items,
+                        key=lambda x: x.get("AuctionInfo", {}).get("BuyPrice", float("inf"))
+                    )
         
-            data_cnt = len(all_items)
-            lines = [f"◕ᴗ◕🌸\n보석 가격을 알려드릴게요 ({data_cnt}개)\n"]
+                    name = cheapest.get("Name", f"{lv}레벨 보석")
+                    price = cheapest.get("AuctionInfo", {}).get("BuyPrice", 0)
         
-            if all_items:
-                up_count = down_count = 0
-                for entry in all_items:
-                    name = entry.get('Name', '')
-                    current = entry.get('CurrentMinPrice', 0)
-                    avg = entry.get('YDayAvgPrice', 0)
+                    lines.append(f"{lv}레벨 {name}: {price:,}💰 ")
         
-                    # 전일 대비 변화
-                    if avg:
-                        change_percent = (current - avg) / avg * 100
-                        if change_percent > 0:
-                            arrow = "🔺"
-                            up_count += 1
-                        elif change_percent < 0:
-                            arrow = "📉"
-                            down_count += 1
-                        else:
-                            arrow = "➖"
-                        change_text = f"{change_percent:+.1f}%{arrow}"
-                    else:
-                        change_text = "N/A"
-        
-                    lines.append(f"❙ {current:,}💰 : {name} ({change_text})")
-        
-                # 상승/하락 메시지
-                if up_count > down_count:
-                    lines.insert(1, "📢 전체적으로 상승했어요")
-                elif down_count > up_count:
-                    lines.insert(1, "📢 전체적으로 하락했어요")
-                else:
-                    lines.insert(1, "📢 변동 개수가 비슷해요")
-            else:
-                lines.append(f"'{item_name}' 조회된 보석이 없습니다.\n이름을 다시 확인해주세요.")
+                lines.append("")  # 티어 구분용 빈 줄
         
             response_text = "\n".join(lines)
-    
+
             if len(response_text) < 400:
                 use_share_button = True
-            
+                
             print(response_text)
         
         # ---------- 9. 유각 거래소 조회 관련 패턴 ----------
@@ -3402,6 +3373,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
