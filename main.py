@@ -1532,6 +1532,10 @@ def fallback():
                 {"title": "유물 각인서", "desc": "유물 각인서 거래소 시세 조회", "msg": ".유각", "img": "https://example.com/relic.png"},
                 {"title": "모험섬", "desc": "오늘의 모험섬 정보 보기", "msg": ".모험섬", "img": "https://example.com/island.png"},
                 {"title": "기타 기능", "desc": "다른 유용한 명령어 보기", "msg": ".도움말", "img": "https://example.com/help.png"},
+                {"title": "로아 일정", "desc": "오늘 모험섬, 필드보스 등 일정 보기", "msg": ".일정", "img": "https://example.com/loaschedule.png"},
+                {"title": "유물 각인서", "desc": "유물 각인서 거래소 시세 조회", "msg": ".유각", "img": "https://example.com/relic.png"},
+                {"title": "모험섬", "desc": "오늘의 모험섬 정보 보기", "msg": ".모험섬", "img": "https://example.com/island.png"},
+                {"title": "기타 기능", "desc": "다른 유용한 명령어 보기", "msg": ".도움말", "img": "https://example.com/help.png"},
             ]
         
             # 카드 구성
@@ -3096,6 +3100,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
