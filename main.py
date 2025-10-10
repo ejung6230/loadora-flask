@@ -1597,9 +1597,9 @@ def fallback():
             일정_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/clipboard2-check-fill.svg")
             이벤트_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/gift-fill.svg")
             코인_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/coin.svg")
-            카트_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/cart2.svg")
+            카트_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/cart-fill.svg")
             크리스탈_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/gem.svg")
-            위치_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/geo-alt.svg")
+            위치_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/geo-alt-fill.svg")
             망원경_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/binoculars-fill.svg")
             말풍선_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/chat-dots-fill.svg")
             사람들_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/people-fill.svg")
@@ -3221,6 +3221,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
