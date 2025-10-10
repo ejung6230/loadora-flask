@@ -1527,6 +1527,7 @@ def fallback():
 
             lostark_icon = "https://search.pstatic.net/sunny?src=https%3A%2F%2Fcdn-lostark.game.onstove.com%2F2018%2Fobt%2Fassets%2Fimages%2Fcommon%2Ficon%2Ffavicon.ico%3Fv%3D20251001074529&type=f30_30_png_expire24"
             gold_icon = "https://cdn-lostark.game.onstove.com/efui_iconatlas/money/money_4.png"
+            sasage_icon = "https://search.pstatic.net/sunny?src=https%3A%2F%2Fstatic.inven.co.kr%2Fimage_2011%2Ffavicon_192x192.png%3Fv%3D2&type=f30_30_png_expire24"
             
             # 명령어 목록 (가나다 순)
             menu_list = [
@@ -1534,7 +1535,7 @@ def fallback():
                 {"title": ".떠상", "desc": "떠돌이 상인 정보 조회", "msg": ".떠상", "img": lostark_icon},
                 {"title": ".마리샵", "desc": "마리샵 아이템 조회", "msg": ".마리샵", "img": "https://cdn-lostark.game.onstove.com/2018/obt/assets/images/pc/sprite/sprite_shop.png?01ff928ef1fbd38c0933"},
                 {"title": ".모험섬", "desc": "오늘의 모험섬 정보 조회", "msg": ".모험섬", "img": lostark_icon},
-                {"title": ".사사게", "desc": "사사게 단어 검색", "msg": ".사사게", "img": lostark_icon},
+                {"title": ".사사게", "desc": "사사게 단어 검색", "msg": ".사사게", "img": sasage_icon},
                 {"title": ".시너지", "desc": "시너지 정보 조회", "msg": ".시너지", "img": lostark_icon},
                 {"title": ".유각", "desc": "유물 각인서 거래소 시세 조회", "msg": ".유각", "img": "https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_9_25.png"},
                 {"title": ".이벤트", "desc": "진행중인 이벤트 조회", "msg": ".이벤트", "img": lostark_icon},
@@ -3143,6 +3144,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
