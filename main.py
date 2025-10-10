@@ -1995,22 +1995,27 @@ def fallback():
             num_match = re.search(r"(\d+)", raw_input)
             max_count = int(num_match.group(1)) if num_match else None
         
-            # 모든 숫자 제거 후 기본 아이템 이름
-            base_name = re.sub(r"\d+", "", raw_input).strip()  # "보석10" -> "보석"
+            # 기본 아이템 이름
+            base_name = re.sub(r"\d+", "", raw_input).strip()
         
-            item_tiers = [4, 3]  # 4티어, 3티어 순서대로 출력
+            # 티어별 이름 목록
+            item_tiers = {
+                4: ["작열", "겁화"],
+                3: ["멸화", "홍염"]
+            }
             item_levels = [10,9,8,7,6,5,4,3,2,1]  # 10→1순서
-        
             lines = []
         
             # ---------------------------
             # fetch 함수 리스트 생성 (lambda로 호출 지연)
             # ---------------------------
             fetch_funcs = []
-            for tier in item_tiers:
+            for tier, names in item_tiers.items():
                 for lv in item_levels:
-                    # lambda default arg 사용해서 lv/tier 덮어쓰기 방지
-                    fetch_funcs.append(lambda lv=lv, tier=tier: fetch_jewelry_engraving(str(lv), 1, tier))
+                    for nm in names:
+                        item_name = f"{lv}레벨 {nm}의 보석"
+                        # lambda default arg 사용해서 값 고정
+                        fetch_funcs.append(lambda item_name=item_name, tier=tier: fetch_jewelry_engraving(item_name, 1, tier))
         
             # ---------------------------
             # 비동기 실행
@@ -2034,25 +2039,27 @@ def fallback():
             # 기존 루프 구조 그대로 출력
             # ---------------------------
             idx = 0
-            for tier in item_tiers:
+            for tier, names in item_tiers.items():
                 lines.append(f"💎 {tier}티어 보석 최저가")
                 for lv in item_levels:
-                    data = results[idx]
-                    idx += 1
+                    for nm in names:
+                        data = results[idx]
+                        idx += 1
+                        item_name = f"{lv}레벨 {nm}의 보석"
         
-                    if isinstance(data, Exception) or not data.get("Items"):
-                        lines.append(f"{lv}레벨: 데이터 없음")
-                        continue
+                        if isinstance(data, Exception) or not data.get("Items"):
+                            lines.append(f"{item_name}: 데이터 없음")
+                            continue
         
-                    # BuyPrice 기준 최저가 아이템 선택
-                    cheapest = min(
-                        data["Items"],
-                        key=lambda x: x.get("AuctionInfo", {}).get("BuyPrice", float("inf"))
-                    )
-                    name = cheapest.get("Name", f"{lv}레벨 {base_name}")
-                    price = cheapest.get("AuctionInfo", {}).get("BuyPrice", 0)
+                        # BuyPrice 기준 최저가 아이템 선택
+                        cheapest = min(
+                            data["Items"],
+                            key=lambda x: x.get("AuctionInfo", {}).get("BuyPrice", float("inf"))
+                        )
+                        name = cheapest.get("Name", item_name)
+                        price = cheapest.get("AuctionInfo", {}).get("BuyPrice", 0)
         
-                    lines.append(f"{name}: {price:,}💰")
+                        lines.append(f"{name}: {price:,}💰")
         
                 lines.append("")  # 티어 구분용 빈 줄
         
@@ -3404,6 +3411,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
