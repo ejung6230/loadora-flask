@@ -1534,20 +1534,27 @@ def fallback():
             레이드_icon = "https://cdn-lostark.game.onstove.com/uploadfiles/notice/fd6945f9ffa24b029bd44fd19245e695.png"
             유각_icon = "https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_9_25.png"
             카게_icon = "https://cdn-lostark.game.onstove.com/efui_iconatlas/island_icon/island_icon_147.png"
+
+            # 부트스트랩 아이콘
+            공지_icon = "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/megaphone.svg"
+            일정_icon = "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/calendar-check.svg"
+            이벤트_icon = "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/gift.svg"
+            떠상_icon = "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/person-fill.svg"
+            코인_icon = "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/coin.svg"
             
             # 명령어 목록 (가나다 순)
             menu_list = [
-                {"title": ".공지", "desc": "공식 홈페이지 공지 조회", "msg": ".공지", "img": 로아_icon},
-                {"title": ".떠상", "desc": "떠돌이 상인 정보 조회", "msg": ".떠상", "img": 로아_icon},
+                {"title": ".공지", "desc": "공식 홈페이지 공지 조회", "msg": ".공지", "img": 공지_icon},
+                {"title": ".떠상", "desc": "떠돌이 상인 정보 조회", "msg": ".떠상", "img": 떠상_icon},
                 {"title": ".마리샵", "desc": "마리샵 아이템 조회", "msg": ".마리샵", "img": 크리스탈_icon},
                 {"title": ".모험섬", "desc": "오늘의 모험섬 정보 조회", "msg": ".모험섬", "img": 항해_icon},
                 {"title": ".사사게 [단어]", "desc": "인벤 사건사고게시판 검색", "msg": ".사사게", "img": 사사게_icon},
                 {"title": ".시너지", "desc": "시너지 정보 조회", "msg": ".시너지", "img": 로아_icon},
                 {"title": ".유각", "desc": "유물 각인서 거래소 시세 조회", "msg": ".유각", "img": 유각_icon},
-                {"title": ".이벤트", "desc": "진행중인 이벤트 조회", "msg": ".이벤트", "img": 로아_icon},
-                {"title": ".일정", "desc": "오늘의 컨텐츠 일정 확인", "msg": ".일정", "img": 로아_icon},
+                {"title": ".이벤트", "desc": "진행중인 이벤트 조회", "msg": ".이벤트", "img": 이벤트_icon},
+                {"title": ".일정", "desc": "오늘의 컨텐츠 일정 확인", "msg": ".일정", "img": 일정_icon},
                 {"title": ".원정대 [단어]", "desc": "원정대 캐릭터 정보 조회", "msg": ".원정대", "img": 로아_icon},
-                {"title": ".주급", "desc": "원정대 주급 조회", "msg": ".주급", "img": 골드_icon},
+                {"title": ".주급", "desc": "원정대 주급 조회", "msg": ".주급", "img": 코인_icon},
                 {"title": ".정보 [단어]", "desc": "캐릭터 정보 조회", "msg": ".정보", "img": 명예_icon},
                 {"title": ".카게", "desc": "카오스게이트 일정 조회", "msg": ".카게", "img": 카게_icon},
                 {"title": ".클골", "desc": "레이드 클리어 골드 조회", "msg": ".클골", "img": 골드_icon},
@@ -3150,6 +3157,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
