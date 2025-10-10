@@ -2008,11 +2008,10 @@ def fallback():
                     page_no = 1
                     item_tier = tier
             
-                    # lv와 티어 아이템명을 포함해서 API 호출용 이름 생성
                     level_prices = []
                     for single_item_name in tier_items:
                         item_name = f"{lv}레벨 {single_item_name}의 보석"
-                        
+            
                         data = fetch_jewelry_engraving(item_name, page_no, item_tier)
                         data_items = data.get("Items", [])
             
@@ -2020,14 +2019,18 @@ def fallback():
                             level_prices.append(f"{single_item_name} 데이터 없음")
                             continue
             
-                        cheapest = min(
-                            data_items,
-                            key=lambda x: x.get("AuctionInfo", {}).get("BuyPrice", float("inf"))
+                        # BuyPrice가 None이 아닌 첫 번째 아이템 선택
+                        first_valid = next(
+                            (x for x in data_items if x.get("AuctionInfo", {}).get("BuyPrice") is not None),
+                            None
                         )
-                        price = cheapest.get("AuctionInfo", {}).get("BuyPrice", 0)
-                        level_prices.append(f"{single_item_name} {price:,}💰")
             
-                    # 티어 내 아이템별 가격 / 구분
+                        if first_valid:
+                            price = first_valid["AuctionInfo"]["BuyPrice"]
+                            level_prices.append(f"{single_item_name} {price:,}💰")
+                        else:
+                            level_prices.append(f"{single_item_name} 데이터 없음")
+            
                     lines.append(f"{lv}레벨 : " + " / ".join(level_prices))
             
                 lines.append("")  # 티어 구분용 빈 줄
@@ -3382,6 +3385,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
