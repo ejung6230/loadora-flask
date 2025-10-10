@@ -1,5 +1,5 @@
 # flask_korlark.py
-from flask import Flask, request, jsonify, copy_current_request_context
+from flask import Flask, request, jsonify, copy_current_request_context, send_file
 from flask_cors import CORS
 from functools import wraps
 from concurrent.futures import ThreadPoolExecutor, TimeoutError, as_completed
@@ -13,6 +13,7 @@ import logging
 from collections import defaultdict
 from wcwidth import wcswidth
 import cairosvg
+from io import BytesIO
 
 
 # 로깅 설정
@@ -109,28 +110,38 @@ def fetch_lopec_ranking(nickname: str, character_class: str):
 # -----------------------------
 def ensure_png(icon_url):
     """
-    SVG URL이면 메모리에서 PNG로 변환 후 base64 데이터 URL 반환.
-    PNG URL이면 그대로 반환.
+    SVG URL을 받아 서버에서 PNG로 변환 후 제공하는 URL 반환
     """
-    if icon_url.lower().endswith(".svg"):
-        try:
-            # 1️⃣ SVG 다운로드
-            response = requests.get(icon_url)
-            response.raise_for_status()
-            svg_content = response.content
+    return f"https://loadora-flask.onrender.com/icon?url={icon_url}"
 
-            # 2️⃣ SVG -> PNG 바이트
-            png_bytes = cairosvg.svg2png(bytestring=svg_content)
+@app.route("/icon")
+def icon():
+    """
+    ?url=SVG_URL 형식으로 요청
+    서버에서 SVG를 PNG로 변환 후 반환
+    """
+    icon_url = request.args.get("url")
+    if not icon_url:
+        return "URL 파라미터가 없습니다", 400
 
-            # 3️⃣ base64 인코딩
-            b64 = base64.b64encode(png_bytes).decode()
-            data_url = f"data:image/png;base64,{b64}"
-            return data_url
-        except Exception as e:
-            print(f"SVG 처리 실패: {icon_url} -> {e}")
-            return icon_url  # 실패 시 원래 URL 반환
-    else:
-        return icon_url  # PNG 등은 그대로 반환
+    try:
+        # SVG 다운로드
+        resp = requests.get(icon_url)
+        resp.raise_for_status()
+        svg_content = resp.content
+
+        # PNG 변환 (메모리)
+        png_bytes = cairosvg.svg2png(bytestring=svg_content)
+
+        # BytesIO로 반환
+        return send_file(
+            BytesIO(png_bytes),
+            mimetype="image/png",
+            as_attachment=False
+        )
+    except Exception as e:
+        return f"SVG 처리 실패: {e}", 500
+
 
 # 로펙 점수 post
 def fetch_lopec_character(nickname: str, character_class: str):
@@ -3191,6 +3202,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
