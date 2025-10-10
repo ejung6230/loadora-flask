@@ -111,11 +111,7 @@ def fetch_lopec_ranking(nickname: str, character_class: str):
 # SVG → PNG 변환 함수
 # -----------------------------
 def ensure_png(icon_url):
-    """
-    SVG URL을 받아 서버에서 PNG로 변환 후 제공하는 URL 반환
-    URL 인코딩 포함
-    """
-    from urllib.parse import quote
+    """SVG URL을 받아 서버에서 PNG로 변환 후 제공하는 URL 반환 (URL 인코딩 포함)"""
     return f"https://loadora-flask.onrender.com/icon?url={quote(icon_url, safe='')}"
 
 @app.route("/icon")
@@ -152,13 +148,15 @@ def icon():
         new_image.save(output, format="PNG")
         output.seek(0)
 
-        # send_file 사용 → Content-Length 포함, PC에서도 표시됨
-        return send_file(
-            output,
-            mimetype='image/png',
-            as_attachment=False,
-            download_name="icon.png"
-        )
+        # send_file 대신 make_response + 헤더 설정
+        response = make_response(output.read())
+        response.headers.set('Content-Type', 'image/png')
+        response.headers.set('Content-Disposition', 'inline', filename='icon.png')
+        response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+        response.headers.set('Pragma', 'no-cache')
+        response.headers.set('Expires', '0')
+
+        return response
 
     except Exception as e:
         return f"SVG 처리 실패: {e}", 500
@@ -3217,6 +3215,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
