@@ -1597,7 +1597,7 @@ def fallback():
             크리스탈_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/gem.svg")
             위치_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/geo-alt-fill.svg")
             망원경_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/binoculars-fill.svg")
-            위험꼬깔_icon = ensure_png("cone-striped")
+            위험꼬깔_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/cone-striped.svg")
             사람들_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/people-fill.svg")
             정보_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/person-lines-fill.svg")
             
@@ -3217,6 +3217,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
