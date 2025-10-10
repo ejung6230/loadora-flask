@@ -1990,51 +1990,35 @@ def fallback():
         jewelry_match = re.match(r"^(\.보석|보석|\.ㅄ|ㅄ|\.ㅂㅅ|ㅂㅅ)\s*(.*)$", user_input)
         if jewelry_match:
             raw_input = jewelry_match.group(2).strip()
-        
-            # 숫자 추출: 예를 들어 "보석10"이면 max_count=10
             num_match = re.search(r"(\d+)", raw_input)
             max_count = int(num_match.group(1)) if num_match else None
-        
-            # 기본 아이템 이름
             base_name = re.sub(r"\d+", "", raw_input).strip()
         
-            # 티어별 이름 목록
-            item_tiers = {
-                4: ["작열", "겁화"],
-                3: ["멸화", "홍염"]
-            }
-            item_levels = [10,9,8,7,6,5,4,3,2,1]  # 10→1순서
+            item_tiers = {4: ["작열", "겁화"], 3: ["멸화", "홍염"]}
+            item_levels = [10,9,8,7,6,5,4,3,2,1]
             lines = []
         
             # ---------------------------
-            # fetch 함수 리스트 생성 (lambda로 호출 지연)
+            # 모든 요청을 한 번에 펼치기
             # ---------------------------
-            fetch_funcs = []
+            requests_list = []
             for tier, names in item_tiers.items():
                 for lv in item_levels:
                     for nm in names:
                         item_name = f"{lv}레벨 {nm}의 보석"
-                        fetch_funcs.append(lambda item_name=item_name, tier=tier: fetch_jewelry_engraving(item_name, 1, tier))
+                        requests_list.append((item_name, tier))
         
             # ---------------------------
-            # 비동기 실행 (run_in_executor로 동기 함수 병렬 실행)
+            # asyncio.to_thread로 병렬 실행
             # ---------------------------
-            async def fetch_item_async(fetch_func):
-                loop = asyncio.get_event_loop()
-                data = await loop.run_in_executor(None, fetch_func)
-                return data
+            async def fetch_all():
+                tasks = [asyncio.to_thread(fetch_jewelry_engraving, name, 1, tier) for name, tier in requests_list]
+                return await asyncio.gather(*tasks, return_exceptions=True)
         
-            async def fetch_items_bulk(fetch_funcs):
-                tasks = [fetch_item_async(func) for func in fetch_funcs]
-                results = await asyncio.gather(*tasks, return_exceptions=True)
-                return results
-        
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            results = loop.run_until_complete(fetch_items_bulk(fetch_funcs))
+            results = asyncio.run(fetch_all())
         
             # ---------------------------
-            # 기존 루프 구조 그대로 출력
+            # 출력
             # ---------------------------
             idx = 0
             for tier, names in item_tiers.items():
@@ -2049,12 +2033,10 @@ def fallback():
                             lines.append(f"{item_name}: 데이터 없음")
                             continue
         
-                        # BuyPrice가 None이 아닌 첫 번째 아이템 선택
                         cheapest = next(
                             (item for item in data["Items"] if (item.get("AuctionInfo") or {}).get("BuyPrice") is not None),
                             None
                         )
-        
                         if not cheapest:
                             lines.append(f"{item_name}: 데이터 없음")
                             continue
@@ -2063,11 +2045,10 @@ def fallback():
                         price = (cheapest.get("AuctionInfo") or {}).get("BuyPrice") or 0
                         lines.append(f"{name}: {price:,}💰")
         
-                lines.append("")  # 티어 구분용 빈 줄
+                lines.append("")
         
             response_text = "\n".join(lines)
             use_share_button = len(response_text) < 400
-        
             print(response_text)
         
         # ---------- 9. 유각 거래소 조회 관련 패턴 ----------
@@ -3413,6 +3394,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
