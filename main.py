@@ -1523,10 +1523,9 @@ def fallback():
         # ---------- 6. 메뉴 선택 관련 패턴 ----------
         match_command_list = re.match(r"^(\.명령어|명령어|\.도움말|도움말|\.ㅁㄹㅇ|ㅁㄹㅇ|\.ㄷㅇㅁ|ㄷㅇㅁ)$", user_input)
         if match_command_list:
-
             items = []
-
-            # 명령어 목록
+        
+            # 명령어 목록 (가나다 순)
             menu_list = [
                 {"title": ".공지", "desc": "공지 관련 명령어", "msg": ".공지", "img": "https://example.com/notice.png"},
                 {"title": ".떠상", "desc": "떠오르는 상점 정보", "msg": ".떠상", "img": "https://example.com/shop.png"},
@@ -1552,9 +1551,9 @@ def fallback():
             })
         
             list_cards = []
-            cards_per_page = 5
+            cards_per_page = 4  # 최대 4개로 제한
         
-            # 5개씩 끊어서 listCard 구성
+            # 4개씩 끊어서 listCard 구성
             for i in range(0, len(menu_list), cards_per_page):
                 chunk = menu_list[i:i + cards_per_page]
                 if not chunk:
@@ -3141,6 +3140,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
