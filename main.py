@@ -16,6 +16,9 @@ import cairosvg
 from io import BytesIO
 from urllib.parse import unquote, quote
 from PIL import Image
+import asyncio
+import aiohttp
+
 
 
 # 로깅 설정
@@ -1999,32 +2002,52 @@ def fallback():
             item_levels = [10,9,8,7,6,5,4,3,2,1]  # 10→1순서
         
             lines = []
-            
+        
+            # ---------------------------
+            # fetch 함수 리스트 생성 (lambda로 호출 지연)
+            # ---------------------------
+            fetch_funcs = []
+            for tier in item_tiers:
+                for lv in item_levels:
+                    fetch_funcs.append(lambda lv=lv, tier=tier: fetch_jewelry_engraving(str(lv), 1, tier))
+        
+            # ---------------------------
+            # 비동기 실행
+            # ---------------------------
+            async def fetch_item_async(session, fetch_func):
+                loop = asyncio.get_event_loop()
+                data = await loop.run_in_executor(None, fetch_func)
+                return data
+        
+            async def fetch_items_bulk(fetch_funcs):
+                async with aiohttp.ClientSession() as session:
+                    tasks = [fetch_item_async(session, func) for func in fetch_funcs]
+                    results = await asyncio.gather(*tasks, return_exceptions=True)
+                    return results
+        
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            results = loop.run_until_complete(fetch_items_bulk(fetch_funcs))
+        
+            # ---------------------------
+            # 기존 루프 구조 그대로 출력
+            # ---------------------------
+            idx = 0
             for tier in item_tiers:
                 lines.append(f"💎 {tier}티어 보석 최저가")
-        
                 for lv in item_levels:
-                    item_name = str(lv)
-                    page_no = 1
-                    item_tier = tier
-
-                    print('item_name, page_no, item_tier', item_name, page_no, item_tier)
+                    data = results[idx]
+                    idx += 1
         
-                    data = fetch_jewelry_engraving(item_name, page_no, item_tier)
-                    data_items = data.get("Items", [])
-
-                    print(data)
-                    
-                    if not data_items:
+                    if isinstance(data, Exception) or not data.get("Items"):
                         lines.append(f"{lv}레벨: 데이터 없음")
                         continue
         
                     # BuyPrice 기준 최저가 아이템 선택
                     cheapest = min(
-                        data_items,
+                        data["Items"],
                         key=lambda x: x.get("AuctionInfo", {}).get("BuyPrice", float("inf"))
                     )
-        
                     name = cheapest.get("Name", f"{lv}레벨 보석")
                     price = cheapest.get("AuctionInfo", {}).get("BuyPrice", 0)
         
@@ -2033,10 +2056,8 @@ def fallback():
                 lines.append("")  # 티어 구분용 빈 줄
         
             response_text = "\n".join(lines)
-
-            if len(response_text) < 400:
-                use_share_button = True
-                
+            use_share_button = len(response_text) < 400
+        
             print(response_text)
         
         # ---------- 9. 유각 거래소 조회 관련 패턴 ----------
@@ -3382,6 +3403,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
