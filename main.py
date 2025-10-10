@@ -111,7 +111,6 @@ def fetch_lopec_ranking(nickname: str, character_class: str):
 # SVG → PNG 변환 (카톡 친화적)
 # -----------------------------
 def ensure_png(icon_url, size=32, border_ratio=0.2):
-    """SVG URL을 받아 PNG로 변환 후 제공하는 안전 URL 반환"""
     return f"https://loadora-flask.onrender.com/icon?url={quote(icon_url, safe='')}&size={size}&border={border_ratio}"
 
 @app.route("/icon")
@@ -131,16 +130,14 @@ def icon():
 
     try:
         icon_url = unquote(icon_url)
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/138.0.0.0 Safari/537.36"}
+        headers = {"User-Agent": "Mozilla/5.0"}
         resp = requests.get(icon_url, headers=headers, timeout=10)
         resp.raise_for_status()
         svg_content = resp.content
 
-        # SVG → PNG 변환 (원본 크기 유지)
         png_bytes = cairosvg.svg2png(bytestring=svg_content)
         image = Image.open(BytesIO(png_bytes)).convert("RGBA")
 
-        # 정사각형 크롭
         w, h = image.size
         if w != h:
             if w > h:
@@ -150,24 +147,23 @@ def icon():
                 top = (h - w) // 2
                 image = image.crop((0, top, w, top + w))
 
-        # 최종 크기 + 여백
         final_size = size
         canvas_size = int(final_size * (1 + border_ratio))
-        new_image = Image.new("RGB", (canvas_size, canvas_size), (255, 255, 255))
+        new_image = Image.new("RGBA", (canvas_size, canvas_size), (255, 255, 255, 255))
         resized = image.resize((final_size, final_size), Image.ANTIALIAS)
         paste_pos = ((canvas_size - final_size) // 2, (canvas_size - final_size) // 2)
-        new_image.paste(resized, paste_pos)
+        new_image.paste(resized, paste_pos, resized)
 
-        # PNG BytesIO로 반환
         output = BytesIO()
-        new_image.save(output, format="PNG")
+        new_image.save(output, format="PNG", optimize=True)
         output.seek(0)
 
         return send_file(
             output,
             mimetype='image/png',
             as_attachment=False,
-            download_name=None
+            download_name=None,
+            conditional=False
         )
 
     except Exception as e:
@@ -3196,6 +3192,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
