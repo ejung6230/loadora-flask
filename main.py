@@ -1986,7 +1986,6 @@ def fallback():
                 # 매칭 성공 → 해당 직업 시너지 정보
                 response_text = f"◕ᴗ◕🌸\n'{matched_job}' 직업의 시너지 정보를 알려드릴게요\n\n✤ {matched_class}\n{matched_job}: {job_data[matched_class][matched_job]['synergy_info']}"
 
-
         # ---------- 9. 보석 거래소 조회 관련 패턴 ----------
         jewelry_match = re.match(r"^(\.보석|보석|\.ㅄ|ㅄ|\.ㅂㅅ|ㅂㅅ)\s*(.*)$", user_input)
         if jewelry_match:
@@ -2006,33 +2005,28 @@ def fallback():
                 for nm in names
             ]
         
-            MAX_WORKERS = 30  # 동시 실행 수 증가
-            ITEM_TIMEOUT = 3.8  # 타임아웃 단축
-        
-            # 비동기 fetch (세마포어 제거로 속도 향상)
-            async def fetch_all_fast():
-                async def fast_fetch(lv, nm, tier):
+            # ThreadPoolExecutor로 병렬 처리
+            results = [None] * len(requests_list)
+            
+            def fetch_item(idx, lv, nm, tier):
+                try:
+                    return idx, fetch_jewelry_engraving(f"{lv}레벨 {nm}의 보석", 1, tier)
+                except:
+                    return idx, {"Items": []}
+            
+            with ThreadPoolExecutor(max_workers=30) as pool:
+                futures = [pool.submit(fetch_item, i, lv, nm, tier) 
+                          for i, (lv, nm, tier) in enumerate(requests_list)]
+                
+                for future in as_completed(futures, timeout=3.8):
                     try:
-                        return await asyncio.wait_for(
-                            asyncio.to_thread(fetch_jewelry_engraving, f"{lv}레벨 {nm}의 보석", 1, tier),
-                            timeout=ITEM_TIMEOUT
-                        )
+                        idx, result = future.result()
+                        results[idx] = result
                     except:
-                        return {"Items": []}
-        
-                # 세마포어 없이 모든 요청 동시 실행
-                tasks = [fast_fetch(lv, nm, tier) for lv, nm, tier in requests_list]
-                return await asyncio.gather(*tasks, return_exceptions=True)
-        
-            # 실행
-            try:
-                loop = asyncio.get_running_loop()
-                results = loop.run_until_complete(fetch_all_fast())
-            except RuntimeError:
-                results = asyncio.run(fetch_all_fast())
-        
-            # 예외 처리된 결과를 빈 데이터로 변환
-            results = [r if isinstance(r, dict) else {"Items": []} for r in results]
+                        pass
+            
+            # None 값을 빈 데이터로 대체
+            results = [r if r is not None else {"Items": []} for r in results]
         
             # tier-lv-name 구조로 정리
             results_dict = {}
@@ -2045,7 +2039,7 @@ def fallback():
                         results_dict[tier][lv][nm] = results[idx]
                         idx += 1
         
-            # 결과 출력 (문자열 연산 최적화)
+            # 결과 출력
             lines = []
             for tier, names in item_tiers.items():
                 lines.append(f"💎 {tier}티어 보석 최저가")
@@ -2058,7 +2052,7 @@ def fallback():
                             parts.append(f"{nm} 데이터 없음")
                             continue
                         
-                        # 가격 있는 항목만 필터링하면서 최소값 찾기 (한 번에 처리)
+                        # 최소값 찾기
                         min_price = None
                         for item in items_list:
                             price = (item.get("AuctionInfo") or {}).get("BuyPrice")
@@ -3420,6 +3414,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
