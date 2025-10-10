@@ -947,7 +947,8 @@ def fallback():
                         overall.append(f"{min(overall_day_hours):02d}시~{max(overall_day_hours):02d}시")
                     if overall_night_hours:
                         overall.append(f"다음날 {min(overall_night_hours):02d}시~{max(overall_night_hours):02d}시")
-                    
+
+                    print('overall: ', overall)
                     time_text = ", ".join(overall) if overall else "정보 없음"
 
                     # ---------- 카드 footer 수정 ----------
@@ -961,7 +962,7 @@ def fallback():
                     header_title = f"카오스게이트({WEEKDAY_KO[today.strftime('%A')]})"
         
                     items = [
-                        {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 카오스게이트 정보를 알려드릴게요.\n💡카게 전체 정보를 보려면 클릭하세요.\n――――――――――――――\n\n", "extra": {}}},
+                        {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 카오스게이트 정보를 알려드릴게요.\n💡카게 전체 정보를 보려면 클릭하세요.", "extra": {}}},
                         {
                             "listCard": {
                                 "header": {"title": header_title},
@@ -3228,6 +3229,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
