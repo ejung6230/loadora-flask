@@ -21,6 +21,7 @@ import aiohttp
 from itertools import product
 
 
+
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -2003,12 +2004,43 @@ def fallback():
                 for lv, nm in product(item_levels, names)
             ]
         
-            async def fetch_all():
-                tasks = [asyncio.to_thread(fetch_jewelry_engraving, name, 1, tier) for name, tier in requests_list]
-                return await asyncio.gather(*tasks, return_exceptions=True)
+            # -----------------------------
+            # ThreadPoolExecutor 기반 fetch_all
+            # -----------------------------
+            MAX_WORKERS = 20      # 동시 요청 제한
+            ITEM_TIMEOUT = 3       # 개별 요청 타임아웃
         
-            results = asyncio.run(fetch_all())
+            async def fetch_all_safe():
+                loop = asyncio.get_running_loop()
+                results = []
         
+                with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+                    tasks = [loop.run_in_executor(executor, fetch_jewelry_engraving, name, 1, tier)
+                             for name, tier in requests_list]
+                    done, pending = await asyncio.wait(tasks, timeout=ITEM_TIMEOUT)
+        
+                    for task in done:
+                        try:
+                            results.append(task.result())
+                        except Exception:
+                            results.append({"Items": []})  # 실패 시 빈 데이터
+        
+                    # 타임아웃된 요청 처리
+                    for task in pending:
+                        results.append({"Items": []})
+        
+                return results
+        
+            # 기존 이벤트 루프 사용
+            try:
+                loop = asyncio.get_running_loop()
+                results = loop.run_until_complete(fetch_all_safe())
+            except RuntimeError:
+                results = asyncio.run(fetch_all_safe())
+        
+            # -----------------------------
+            # 결과 출력
+            # -----------------------------
             lines = []
             idx = 0
             for tier, names in item_tiers.items():
@@ -2019,13 +2051,13 @@ def fallback():
                         data = results[idx]
                         idx += 1
         
-                        if isinstance(data, Exception) or not data.get("Items"):
+                        if not data.get("Items"):
                             line_parts.append(f"{nm} 데이터 없음")
                             continue
         
                         items_with_price = [item for item in data["Items"]
                                             if (item.get("AuctionInfo") or {}).get("BuyPrice") is not None]
-                        cheapest = min(items_with_price, key=lambda x: x["AuctionInfo"]["BuyPrice"]) if items_with_price else None
+                        cheapest = min(items_with_price, key=lambda x: x["AuctionInfo"]["BuyPrice"], default=None)
         
                         if not cheapest:
                             line_parts.append(f"{nm} 데이터 없음")
@@ -3384,6 +3416,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
