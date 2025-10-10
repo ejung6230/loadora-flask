@@ -1998,12 +1998,20 @@ def fallback():
             item_levels = [10,9,8,7,6,5,4,3,2,1]  # 10→1순서
         
             lines = []
-        
+
+            fetch_jewelry_engraving(item_name: str, page_no: int = 0, item_tier: int = None, item_grade: str = ""):
+
+
+            
             for tier in item_tiers:
                 lines.append(f"💎 {tier}티어 보석 최저가")
         
                 for lv in item_levels:
-                    data = fetch_jewelry_engraving(str(lv), 1, [tier])
+                    item_name = str(lv)
+                    page_no = 1
+                    item_grade = [tier]
+                
+                    data = fetch_jewelry_engraving(item_name, page_no, item_grade)
                     data_items = data.get("Items", [])
                     
                     if not data_items:
@@ -3373,6 +3381,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
