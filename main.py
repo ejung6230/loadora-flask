@@ -1715,6 +1715,7 @@ def fallback():
                 {"title": ".떠상", "desc": "떠돌이 상인 정보 조회", "msg": ".떠상", "img": 위치_icon},
                 {"title": ".마리샵", "desc": "마리샵 아이템 조회", "msg": ".마리샵", "img": 카트_icon},
                 {"title": ".모험섬", "desc": "오늘의 모험섬 정보 조회", "msg": ".모험섬", "img": 망원경_icon},
+                {"title": ".보석", "desc": "보석 경매장 최저가 조회", "msg": ".보석", "img": 크리스탈_icon},
                 {"title": ".사사게 [단어]", "desc": "인벤 사건사고게시판 검색", "msg": ".사사게", "img": 위험꼬깔_icon},
                 {"title": ".시너지", "desc": "시너지 정보 조회", "msg": ".시너지", "img": 사람들_icon},
                 {"title": ".유각", "desc": "유물 각인서 거래소 시세 조회", "msg": ".유각", "img": 유각_icon},
@@ -3381,6 +3382,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
