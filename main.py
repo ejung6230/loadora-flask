@@ -883,7 +883,9 @@ def fallback():
                 selected_island = None  # 접두사만 입력한 경우 전체 표시
         
                 result = "◕ᴗ◕🌸\n오늘의 카오스게이트 정보를 알려드릴게요.\n"
+                result += "💡카게 전체 정보를 보려면 클릭하세요."
                 result += "――――――――――――――\n\n"
+
         
                 if chaos_gates:
                     icon = chaos_gates[0].get("ContentsIcon", "")
@@ -961,7 +963,7 @@ def fallback():
                     header_title = f"카오스게이트({WEEKDAY_KO[today.strftime('%A')]})"
         
                     items = [
-                        {"simpleText": {"text": "◕ᴗ◕🌸\n전체 카오스게이트 정보를 알려드릴게요.\n💡카게 전체 정보를 보려면 클릭하세요.", "extra": {}}},
+                        {"simpleText": {"text": result, "extra": {}}},
                         {
                             "listCard": {
                                 "header": {"title": header_title},
@@ -3228,6 +3230,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
