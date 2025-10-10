@@ -432,6 +432,46 @@ def get_markets_items():
             "message": str(e)
         }), 500
 
+@app.route('/markets/jewelry_engraving', methods=['GET'])
+def search_relic_engraving():
+    """
+    보석 검색 함수
+    쿼리 파라미터:
+      - item_name: 검색할 보석 이름
+      - page_no: 조회할 페이지 번호 (선택, 기본값 0)
+    예시: 
+      https://loadora-flask.onrender.com/markets/jewelry_engraving?item_name=7레벨&page_no=1
+    """
+    try:
+        item_name = request.args.get("item_name", "")
+        page_no = int(request.args.get("page_no", 0))  # 기본값 0
+        data = fetch_jewelry_engraving(item_name, page_no)  # 페이지 번호 인자로 전달
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": True, "message": str(e)}), 500
+
+# 보석 조회 함수
+def fetch_jewelry_engraving(item_name: str, page_no: int = 0):
+    """
+    보석 마켓 조회
+    :param item_name: 검색할 보석 이름
+    :param page_no: 조회할 페이지 번호 (기본값 0)
+    :return: API 응답 데이터
+    """
+    
+    # payload = {여기 수정해야함
+        "Sort": "CURRENT_MIN_PRICE",  # [GRADE, YDAY_AVG_PRICE, RECENT_PRICE, CURRENT_MIN_PRICE]
+        "CategoryCode": 220000,
+        "CharacterClass": "",
+        "ItemTier": 0,
+        "ItemGrade": "",
+        "ItemName": item_name,
+        "PageNo": page_no,
+        "SortCondition": "DESC"  # [ASC, DESC]
+    }
+
+    return fetch_markets_items(payload)
+
 
 
 @app.route('/markets/relic_engraving', methods=['GET'])
@@ -1851,6 +1891,84 @@ def fallback():
                 # 매칭 성공 → 해당 직업 시너지 정보
                 response_text = f"◕ᴗ◕🌸\n'{matched_job}' 직업의 시너지 정보를 알려드릴게요\n\n✤ {matched_class}\n{matched_job}: {job_data[matched_class][matched_job]['synergy_info']}"
 
+
+        # ---------- 9. 보석 거래소 조회 관련 패턴 ----------
+        jewelry_match = re.match(r"^(\.보석|보석|\.ㅄ|ㅄ|\.ㅂㅅ|ㅂㅅ)\s*(.*)$", user_input)
+        if jewelry_match:
+            raw_input = jewelry_match.group(2).strip()  # 예: "보석10" 또는 "보석 10"
+        
+            # 숫자 추출: 예를 들어 "보석10"이면 max_count=10
+            num_match = re.search(r"(\d+)", raw_input)
+            max_count = int(num_match.group(1)) if num_match else None
+        
+            # 모든 숫자 제거 후 item_name 사용
+            item_name = re.sub(r"\d+", "", raw_input).strip()  # "보석10" -> "보석"
+        
+            all_items = []
+            page_no = 1
+            while True:
+                data = fetch_relic_engraving(item_name, page_no)
+                data_items = data.get("Items", [])
+                if not data_items:
+                    break
+        
+                all_items.extend(data_items)
+        
+                # 최대 조회 개수 지정 시 체크
+                if max_count and len(all_items) >= max_count:
+                    all_items = all_items[:max_count]
+                    break
+        
+                # 전체 데이터 개수보다 더 가져오지 않도록
+                if len(all_items) >= data.get("TotalCount", 0):
+                    break
+        
+                page_no += 1
+        
+            data_cnt = len(all_items)
+            lines = [f"◕ᴗ◕🌸\n보석 가격을 알려드릴게요 ({data_cnt}개)\n"]
+        
+            if all_items:
+                up_count = down_count = 0
+                for entry in all_items:
+                    name = entry.get('Name', '')
+                    current = entry.get('CurrentMinPrice', 0)
+                    avg = entry.get('YDayAvgPrice', 0)
+        
+                    # 전일 대비 변화
+                    if avg:
+                        change_percent = (current - avg) / avg * 100
+                        if change_percent > 0:
+                            arrow = "🔺"
+                            up_count += 1
+                        elif change_percent < 0:
+                            arrow = "📉"
+                            down_count += 1
+                        else:
+                            arrow = "➖"
+                        change_text = f"{change_percent:+.1f}%{arrow}"
+                    else:
+                        change_text = "N/A"
+        
+                    lines.append(f"❙ {current:,}💰 : {name} ({change_text})")
+        
+                # 상승/하락 메시지
+                if up_count > down_count:
+                    lines.insert(1, "📢 전체적으로 상승했어요")
+                elif down_count > up_count:
+                    lines.insert(1, "📢 전체적으로 하락했어요")
+                else:
+                    lines.insert(1, "📢 변동 개수가 비슷해요")
+            else:
+                lines.append(f"'{item_name}' 조회된 보석이 없습니다.\n이름을 다시 확인해주세요.")
+        
+            response_text = "\n".join(lines)
+    
+            if len(response_text) < 400:
+                use_share_button = True
+            
+            print(response_text)
+        
         # ---------- 9. 유각 거래소 조회 관련 패턴 ----------
         relic_match = re.match(r"^(\.유각|유각|\.ㅇㄱ|ㅇㄱ|\.유물각인서|유물각인서|\.ㅇㅁㄱㅇㅅ|ㅇㅁㄱㅇㅅ)\s*(.*)$", user_input)
         if relic_match:
@@ -3194,6 +3312,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
