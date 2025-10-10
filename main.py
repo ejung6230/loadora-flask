@@ -1524,7 +1524,9 @@ def fallback():
         match_command_list = re.match(r"^(\.명령어|명령어|\.도움말|도움말|\.ㅁㄹㅇ|ㅁㄹㅇ|\.ㄷㅇㅁ|ㄷㅇㅁ)$", user_input)
         if match_command_list:
 
-            # 예시 메뉴 목록
+            items = []
+        
+            # 예시 메뉴
             menu_list = [
                 {"title": "로아 일정", "desc": "오늘 모험섬, 필드보스 등 일정 보기", "msg": ".일정", "img": "https://example.com/loaschedule.png"},
                 {"title": "유물 각인서", "desc": "유물 각인서 거래소 시세 조회", "msg": ".유각", "img": "https://example.com/relic.png"},
@@ -1536,20 +1538,23 @@ def fallback():
                 {"title": "전투 통계", "desc": "내 전투 데이터 분석", "msg": ".전투", "img": "https://example.com/stats.png"},
             ]
         
-            items = []
-        
-            # 상단 안내 문구
+            # 안내 문구
             items.append({
                 "simpleText": {
                     "text": "◕ᴗ◕🌸\n전체 명령어를 알려드릴게요.\n💡원하는 메뉴를 클릭하세요."
                 }
             })
         
-            # 캐러셀 구성용 리스트 카드들 생성
             list_cards = []
             cards_per_page = 5
+        
+            # 5개씩 끊어서 listCard 구성
             for i in range(0, len(menu_list), cards_per_page):
                 chunk = menu_list[i:i + cards_per_page]
+        
+                # 빈 리스트 방지
+                if not chunk:
+                    continue
         
                 list_items = []
                 for menu in chunk:
@@ -1558,7 +1563,8 @@ def fallback():
                         "description": menu["desc"],
                         "imageUrl": menu["img"],
                         "action": "message",
-                        "messageText": menu["msg"]
+                        "messageText": menu["msg"],
+                        "link": {"web": ""}  # 필수 링크값 보완
                     })
         
                 page_no = (i // cards_per_page) + 1
@@ -1567,9 +1573,9 @@ def fallback():
                     "listCard": {
                         "header": {
                             "title": f"명령어 목록 {page_no}",
-                            "link": {"web": ""}
+                            "link": {"web": ""}  # header.link도 명시 필요
                         },
-                        "items": list_items,
+                        "items": list_items,  # 최소 1개 이상
                         "buttons": [],
                         "lock": False,
                         "forwardable": True
@@ -1578,7 +1584,19 @@ def fallback():
         
                 list_cards.append(list_card)
         
-            # 캐러셀 형태로 묶기
+            # list_cards가 비어있는 경우 예외 처리
+            if not list_cards:
+                list_cards.append({
+                    "listCard": {
+                        "header": {"title": "명령어가 없습니다", "link": {"web": ""}},
+                        "items": [{"title": "현재 표시할 명령어가 없습니다.", "link": {"web": ""}}],
+                        "buttons": [],
+                        "lock": False,
+                        "forwardable": True
+                    }
+                })
+        
+            # 캐러셀로 감싸기
             carousel = {
                 "carousel": {
                     "type": "listCard",
@@ -3123,6 +3141,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
