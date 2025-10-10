@@ -3,3 +3,5 @@ requests
 gunicorn
 flask-cors
 wcwidth
+cairosvg
+
