@@ -2006,7 +2006,7 @@ def fallback():
                 for lv in item_levels:
                     item_name = str(lv)
                     page_no = 1
-                    item_tier = [tier]
+                    item_tier = tier
 
                     print('item_name, page_no, item_tier', item_name, page_no, item_tier)
         
@@ -3382,6 +3382,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
