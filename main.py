@@ -2010,6 +2010,8 @@ def fallback():
                 
                     data = fetch_jewelry_engraving(item_name, page_no, item_grade)
                     data_items = data.get("Items", [])
+
+                    print(data)
                     
                     if not data_items:
                         lines.append(f"{lv}레벨: 데이터 없음")
@@ -3378,6 +3380,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
