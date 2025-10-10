@@ -791,28 +791,43 @@ def fallback():
             data = fetch_calendar()
         
             # CategoryName이 "카오스게이트"인 모든 아이템
-            chaos_gates = [
-                item for item in data
-                if item.get("CategoryName") == "카오스게이트"
-            ]
+            chaos_gates = [item for item in data if item.get("CategoryName") == "카오스게이트"]
+        
             # 항상 초기화
             overall_day_hours = []
             overall_night_hours = []
             remaining_text = ""
             time_text = ""
-            
+            header_title = f"카오스게이트({WEEKDAY_KO[TODAY.strftime('%A')]})"
             cards = []
         
-
+            # ---------- 입장 시간 정리 및 전체 일정 채우기 ----------
+            date_hours = defaultdict(list)
+            for gate in chaos_gates:
+                for t in gate.get("StartTimes", []):
+                    dt = datetime.fromisoformat(t)
+                    date = dt.date()
+                    hour = dt.hour
         
+                    # 00~06시는 전날 기준
+                    if 0 <= hour <= 6:
+                        date -= timedelta(days=1)
+        
+                    date_hours[date].append(hour)
+        
+                    # 전체 일정 범위 채우기
+                    if 7 <= hour <= 23:
+                        overall_day_hours.append(hour)
+                    elif 0 <= hour <= 5:
+                        overall_night_hours.append(hour)
+        
+            # ---------- 전체 조회 처리 ----------
             if match_chaos_gate.group(2):
                 text_chaos_gate = match_chaos_gate.group(2).strip()
-        
-                result = f"◕ᴗ◕🌸\n전체 카오스게이트 정보를 알려드릴게요.\n"
-                result += "――――――――――――――\n\n"
+                result = "◕ᴗ◕🌸\n전체 카오스게이트 정보를 알려드릴게요.\n――――――――――――――\n\n"
         
                 if text_chaos_gate in ["전체", "ㅈㅊ"]:
-                    # ---------- 최소 입장 레벨 ----------
+                    # 최소 입장 레벨
                     all_levels = set()
                     for gate in chaos_gates:
                         for ri in gate.get("RewardItems", []):
@@ -820,22 +835,10 @@ def fallback():
                                 item_level = ri.get("ItemLevel")
                                 if item_level:
                                     all_levels.add(item_level)
-        
                     if all_levels:
-                        result += f"❚ 최소 입장 레벨: {', '.join(map(str, sorted(all_levels)))}\n\n"
+                        result += f"❙ 최소 입장 레벨: {', '.join(map(str, sorted(all_levels)))}\n\n"
         
-                    # ---------- 입장 시간 정리 ----------
-                    date_hours = defaultdict(list)
-                    for gate in chaos_gates:
-                        for t in gate.get("StartTimes", []):
-                            dt = datetime.fromisoformat(t)
-                            date = dt.date()
-                            hour = dt.hour
-                            if 0 <= hour <= 5:  # 다음날 오전 시간은 전날 key로
-                                date -= timedelta(days=1)
-                            date_hours[date].append(hour)
-        
-                    result += "❚ 카오스게이트 입장 시간\n"
+                    result += "❙ 카오스게이트 입장 시간\n"
         
                     # 전체 일정용 범위 계산
                     for date_key in sorted(date_hours.keys()):
@@ -843,30 +846,20 @@ def fallback():
                         day_hours = sorted(h for h in hours if 7 <= h <= 23)
                         night_hours = sorted(h for h in hours if 0 <= h <= 5)
         
-                        if day_hours:
-                            overall_day_hours.extend(day_hours)
-                            day_part = f"{day_hours[0]:02d}시~{day_hours[-1]:02d}시"
-                        else:
-                            day_part = ""
-                        if night_hours:
-                            overall_night_hours.extend(night_hours)
-                            night_part = f"다음날 {night_hours[0]:02d}시~{night_hours[-1]:02d}시"
-                        else:
-                            night_part = ""
-        
+                        day_part = f"{day_hours[0]:02d}시~{day_hours[-1]:02d}시" if day_hours else ""
+                        night_part = f"다음날 {night_hours[0]:02d}시~{night_hours[-1]:02d}시" if night_hours else ""
                         display = ", ".join(part for part in [day_part, night_part] if part)
                         weekday = WEEKDAY_KO[date_key.strftime("%A")]
                         result += f"- {date_key.strftime('%Y년 %m월 %d일')}({weekday}) : {display}\n"
         
-                    # ---------- 남은 시간 계산 ----------
-                    now = NOW_KST
+                    # 남은 시간 계산
                     remaining_time = None
                     next_hour_display = None
                     for date_key in sorted(date_hours.keys()):
                         for h in sorted(date_hours[date_key]):
                             dt_check = datetime.combine(date_key, datetime.min.time()) + timedelta(hours=h)
-                            if dt_check > now:
-                                remaining_time = dt_check - now
+                            if dt_check > NOW_KST:
+                                remaining_time = dt_check - NOW_KST
                                 next_hour_display = h
                                 break
                         if remaining_time:
@@ -876,17 +869,14 @@ def fallback():
         
                 else:
                     items = [
-                        {"simpleText": {"text": f"◕_◕💧\n정보를 조회할 수 없어요. '.카게 전체'를 정확하게 입력해주세요.", "extra": {}}},
+                        {"simpleText": {"text": "◕_◕💧\n정보를 조회할 수 없어요. '.카게 전체'를 정확하게 입력해주세요.", "extra": {}}}
                     ]
+        
+            # ---------- 오늘 카게 정보 ----------
             else:
-                # 오늘 카게 정보
-                today = NOW_KST.date()
-                selected_island = None  # 접두사만 입력한 경우 전체 표시
-    
                 if chaos_gates:
                     icon = chaos_gates[0].get("ContentsIcon", "")
-        
-                    # ---------- 최소 입장 레벨 ----------
+                    # 최소 입장 레벨
                     all_levels = set()
                     for gate in chaos_gates:
                         for ri in gate.get("RewardItems", []):
@@ -894,36 +884,20 @@ def fallback():
                                 item_level = ri.get("ItemLevel")
                                 if item_level:
                                     all_levels.add(item_level)
-        
-                    items_text = ""
-                    if all_levels:
-                        items_text = f"레벨: {', '.join(map(str, sorted(all_levels)))}\n\n"
+                    items_text = f"레벨: {', '.join(map(str, sorted(all_levels)))}\n\n" if all_levels else ""
         
                     cards.append({
                         "title": "카오스게이트",
                         "imageUrl": icon,
-                        "messageText": f".카오스게이트 전체",
+                        "messageText": ".카오스게이트 전체",
                         "link": {"web": ""},
-                        "description": f"{items_text}",
+                        "description": "💡상세 정보 클릭",
                         "action": "message"
                     })
         
-                    # ---------- 입장 시간 정리 ----------
-                    date_hours = defaultdict(list)
-                    for gate in chaos_gates:
-                        for t in gate.get("StartTimes", []):
-                            dt = datetime.fromisoformat(t)
-                            date = dt.date()
-                            hour = dt.hour
-                            if 0 <= hour <= 6:
-                                date -= timedelta(days=1)
-                            date_hours[date].append(hour)
-        
-                    # ---------- 남은 시간 계산 ----------
-                    now = NOW_KST
+                    # 남은 시간 계산
                     remaining_time = None
                     next_hour_display = None
-
                     for date_key in sorted(date_hours.keys()):
                         for h in sorted(date_hours[date_key]):
                             dt_check = datetime.combine(date_key, datetime.min.time()) + timedelta(hours=h)
@@ -933,27 +907,23 @@ def fallback():
                                 break
                         if remaining_time:
                             break
-                    
+        
                     if remaining_time:
                         hours_left, remainder = divmod(int(remaining_time.total_seconds()), 3600)
                         minutes_left = remainder // 60
                         remaining_text = f"{next_hour_display}시까지 {hours_left}시간 {minutes_left}분 남았습니다."
                     else:
                         remaining_text = "오늘 남은 카오스게이트가 없습니다."
-                    
-                    # ---------- 전체 일정 표시 (범위 형태) ----------
+        
+                    # 전체 일정 표시
                     overall = []
-                    day_hours_today = [h for h in overall_day_hours if DAY_START.hour <= h <= 23]
-                    night_hours_today = [h for h in overall_night_hours if 0 <= h <= 5]
-                    
-                    if day_hours_today:
-                        overall.append(f"{min(day_hours_today):02d}시~{max(day_hours_today):02d}시")
-                    if night_hours_today:
-                        overall.append(f"다음날 {min(night_hours_today):02d}시~{max(night_hours_today):02d}시")
-                    
+                    if overall_day_hours:
+                        overall.append(f"{min(overall_day_hours):02d}시~{max(overall_day_hours):02d}시")
+                    if overall_night_hours:
+                        overall.append(f"다음날 {min(overall_night_hours):02d}시~{max(overall_night_hours):02d}시")
                     time_text = ", ".join(overall) if overall else "정보 없음"
-
-                    # ---------- 카드 footer 수정 ----------
+        
+                    # 카드 footer
                     card_footer = {
                         "title": f"⏰ {remaining_text}",
                         "link": {"web": ""},
@@ -961,10 +931,8 @@ def fallback():
                     }
                     cards.append(card_footer)
         
-                    header_title = f"카오스게이트({WEEKDAY_KO[today.strftime('%A')]})"
-        
                     items = [
-                        {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 카오스게이트 정보를 알려드릴게요.\n💡카게 전체 정보를 보려면 클릭하세요.", "extra": {}}},
+                        {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 카오스게이트 정보를 알려드릴게요.", "extra": {}}},
                         {
                             "listCard": {
                                 "header": {"title": header_title},
@@ -977,10 +945,21 @@ def fallback():
                     ]
                 else:
                     items = [
+                        {"simpleText": {"text": "◕_◕💧\n오늘은 카오스게이트가 없어요.", "extra": {}}},
                         {
-                            "simpleText": {
-                                "text": "◕_◕💧\n오늘은 카오스게이트가 없어요.\n💡전체 정보를 보려면 클릭하세요.",
-                                "extra": {}
+                            "listCard": {
+                                "header": {"title": header_title},
+                                "items": [{
+                                    "title": "카오스게이트 없음",
+                                    "imageUrl": "",
+                                    "messageText": ".카오스게이트 전체",
+                                    "link": {"web": ""},
+                                    "description": "💡상세 정보 클릭",
+                                    "action": "message"
+                                }],
+                                "buttons": [{"label": "공유하기", "highlight": False, "action": "share"}],
+                                "lock": False,
+                                "forwardable": False
                             }
                         }
                     ]
@@ -3231,6 +3210,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
