@@ -1523,8 +1523,7 @@ def fallback():
         # ---------- 6. 메뉴 선택 관련 패턴 ----------
         match_command_list = re.match(r"^(\.명령어|명령어|\.도움말|도움말|\.ㅁㄹㅇ|ㅁㄹㅇ|\.ㄷㅇㅁ|ㄷㅇㅁ)$", user_input)
         if match_command_list:
-            items = []
-        
+
             # 예시 메뉴 목록
             menu_list = [
                 {"title": "로아 일정", "desc": "오늘 모험섬, 필드보스 등 일정 보기", "msg": ".일정", "img": "https://example.com/loaschedule.png"},
@@ -1537,14 +1536,16 @@ def fallback():
                 {"title": "전투 통계", "desc": "내 전투 데이터 분석", "msg": ".전투", "img": "https://example.com/stats.png"},
             ]
         
-            # 상단 안내문
+            items = []
+        
+            # 상단 안내 문구
             items.append({
                 "simpleText": {
                     "text": "◕ᴗ◕🌸\n전체 명령어를 알려드릴게요.\n💡원하는 메뉴를 클릭하세요."
                 }
             })
         
-            # 5개씩 나누어 캐러셀용 리스트 카드 생성
+            # 캐러셀 구성용 리스트 카드들 생성
             list_cards = []
             cards_per_page = 5
             for i in range(0, len(menu_list), cards_per_page):
@@ -1560,22 +1561,24 @@ def fallback():
                         "messageText": menu["msg"]
                     })
         
-                # header 필수값 명시 (페이지별로 제목 다르게)
                 page_no = (i // cards_per_page) + 1
-                header_title = f"명령어 목록 {page_no}"
         
                 list_card = {
                     "listCard": {
-                        "header": {"title": header_title},
+                        "header": {
+                            "title": f"명령어 목록 {page_no}",
+                            "link": {"web": ""}
+                        },
                         "items": list_items,
-                        "buttons": [
-                            {"label": "전체 명령어 보기", "action": "message", "messageText": ".명령어"}
-                        ]
+                        "buttons": [],
+                        "lock": False,
+                        "forwardable": True
                     }
                 }
+        
                 list_cards.append(list_card)
         
-            # 캐러셀 구조로 묶기
+            # 캐러셀 형태로 묶기
             carousel = {
                 "carousel": {
                     "type": "listCard",
@@ -3120,6 +3123,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
