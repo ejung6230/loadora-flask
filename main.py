@@ -1529,7 +1529,7 @@ def fallback():
             골드_icon = "https://cdn-lostark.game.onstove.com/efui_iconatlas/money/money_4.png"
             사사게_icon = "https://search.pstatic.net/sunny?src=https%3A%2F%2Fstatic.inven.co.kr%2Fimage_2011%2Ffavicon_192x192.png%3Fv%3D2&type=f30_30_png_expire24"
             크리스탈_icon = "https://cdn-lostark.game.onstove.com/uploadfiles/shop/11ef8e95ad2349e1af58728fc7bbfb44.png"
-            명예_icon = "cdn-lostark.game.onstove.com/uploadfiles/notice/454f0145ddaa4534bc5d939461b7fd94.png"
+            명예_icon = "https://cdn-lostark.game.onstove.com/uploadfiles/notice/454f0145ddaa4534bc5d939461b7fd94.png"
             항해_icon = "https://cdn-lostark.game.onstove.com/uploadfiles/notice/1114dff33d3c4203878065bd6de1bbfd.jpg"
             레이드_icon = "https://cdn-lostark.game.onstove.com/uploadfiles/notice/fd6945f9ffa24b029bd44fd19245e695.png"
             유각_icon = "https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_9_25.png"
@@ -3150,6 +3150,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
