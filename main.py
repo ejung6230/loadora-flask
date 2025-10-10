@@ -433,7 +433,7 @@ def get_markets_items():
         }), 500
 
 @app.route('/markets/jewelry_engraving', methods=['GET'])
-def search_relic_engraving():
+def search_jewelry_engraving():
     """
     보석 검색 함수
     쿼리 파라미터:
@@ -3312,6 +3312,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
