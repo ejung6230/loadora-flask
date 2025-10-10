@@ -1519,7 +1519,47 @@ def fallback():
             except Exception as e:
                 # 기타 예외
                 raise
+
+        # ---------- 6. 메뉴 선택 관련 패턴 ----------
+        match_menu = re.match(r"^(\.메뉴|메뉴|\.ㅁㄴ|ㅁㄴ)$", user_input)
+        if match_menu:
+
+            cards = []
         
+            # 예시 메뉴 카드들
+            menu_list = [
+                {"title": "로아 일정", "desc": "오늘 모험섬, 필드보스 등 일정 보기", "msg": ".일정", "img": "https://example.com/loaschedule.png"},
+                {"title": "유물 각인서", "desc": "유물 각인서 거래소 시세 조회", "msg": ".유각", "img": "https://example.com/relic.png"},
+                {"title": "모험섬", "desc": "오늘의 모험섬 정보 보기", "msg": ".모험섬", "img": "https://example.com/island.png"},
+                {"title": "기타 기능", "desc": "다른 유용한 명령어 보기", "msg": ".도움말", "img": "https://example.com/help.png"},
+            ]
+        
+            # 카드 구성
+            for menu in menu_list:
+                cards.append({
+                    "title": menu["title"],
+                    "imageUrl": menu["img"],
+                    "link": {"web": ""},
+                    "description": menu["desc"],
+                    "messageText": menu["msg"],
+                    "action": "message"
+                })
+        
+            # 전체 응답 구조
+            items = [
+                {"simpleText": {"text": "◕ᴗ◕🌸\n전체 명령어를 알려드릴게요.\n💡원하는 메뉴를 클릭하세요.", "extra": {}}},
+                {
+                    "listCard": {
+                        "header": {"title": "명령어 목록"},
+                        "items": cards,
+                        "buttons": [
+                            {"label": "공유하기", "highlight": False, "action": "share"}
+                        ],
+                        "lock": False,
+                        "forwardable": False
+                    }
+                }
+            ]
         
         # ---------- 6. 전체 서버 떠상 관련 패턴 ----------
         match_merchant = re.match(r"^(\.떠상|떠상|\.ㄸㅅ|ㄸㅅ|떠돌이상인)$", user_input)
@@ -3056,6 +3096,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
