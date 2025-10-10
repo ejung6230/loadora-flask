@@ -120,10 +120,6 @@ def ensure_png(icon_url):
 
 @app.route("/icon")
 def icon():
-    """
-    ?url=SVG_URL 형식으로 요청
-    SVG를 PNG로 변환 후 여백 추가, 고화질, CORS 적용
-    """
     icon_url = request.args.get("url")
     if not icon_url:
         return "URL 파라미터가 없습니다", 400
@@ -137,33 +133,32 @@ def icon():
         resp.raise_for_status()
         svg_content = resp.content
 
-        # PNG 변환 (scale=4로 고화질)
+        # PNG 변환
         png_bytes = cairosvg.svg2png(bytestring=svg_content, scale=4)
         image = Image.open(BytesIO(png_bytes)).convert("RGBA")
 
-        # 여백 추가 (예: 20% 여백)
+        # 여백 추가
         border_ratio = 0.2
         width, height = image.size
         new_width = int(width * (1 + border_ratio))
         new_height = int(height * (1 + border_ratio))
-
-        # 투명 배경 새 이미지
         new_image = Image.new("RGBA", (new_width, new_height), (255, 255, 255, 0))
-
-        # 중앙에 합성
         paste_x = (new_width - width) // 2
         paste_y = (new_height - height) // 2
         new_image.alpha_composite(image, (paste_x, paste_y))
 
-        # BytesIO로 반환
+        # BytesIO로 PNG 반환
         output = BytesIO()
         new_image.save(output, format="PNG")
         output.seek(0)
 
-        response = make_response(output.getvalue())
-        response.headers.set('Content-Type', 'image/png')
-        response.headers.set('Access-Control-Allow-Origin', '*')  # 모바일/PC 모두 허용
-        return response
+        # send_file 사용 → Content-Length 포함, PC에서도 표시됨
+        return send_file(
+            output,
+            mimetype='image/png',
+            as_attachment=False,
+            download_name="icon.png"
+        )
 
     except Exception as e:
         return f"SVG 처리 실패: {e}", 500
@@ -3228,6 +3223,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
