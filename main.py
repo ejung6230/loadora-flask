@@ -938,21 +938,27 @@ def fallback():
                         if remaining_time:
                             break
         
+                    # 남은 시간 텍스트
                     if remaining_time:
                         hours_left, remainder = divmod(int(remaining_time.total_seconds()), 3600)
                         minutes_left = remainder // 60
-                        result += f"\n⏰ {next_hour_display}시까지 {hours_left}시간 {minutes_left}분 남았습니다.\n"
-        
-                    # ---------- 전체 일정 표시 (범위 형태) ----------
+                        remaining_text = f"{next_hour_display}시까지 {hours_left}시간 {minutes_left}분 남았습니다."
+                        result += f"\n⏰ {remaining_text}\n"
+                    else:
+                        remaining_text = "오늘 남은 카오스게이트가 없습니다."
+                    
+                    # ---------- 전체 일정 표시 ----------
                     overall = []
                     if overall_day_hours:
                         overall.append(f"{min(overall_day_hours):02d}시~{max(overall_day_hours):02d}시")
                     if overall_night_hours:
                         overall.append(f"다음날 {min(overall_night_hours):02d}시~{max(overall_night_hours):02d}시")
+                    
+                    time_text = ", ".join(overall) if overall else "정보 없음"
                     if overall:
-                        result += f"일정: {', '.join(overall)}"
-                        
-        
+                        result += f"일정: {time_text}"
+                    
+                    # ---------- 카드 footer 수정 ----------
                     card_footer = {
                         "title": f"⏰ {remaining_text}",
                         "link": {"web": ""},
@@ -3230,6 +3236,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
