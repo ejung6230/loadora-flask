@@ -1998,9 +1998,7 @@ def fallback():
             item_tiers = {4: ["작열", "겁화"], 3: ["멸화", "홍염"]}
             item_levels = [10,9,8,7,6,5,4,3,2,1]
         
-            # -----------------------------
-            # 요청 리스트 생성 (출력 순서와 정확히 맞춤)
-            # -----------------------------
+            # 요청 리스트 생성
             requests_list = [
                 (lv, nm, tier)
                 for tier, names in item_tiers.items()
@@ -2008,40 +2006,35 @@ def fallback():
                 for nm in names
             ]
         
-            MAX_WORKERS = 20
-            ITEM_TIMEOUT = 4.2  # 개별 요청 타임아웃
+            MAX_WORKERS = 30  # 동시 실행 수 증가
+            ITEM_TIMEOUT = 3.8  # 타임아웃 단축
         
-            # -----------------------------
-            # 안전한 fetch_all
-            # -----------------------------
-            async def fetch_all_safe():
-                semaphore = asyncio.Semaphore(MAX_WORKERS)
+            # 비동기 fetch (세마포어 제거로 속도 향상)
+            async def fetch_all_fast():
+                async def fast_fetch(lv, nm, tier):
+                    try:
+                        return await asyncio.wait_for(
+                            asyncio.to_thread(fetch_jewelry_engraving, f"{lv}레벨 {nm}의 보석", 1, tier),
+                            timeout=ITEM_TIMEOUT
+                        )
+                    except:
+                        return {"Items": []}
         
-                async def safe_fetch(lv, nm, tier):
-                    async with semaphore:
-                        try:
-                            return await asyncio.wait_for(
-                                asyncio.to_thread(fetch_jewelry_engraving, f"{lv}레벨 {nm}의 보석", 1, tier),
-                                timeout=ITEM_TIMEOUT
-                            )
-                        except Exception:
-                            return {"Items": []}  # 실패 시 빈 데이터
+                # 세마포어 없이 모든 요청 동시 실행
+                tasks = [fast_fetch(lv, nm, tier) for lv, nm, tier in requests_list]
+                return await asyncio.gather(*tasks, return_exceptions=True)
         
-                tasks = [safe_fetch(lv, nm, tier) for lv, nm, tier in requests_list]
-                return await asyncio.gather(*tasks)
-        
-            # -----------------------------
             # 실행
-            # -----------------------------
             try:
                 loop = asyncio.get_running_loop()
-                results = loop.run_until_complete(fetch_all_safe())
+                results = loop.run_until_complete(fetch_all_fast())
             except RuntimeError:
-                results = asyncio.run(fetch_all_safe())
+                results = asyncio.run(fetch_all_fast())
         
-            # -----------------------------
-            # 결과를 tier-lv-name 구조로 정리
-            # -----------------------------
+            # 예외 처리된 결과를 빈 데이터로 변환
+            results = [r if isinstance(r, dict) else {"Items": []} for r in results]
+        
+            # tier-lv-name 구조로 정리
             results_dict = {}
             idx = 0
             for tier, names in item_tiers.items():
@@ -2052,33 +2045,32 @@ def fallback():
                         results_dict[tier][lv][nm] = results[idx]
                         idx += 1
         
-            # -----------------------------
-            # 결과 출력
-            # -----------------------------
+            # 결과 출력 (문자열 연산 최적화)
             lines = []
             for tier, names in item_tiers.items():
                 lines.append(f"💎 {tier}티어 보석 최저가")
                 for lv in item_levels:
-                    line_parts = []
+                    parts = []
                     for nm in names:
-                        data = results_dict[tier][lv][nm]
-        
-                        if not data.get("Items"):
-                            line_parts.append(f"{nm} 데이터 없음")
+                        items_list = results_dict[tier][lv][nm].get("Items", [])
+                        
+                        if not items_list:
+                            parts.append(f"{nm} 데이터 없음")
                             continue
-        
-                        items_with_price = [item for item in data["Items"]
-                                            if (item.get("AuctionInfo") or {}).get("BuyPrice") is not None]
-                        cheapest = min(items_with_price, key=lambda x: x["AuctionInfo"]["BuyPrice"], default=None)
-        
-                        if not cheapest:
-                            line_parts.append(f"{nm} 데이터 없음")
-                            continue
-        
-                        price = cheapest["AuctionInfo"]["BuyPrice"]
-                        line_parts.append(f"{nm} {price:,}💰")
-        
-                    lines.append(f"{lv}레벨 : " + " / ".join(line_parts))
+                        
+                        # 가격 있는 항목만 필터링하면서 최소값 찾기 (한 번에 처리)
+                        min_price = None
+                        for item in items_list:
+                            price = (item.get("AuctionInfo") or {}).get("BuyPrice")
+                            if price is not None and (min_price is None or price < min_price):
+                                min_price = price
+                        
+                        if min_price is None:
+                            parts.append(f"{nm} 데이터 없음")
+                        else:
+                            parts.append(f"{nm} {min_price:,}💰")
+                    
+                    lines.append(f"{lv}레벨 : " + " / ".join(parts))
                 lines.append("")
         
             response_text = "\n".join(lines)
@@ -3428,6 +3420,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
