@@ -2051,14 +2051,18 @@ def fallback():
                             lines.append(f"{item_name}: 데이터 없음")
                             continue
         
-                        # BuyPrice 기준 최저가 아이템 선택
-                        cheapest = min(
-                            data["Items"],
-                            key=lambda x: ((x.get("AuctionInfo") or {}).get("BuyPrice") or float("inf"))
+                        # BuyPrice가 None이 아닌 첫 번째 최저가 아이템 선택
+                        cheapest = next(
+                            (item for item in data["Items"] if (item.get("AuctionInfo") or {}).get("BuyPrice") is not None),
+                            None
                         )
+                        
+                        if not cheapest:
+                            lines.append(f"{item_name}: 데이터 없음")
+                            continue
+                        
                         name = cheapest.get("Name", item_name)
                         price = (cheapest.get("AuctionInfo") or {}).get("BuyPrice") or 0
-        
                         lines.append(f"{name}: {price:,}💰")
         
                 lines.append("")  # 티어 구분용 빈 줄
@@ -3411,6 +3415,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
