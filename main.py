@@ -1551,8 +1551,6 @@ def fallback():
             # 5개씩 끊어서 listCard 구성
             for i in range(0, len(menu_list), cards_per_page):
                 chunk = menu_list[i:i + cards_per_page]
-        
-                # 빈 리스트 방지
                 if not chunk:
                     continue
         
@@ -1564,39 +1562,35 @@ def fallback():
                         "imageUrl": menu["img"],
                         "action": "message",
                         "messageText": menu["msg"],
-                        "link": {"web": ""}  # 필수 링크값 보완
+                        "link": {"web": ""}
                     })
         
                 page_no = (i // cards_per_page) + 1
         
                 list_card = {
-                    "listCard": {
-                        "header": {
-                            "title": f"명령어 목록 {page_no}",
-                            "link": {"web": ""}  # header.link도 명시 필요
-                        },
-                        "items": list_items,  # 최소 1개 이상
-                        "buttons": [],
-                        "lock": False,
-                        "forwardable": True
-                    }
+                    "header": {
+                        "title": f"명령어 목록 {page_no}",
+                        "link": {"web": ""}
+                    },
+                    "items": list_items,
+                    "buttons": [],
+                    "lock": False,
+                    "forwardable": True
                 }
         
                 list_cards.append(list_card)
         
-            # list_cards가 비어있는 경우 예외 처리
+            # 비었을 때 예외 처리
             if not list_cards:
                 list_cards.append({
-                    "listCard": {
-                        "header": {"title": "명령어가 없습니다", "link": {"web": ""}},
-                        "items": [{"title": "현재 표시할 명령어가 없습니다.", "link": {"web": ""}}],
-                        "buttons": [],
-                        "lock": False,
-                        "forwardable": True
-                    }
+                    "header": {"title": "명령어가 없습니다", "link": {"web": ""}},
+                    "items": [{"title": "현재 표시할 명령어가 없습니다.", "link": {"web": ""}}],
+                    "buttons": [],
+                    "lock": False,
+                    "forwardable": True
                 })
         
-            # 캐러셀로 감싸기
+            # 캐러셀 구성 (listCard 직접 삽입)
             carousel = {
                 "carousel": {
                     "type": "listCard",
@@ -3141,6 +3135,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
