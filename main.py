@@ -481,7 +481,7 @@ def search_jewelry_engraving():
         return jsonify({"error": True, "message": str(e)}), 500
 
 # 보석 조회 함수
-def fetch_jewelry_engraving(item_name: str, page_no: int = 0, item_tier: int = None, item_grade: str):
+def fetch_jewelry_engraving(item_name: str, page_no: int = 0, item_tier: int = None, item_grade: str = ""):
     """
     보석 마켓 조회
     :param item_name: 검색할 보석 이름
@@ -3402,6 +3402,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
