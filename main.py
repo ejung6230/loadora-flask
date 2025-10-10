@@ -1998,40 +1998,41 @@ def fallback():
             item_tiers = {4: ["작열", "겁화"], 3: ["멸화", "홍염"]}
             item_levels = [10,9,8,7,6,5,4,3,2,1]
         
+            # -----------------------------
+            # 요청 리스트 생성 (출력 순서와 정확히 맞춤)
+            # -----------------------------
             requests_list = [
-                (f"{lv}레벨 {nm}의 보석", tier)
+                (lv, nm, tier)
                 for tier, names in item_tiers.items()
-                for lv, nm in product(item_levels, names)
+                for lv in item_levels
+                for nm in names
             ]
         
-            # -----------------------------
-            # ThreadPoolExecutor 기반 fetch_all
-            # -----------------------------
-            MAX_WORKERS = 20      # 동시 요청 제한
-            ITEM_TIMEOUT = 4.2       # 개별 요청 타임아웃
+            MAX_WORKERS = 20
+            ITEM_TIMEOUT = 4.2  # 개별 요청 타임아웃
         
+            # -----------------------------
+            # 안전한 fetch_all
+            # -----------------------------
             async def fetch_all_safe():
-                loop = asyncio.get_running_loop()
-                results = []
+                semaphore = asyncio.Semaphore(MAX_WORKERS)
         
-                with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-                    tasks = [loop.run_in_executor(executor, fetch_jewelry_engraving, name, 1, tier)
-                             for name, tier in requests_list]
-                    done, pending = await asyncio.wait(tasks, timeout=ITEM_TIMEOUT)
-        
-                    for task in done:
+                async def safe_fetch(lv, nm, tier):
+                    async with semaphore:
                         try:
-                            results.append(task.result())
+                            return await asyncio.wait_for(
+                                asyncio.to_thread(fetch_jewelry_engraving, f"{lv}레벨 {nm}의 보석", 1, tier),
+                                timeout=ITEM_TIMEOUT
+                            )
                         except Exception:
-                            results.append({"Items": []})  # 실패 시 빈 데이터
+                            return {"Items": []}  # 실패 시 빈 데이터
         
-                    # 타임아웃된 요청 처리
-                    for task in pending:
-                        results.append({"Items": []})
+                tasks = [safe_fetch(lv, nm, tier) for lv, nm, tier in requests_list]
+                return await asyncio.gather(*tasks)
         
-                return results
-        
-            # 기존 이벤트 루프 사용
+            # -----------------------------
+            # 실행
+            # -----------------------------
             try:
                 loop = asyncio.get_running_loop()
                 results = loop.run_until_complete(fetch_all_safe())
@@ -2039,17 +2040,28 @@ def fallback():
                 results = asyncio.run(fetch_all_safe())
         
             # -----------------------------
+            # 결과를 tier-lv-name 구조로 정리
+            # -----------------------------
+            results_dict = {}
+            idx = 0
+            for tier, names in item_tiers.items():
+                results_dict[tier] = {}
+                for lv in item_levels:
+                    results_dict[tier][lv] = {}
+                    for nm in names:
+                        results_dict[tier][lv][nm] = results[idx]
+                        idx += 1
+        
+            # -----------------------------
             # 결과 출력
             # -----------------------------
             lines = []
-            idx = 0
             for tier, names in item_tiers.items():
                 lines.append(f"💎 {tier}티어 보석 최저가")
                 for lv in item_levels:
                     line_parts = []
                     for nm in names:
-                        data = results[idx]
-                        idx += 1
+                        data = results_dict[tier][lv][nm]
         
                         if not data.get("Items"):
                             line_parts.append(f"{nm} 데이터 없음")
@@ -3416,6 +3428,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
