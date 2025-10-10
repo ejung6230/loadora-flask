@@ -1988,55 +1988,53 @@ def fallback():
         if jewelry_match:
             raw_input = jewelry_match.group(2).strip()  # 예: "보석10" 또는 "보석 10"
         
-            # 숫자 추출: 예를 들어 "보석10"이면 max_count=10
+            # 숫자 추출
             num_match = re.search(r"(\d+)", raw_input)
             max_count = int(num_match.group(1)) if num_match else None
         
-            # 모든 숫자 제거 후 item_name 사용
+            # 아이템 이름 추출
             item_name = re.sub(r"\d+", "", raw_input).strip()  # "보석10" -> "보석"
         
-            item_tiers = [4, 3]  # 4티어, 3티어 순서대로 출력
-            item_levels = [10,9,8,7,6,5,4,3,2,1]  # 10→1순서
+            # 티어, 레벨 정의
+            item_tiers = {4: ["작열", "겁화"], 3: ["멸화", "홍염"]}
+            item_levels = [10,9,8,7,6,5,4,3,2,1]
         
             lines = []
-            
-            for tier in item_tiers:
+        
+            for tier, tier_items in item_tiers.items():
                 lines.append(f"💎 {tier}티어 보석 최저가")
         
                 for lv in item_levels:
-                    item_name = str(lv)
                     page_no = 1
                     item_tier = tier
-
-                    print('item_name, page_no, item_tier', item_name, page_no, item_tier)
         
-                    data = fetch_jewelry_engraving(item_name, page_no, item_tier)
-                    data_items = data.get("Items", [])
-
-                    print(data)
-                    
-                    if not data_items:
-                        lines.append(f"{lv}레벨: 데이터 없음")
-                        continue
+                    level_prices = []
+                    for single_item_name in tier_items:
+                        data = fetch_jewelry_engraving(single_item_name, page_no, item_tier, lv)
+                        data_items = data.get("Items", [])
         
-                    # BuyPrice 기준 최저가 아이템 선택
-                    cheapest = min(
-                        data_items,
-                        key=lambda x: x.get("AuctionInfo", {}).get("BuyPrice", float("inf"))
-                    )
+                        if not data_items:
+                            level_prices.append(f"{single_item_name} 데이터 없음")
+                            continue
         
-                    name = cheapest.get("Name", f"{lv}레벨 보석")
-                    price = cheapest.get("AuctionInfo", {}).get("BuyPrice", 0)
+                        # BuyPrice 기준 최저가 아이템 선택
+                        cheapest = min(
+                            data_items,
+                            key=lambda x: x.get("AuctionInfo", {}).get("BuyPrice", float("inf"))
+                        )
+                        price = cheapest.get("AuctionInfo", {}).get("BuyPrice", 0)
+                        level_prices.append(f"{single_item_name} {price:,}💰")
         
-                    lines.append(f"{lv}레벨 {name}: {price:,}💰 ")
+                    # 티어 내 아이템별 가격 / 구분
+                    lines.append(f"{lv}레벨 : " + " / ".join(level_prices))
         
                 lines.append("")  # 티어 구분용 빈 줄
         
             response_text = "\n".join(lines)
-
+        
             if len(response_text) < 400:
                 use_share_button = True
-                
+        
             print(response_text)
         
         # ---------- 9. 유각 거래소 조회 관련 패턴 ----------
@@ -3382,6 +3380,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
