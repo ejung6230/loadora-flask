@@ -881,12 +881,9 @@ def fallback():
                 # 오늘 카게 정보
                 today = NOW_KST.date()
                 selected_island = None  # 접두사만 입력한 경우 전체 표시
-        
-                result = "◕ᴗ◕🌸\n오늘의 카오스게이트 정보를 알려드릴게요.\n"
-                result += "💡카게 전체 정보를 보려면 클릭하세요."
-                result += "――――――――――――――\n\n"
-
-        
+                remaining_text = ""
+                time_text = ""
+    
                 if chaos_gates:
                     icon = chaos_gates[0].get("ContentsIcon", "")
         
@@ -946,7 +943,7 @@ def fallback():
                         result += f"\n⏰ {remaining_text}\n"
                     else:
                         remaining_text = "오늘 남은 카오스게이트가 없습니다."
-                    
+                        
                     # ---------- 전체 일정 표시 ----------
                     overall = []
                     if overall_day_hours:
@@ -957,7 +954,7 @@ def fallback():
                     time_text = ", ".join(overall) if overall else "정보 없음"
                     if overall:
                         result += f"일정: {time_text}"
-                    
+
                     # ---------- 카드 footer 수정 ----------
                     card_footer = {
                         "title": f"⏰ {remaining_text}",
@@ -969,7 +966,7 @@ def fallback():
                     header_title = f"카오스게이트({WEEKDAY_KO[today.strftime('%A')]})"
         
                     items = [
-                        {"simpleText": {"text": result, "extra": {}}},
+                        {"simpleText": {"text": "◕ᴗ◕🌸\n오늘의 카오스게이트 정보를 알려드릴게요.\n💡카게 전체 정보를 보려면 클릭하세요.\n――――――――――――――\n\n", "extra": {}}},
                         {
                             "listCard": {
                                 "header": {"title": header_title},
@@ -3236,6 +3233,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
