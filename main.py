@@ -506,11 +506,11 @@ def fetch_jewelry_engraving(item_name: str, page_no: int = 0):
             }
         ],
         "Sort": "BIDSTART_PRICE", # [ BIDSTART_PRICE, BUY_PRICE, EXPIREDATE, ITEM_GRADE, ITEM_LEVEL, ITEM_QUALITY ]
-        "CategoryCode": 0,
-        "CharacterClass": "string",
+        "CategoryCode": 210000,
+        "CharacterClass": "",
         "ItemTier": null,
-        "ItemGrade": "string",
-        "ItemName": "string",
+        "ItemGrade": "",
+        "ItemName": "",
         "PageNo": 0,
         "SortCondition": "DESC"  # [ ASC, DESC ]
     }
@@ -3396,6 +3396,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
