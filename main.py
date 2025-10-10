@@ -830,7 +830,7 @@ def fallback():
                     for date_key in sorted(date_hours.keys()):
                         hours = date_hours[date_key]
                         day_hours = sorted(h for h in hours if 7 <= h <= 23)
-                        night_hours = sorted(h for h in hours if 0 <= h <= 5)
+                        night_hours = sorted(h for h in hours if 0 <= h <= 6)
         
                         day_part = f"{day_hours[0]:02d}시~{day_hours[-1]:02d}시" if day_hours else ""
                         night_part = f"다음날 {night_hours[0]:02d}시~{night_hours[-1]:02d}시" if night_hours else ""
@@ -3196,6 +3196,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
