@@ -129,6 +129,9 @@ def icon():
         return "URL 파라미터가 없습니다", 400
 
     try:
+        # URL 디코딩
+        icon_url = unquote(icon_url)
+
         # SVG 다운로드
         resp = requests.get(icon_url)
         resp.raise_for_status()
@@ -143,10 +146,14 @@ def icon():
         width, height = image.size
         new_width = int(width * (1 + border_ratio))
         new_height = int(height * (1 + border_ratio))
-        new_image = Image.new("RGBA", (new_width, new_height), (255, 255, 255, 0))  # 투명 배경
+
+        # 투명 배경 새 이미지
+        new_image = Image.new("RGBA", (new_width, new_height), (255, 255, 255, 0))
+
+        # 중앙에 합성
         paste_x = (new_width - width) // 2
         paste_y = (new_height - height) // 2
-        new_image.paste(image, (paste_x, paste_y), image)
+        new_image.alpha_composite(image, (paste_x, paste_y))
 
         # BytesIO로 반환
         output = BytesIO()
@@ -3221,6 +3228,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
