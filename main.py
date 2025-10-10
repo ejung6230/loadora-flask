@@ -15,6 +15,7 @@ from wcwidth import wcswidth
 import cairosvg
 from io import BytesIO
 from urllib.parse import unquote
+from PIL import Image
 
 
 # 로깅 설정
@@ -121,25 +122,42 @@ def ensure_png(icon_url):
 def icon():
     """
     ?url=SVG_URL 형식으로 요청
-    서버에서 SVG를 PNG로 변환 후 반환 (고화질 + CORS)
+    SVG를 PNG로 변환 후 여백 추가, 고화질, CORS 적용
     """
     icon_url = request.args.get("url")
     if not icon_url:
         return "URL 파라미터가 없습니다", 400
 
     try:
-        icon_url = unquote(icon_url)
+        # SVG 다운로드
         resp = requests.get(icon_url)
         resp.raise_for_status()
         svg_content = resp.content
 
+        # PNG 변환 (scale=4로 고화질)
         png_bytes = cairosvg.svg2png(bytestring=svg_content, scale=4)
+        image = Image.open(BytesIO(png_bytes)).convert("RGBA")
 
-        output = BytesIO(png_bytes)
+        # 여백 추가 (예: 20% 여백)
+        border_ratio = 0.2
+        width, height = image.size
+        new_width = int(width * (1 + border_ratio))
+        new_height = int(height * (1 + border_ratio))
+        new_image = Image.new("RGBA", (new_width, new_height), (255, 255, 255, 0))  # 투명 배경
+        paste_x = (new_width - width) // 2
+        paste_y = (new_height - height) // 2
+        new_image.paste(image, (paste_x, paste_y), image)
+
+        # BytesIO로 반환
+        output = BytesIO()
+        new_image.save(output, format="PNG")
+        output.seek(0)
+
         response = make_response(output.getvalue())
         response.headers.set('Content-Type', 'image/png')
-        response.headers.set('Access-Control-Allow-Origin', '*')  # PC/모바일 모두 허용
+        response.headers.set('Access-Control-Allow-Origin', '*')  # 모바일/PC 모두 허용
         return response
+
     except Exception as e:
         return f"SVG 처리 실패: {e}", 500
 
@@ -3203,6 +3221,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
