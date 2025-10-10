@@ -1569,7 +1569,6 @@ def fallback():
             골드_icon = "https://cdn-lostark.game.onstove.com/efui_iconatlas/money/money_4.png"
             사사게_icon = "https://search.pstatic.net/sunny?src=https%3A%2F%2Fstatic.inven.co.kr%2Fimage_2011%2Ffavicon_192x192.png%3Fv%3D2&type=f30_30_png_expire24"
             크리스탈_icon = "https://cdn-lostark.game.onstove.com/uploadfiles/shop/11ef8e95ad2349e1af58728fc7bbfb44.png"
-            명예_icon = "https://cdn-lostark.game.onstove.com/uploadfiles/notice/454f0145ddaa4534bc5d939461b7fd94.png"
             레이드_icon = "https://cdn-lostark.game.onstove.com/uploadfiles/notice/fd6945f9ffa24b029bd44fd19245e695.png"
             유각_icon = "https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_9_25.png"
             카게_icon = "https://cdn-lostark.game.onstove.com/efui_iconatlas/island_icon/island_icon_147.png"
@@ -1586,6 +1585,7 @@ def fallback():
             망원경_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/binoculars-fill.svg")
             말풍선_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/chat-dots-fill.svg")
             사람들_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/people-fill.svg")
+            정보_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/person-lines-fill.svg")
             
             
             # 명령어 목록 (가나다 순)
@@ -1601,7 +1601,7 @@ def fallback():
                 {"title": ".일정", "desc": "오늘의 컨텐츠 일정 확인", "msg": ".일정", "img": 일정_icon},
                 {"title": ".원정대 [단어]", "desc": "원정대 캐릭터 정보 조회", "msg": ".원정대", "img": 로아_icon},
                 {"title": ".주급", "desc": "원정대 주급 조회", "msg": ".주급", "img": 코인_icon},
-                {"title": ".정보 [단어]", "desc": "캐릭터 정보 조회", "msg": ".정보", "img": 명예_icon},
+                {"title": ".정보 [단어]", "desc": "캐릭터 정보 조회", "msg": ".정보", "img": 정보_icon},
                 {"title": ".카게", "desc": "카오스게이트 일정 조회", "msg": ".카게", "img": 카게_icon},
                 {"title": ".클골", "desc": "레이드 클리어 골드 조회", "msg": ".클골", "img": 골드_icon},
             ]
@@ -3203,6 +3203,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
