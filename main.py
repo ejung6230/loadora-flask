@@ -155,6 +155,7 @@ def icon():
         response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
         response.headers.set('Pragma', 'no-cache')
         response.headers.set('Expires', '0')
+        response.headers.set('Access-Control-Allow-Origin', '*')
 
         return response
 
@@ -1598,7 +1599,7 @@ def fallback():
             위험꼬깔_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/cone-striped.svg")
             사람들_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/people-fill.svg")
             정보_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/person-lines-fill.svg")
-            
+
             
             # 명령어 목록 (가나다 순)
             menu_list = [
@@ -3215,6 +3216,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
