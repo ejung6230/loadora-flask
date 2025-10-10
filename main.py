@@ -2051,7 +2051,7 @@ def fallback():
                     name = cheapest.get("Name", f"{lv}레벨 보석")
                     price = cheapest.get("AuctionInfo", {}).get("BuyPrice", 0)
         
-                    lines.append(f"{lv}레벨 {name}: {price:,}💰 ")
+                    lines.append(f"{name}: {price:,}💰 ")
         
                 lines.append("")  # 티어 구분용 빈 줄
         
@@ -3403,6 +3403,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
