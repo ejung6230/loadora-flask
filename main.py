@@ -14,6 +14,7 @@ from collections import defaultdict
 from wcwidth import wcswidth
 import cairosvg
 from io import BytesIO
+from urllib.parse import unquote
 
 
 # 로깅 설정
@@ -111,27 +112,33 @@ def fetch_lopec_ranking(nickname: str, character_class: str):
 def ensure_png(icon_url):
     """
     SVG URL을 받아 서버에서 PNG로 변환 후 제공하는 URL 반환
+    URL 인코딩 포함
     """
-    return f"https://loadora-flask.onrender.com/icon?url={icon_url}"
+    from urllib.parse import quote
+    return f"https://loadora-flask.onrender.com/icon?url={quote(icon_url, safe='')}"
 
 @app.route("/icon")
 def icon():
     """
     ?url=SVG_URL 형식으로 요청
-    서버에서 SVG를 PNG로 변환 후 반환
+    서버에서 SVG를 PNG로 변환 후 반환 (고화질)
     """
     icon_url = request.args.get("url")
     if not icon_url:
         return "URL 파라미터가 없습니다", 400
 
     try:
+        # URL 디코딩
+        icon_url = unquote(icon_url)
+
         # SVG 다운로드
         resp = requests.get(icon_url)
         resp.raise_for_status()
         svg_content = resp.content
 
-        # PNG 변환 (메모리)
-        png_bytes = cairosvg.svg2png(bytestring=svg_content)
+        # PNG 변환 (메모리, 고화질)
+        # scale=4: SVG를 4배 확대 후 PNG 생성 → 흐림 방지
+        png_bytes = cairosvg.svg2png(bytestring=svg_content, scale=4)
 
         # BytesIO로 반환
         return send_file(
@@ -141,7 +148,6 @@ def icon():
         )
     except Exception as e:
         return f"SVG 처리 실패: {e}", 500
-
 
 # 로펙 점수 post
 def fetch_lopec_character(nickname: str, character_class: str):
@@ -3202,6 +3208,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
