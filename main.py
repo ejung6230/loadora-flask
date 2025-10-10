@@ -1525,17 +1525,23 @@ def fallback():
         if match_command_list:
 
             items = []
-        
-            # 예시 메뉴
+
+            # 명령어 목록
             menu_list = [
-                {"title": "로아 일정", "desc": "오늘 모험섬, 필드보스 등 일정 보기", "msg": ".일정", "img": "https://example.com/loaschedule.png"},
-                {"title": "유물 각인서", "desc": "유물 각인서 거래소 시세 조회", "msg": ".유각", "img": "https://example.com/relic.png"},
-                {"title": "모험섬", "desc": "오늘의 모험섬 정보 보기", "msg": ".모험섬", "img": "https://example.com/island.png"},
-                {"title": "기타 기능", "desc": "다른 유용한 명령어 보기", "msg": ".도움말", "img": "https://example.com/help.png"},
-                {"title": "항해 지도", "desc": "항해 콘텐츠 위치 보기", "msg": ".항해", "img": "https://example.com/sailing.png"},
-                {"title": "주간 레이드", "desc": "주간 콘텐츠 일정 확인", "msg": ".주간", "img": "https://example.com/raid.png"},
-                {"title": "카드 각성", "desc": "각성 조합 계산기", "msg": ".카드", "img": "https://example.com/card.png"},
-                {"title": "전투 통계", "desc": "내 전투 데이터 분석", "msg": ".전투", "img": "https://example.com/stats.png"},
+                {"title": ".공지", "desc": "공지 관련 명령어", "msg": ".공지", "img": "https://example.com/notice.png"},
+                {"title": ".떠상", "desc": "떠오르는 상점 정보", "msg": ".떠상", "img": "https://example.com/shop.png"},
+                {"title": ".마리샵", "desc": "마리샵 관련 명령어", "msg": ".마리샵", "img": "https://example.com/marishop.png"},
+                {"title": ".모험섬", "desc": "오늘의 모험섬 정보 보기", "msg": ".모험섬", "img": "https://example.com/island.png"},
+                {"title": ".사사게", "desc": "사사게 관련 명령어", "msg": ".사사게", "img": "https://example.com/sasage.png"},
+                {"title": ".시너지", "desc": "시너지 관련 정보", "msg": ".시너지", "img": "https://example.com/synergy.png"},
+                {"title": ".유각", "desc": "유물 각인서 거래소 시세 조회", "msg": ".유각", "img": "https://example.com/relic.png"},
+                {"title": ".이벤트", "desc": "이벤트 관련 명령어", "msg": ".이벤트", "img": "https://example.com/event.png"},
+                {"title": ".일정", "desc": "오늘 일정 확인", "msg": ".일정", "img": "https://example.com/schedule.png"},
+                {"title": ".원정대", "desc": "원정대 관련 정보", "msg": ".원정대", "img": "https://example.com/expedition.png"},
+                {"title": ".주급", "desc": "주급 관련 명령어", "msg": ".주급", "img": "https://example.com/weekly.png"},
+                {"title": ".정보", "desc": "게임 정보 확인", "msg": ".정보", "img": "https://example.com/info.png"},
+                {"title": ".카게", "desc": "카게 관련 명령어", "msg": ".카게", "img": "https://example.com/kage.png"},
+                {"title": ".클골", "desc": "클골 관련 정보", "msg": ".클골", "img": "https://example.com/cleargold.png"},
             ]
         
             # 안내 문구
@@ -3135,6 +3141,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
