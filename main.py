@@ -776,32 +776,34 @@ def fallback():
             chaos_gates = [item for item in data if item.get("CategoryName") == "카오스게이트"]
         
             # 항상 초기화
+            date_hours = defaultdict(list)
             overall_day_hours = []
             overall_night_hours = []
+
             remaining_text = ""
             time_text = ""
             header_title = f"카오스게이트({WEEKDAY_KO[TODAY.strftime('%A')]})"
             cards = []
         
             # ---------- 입장 시간 정리 및 전체 일정 채우기 ----------
-            date_hours = defaultdict(list)
             for gate in chaos_gates:
                 for t in gate.get("StartTimes", []):
                     dt = datetime.fromisoformat(t)
-                    date = dt.date()
-                    hour = dt.hour
-        
-                    # 00~06시는 전날 기준
-                    if 0 <= hour <= 6:
-                        date -= timedelta(days=1)
-        
-                    date_hours[date].append(hour)
-        
-                    # 전체 일정 범위 채우기
-                    if 7 <= hour <= 23:
-                        overall_day_hours.append(hour)
-                    elif 0 <= hour <= 5:
-                        overall_night_hours.append(hour)
+            
+                    # DAY_START ~ DAY_END 범위 기준 날짜 계산
+                    if dt < DAY_START:
+                        # DAY_START 이전이면 전날 날짜로
+                        date = (DAY_START - timedelta(days=1)).date()
+                    else:
+                        date = DAY_START.date()
+            
+                    date_hours[date].append(dt.hour)
+            
+                    # 전체 일정 채우기
+                    if DAY_START <= dt <= DAY_END:
+                        overall_day_hours.append(dt.hour)
+                    else:
+                        overall_night_hours.append(dt.hour)
         
             # ---------- 전체 조회 처리 ----------
             if match_chaos_gate.group(2):
@@ -3192,6 +3194,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
