@@ -1996,57 +1996,45 @@ def fallback():
         
             item_tiers = {4: ["작열", "겁화"], 3: ["멸화", "홍염"]}
             item_levels = [10,9,8,7,6,5,4,3,2,1]
-            lines = []
-        
-            # ---------------------------
-            # 모든 요청을 한 번에 펼치기
-            # ---------------------------
-            requests_list = []
-            for tier, names in item_tiers.items():
-                for lv in item_levels:
-                    for nm in names:
-                        item_name = f"{lv}레벨 {nm}의 보석"
-                        requests_list.append((item_name, tier))
-        
-            # ---------------------------
-            # asyncio.to_thread로 병렬 실행
-            # ---------------------------
+            
+            requests_list = [
+                (f"{lv}레벨 {nm}의 보석", tier)
+                for tier, names in item_tiers.items()
+                for lv, nm in product(item_levels, names)
+            ]
+            
             async def fetch_all():
                 tasks = [asyncio.to_thread(fetch_jewelry_engraving, name, 1, tier) for name, tier in requests_list]
                 return await asyncio.gather(*tasks, return_exceptions=True)
-        
+            
             results = asyncio.run(fetch_all())
-        
-            # ---------------------------
-            # 출력
-            # ---------------------------
+            
+            lines = []
             idx = 0
             for tier, names in item_tiers.items():
                 lines.append(f"💎 {tier}티어 보석 최저가")
-                for lv in item_levels:
-                    for nm in names:
-                        data = results[idx]
-                        idx += 1
-                        item_name = f"{lv}레벨 {nm}의 보석"
-        
-                        if isinstance(data, Exception) or not data.get("Items"):
-                            lines.append(f"{item_name}: 데이터 없음")
-                            continue
-        
-                        cheapest = next(
-                            (item for item in data["Items"] if (item.get("AuctionInfo") or {}).get("BuyPrice") is not None),
-                            None
-                        )
-                        if not cheapest:
-                            lines.append(f"{item_name}: 데이터 없음")
-                            continue
-        
-                        name = cheapest.get("Name", item_name)
-                        price = (cheapest.get("AuctionInfo") or {}).get("BuyPrice") or 0
-                        lines.append(f"{name}: {price:,}💰")
-        
+                for lv, nm in product(item_levels, names):
+                    data = results[idx]
+                    idx += 1
+                    item_name = f"{lv}레벨 {nm}의 보석"
+            
+                    if isinstance(data, Exception) or not data.get("Items"):
+                        lines.append(f"{item_name}: 데이터 없음")
+                        continue
+            
+                    items_with_price = [item for item in data["Items"] if (item.get("AuctionInfo") or {}).get("BuyPrice") is not None]
+                    cheapest = min(items_with_price, key=lambda x: x["AuctionInfo"]["BuyPrice"]) if items_with_price else None
+            
+                    if not cheapest:
+                        lines.append(f"{item_name}: 데이터 없음")
+                        continue
+            
+                    name = cheapest.get("Name", item_name)
+                    price = cheapest["AuctionInfo"]["BuyPrice"]
+                    lines.append(f"{name}: {price:,}💰")
+            
                 lines.append("")
-        
+            
             response_text = "\n".join(lines)
             use_share_button = len(response_text) < 400
             print(response_text)
@@ -3394,6 +3382,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
