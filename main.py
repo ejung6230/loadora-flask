@@ -108,10 +108,10 @@ def fetch_lopec_ranking(nickname: str, character_class: str):
         return {"error": f"로펙 서버와 통신 중 오류가 발생했습니다. ({e})"}
 
 # -----------------------------
-# SVG → PNG 변환 (크기 & 여백 파라미터 지원)
+# SVG → PNG 변환 (카톡 친화적)
 # -----------------------------
 def ensure_png(icon_url, size=32, border_ratio=0.2):
-    """SVG URL을 받아 서버에서 PNG로 변환 후 제공하는 URL 반환"""
+    """SVG URL을 받아 PNG로 변환 후 제공하는 안전 URL 반환"""
     return f"https://loadora-flask.onrender.com/icon?url={quote(icon_url, safe='')}&size={size}&border={border_ratio}"
 
 @app.route("/icon")
@@ -120,60 +120,45 @@ def icon():
     if not icon_url:
         return "URL 파라미터가 없습니다", 400
 
-    # 파라미터: 크기와 여백
     try:
         size = int(request.args.get("size", 32))
         border_ratio = float(request.args.get("border", 0.2))
-        if not (16 <= size <= 64):
-            size = 32
-        if not (0 <= border_ratio <= 1):
-            border_ratio = 0.2
+        size = max(16, min(size, 64))
+        border_ratio = max(0, min(border_ratio, 0.5))
     except:
         size = 32
         border_ratio = 0.2
 
     try:
-        # URL 디코딩
         icon_url = unquote(icon_url)
-
-        # SVG 다운로드 (카톡 WebView 친화적 User-Agent)
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/138.0.0.0 Safari/537.36"}
         resp = requests.get(icon_url, headers=headers, timeout=10)
         resp.raise_for_status()
         svg_content = resp.content
 
-        # PNG 변환
-        png_bytes = cairosvg.svg2png(bytestring=svg_content, scale=4)
+        # SVG → PNG 변환 (원본 크기 유지)
+        png_bytes = cairosvg.svg2png(bytestring=svg_content)
         image = Image.open(BytesIO(png_bytes)).convert("RGBA")
 
-        # -----------------------------
         # 정사각형 크롭
-        # -----------------------------
-        width, height = image.size
-        if width != height:
-            if width > height:
-                left = (width - height) // 2
-                right = left + height
-                top = 0
-                bottom = height
+        w, h = image.size
+        if w != h:
+            if w > h:
+                left = (w - h) // 2
+                image = image.crop((left, 0, left + h, h))
             else:
-                top = (height - width) // 2
-                bottom = top + width
-                left = 0
-                right = width
-            image = image.crop((left, top, right, bottom))
+                top = (h - w) // 2
+                image = image.crop((0, top, w, top + w))
 
-        # -----------------------------
-        # 지정 크기 + 여백
-        # -----------------------------
-        target_size = size
-        new_size = int(target_size * (1 + border_ratio))
-        new_image = Image.new("RGBA", (new_size, new_size), (255, 255, 255, 0))
-        paste_pos = ((new_size - target_size) // 2, (new_size - target_size) // 2)
-        image_resized = image.resize((target_size, target_size), Image.ANTIALIAS)
-        new_image.alpha_composite(image_resized, paste_pos)
+        # 최종 크기 + 여백
+        final_size = size
+        canvas_size = int(final_size * (1 + border_ratio))
+        new_image = Image.new("RGB", (canvas_size, canvas_size), (255, 255, 255))
+        resized = image.resize((final_size, final_size), Image.ANTIALIAS)
+        paste_pos = ((canvas_size - final_size) // 2, (canvas_size - final_size) // 2)
+        new_image.paste(resized, paste_pos)
 
-        # BytesIO로 PNG 반환
+        # PNG BytesIO로 반환
         output = BytesIO()
         new_image.save(output, format="PNG")
         output.seek(0)
@@ -181,7 +166,8 @@ def icon():
         return send_file(
             output,
             mimetype='image/png',
-            as_attachment=False
+            as_attachment=False,
+            download_name=None
         )
 
     except Exception as e:
@@ -3210,6 +3196,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
