@@ -2008,7 +2008,7 @@ def fallback():
             # ThreadPoolExecutor 기반 fetch_all
             # -----------------------------
             MAX_WORKERS = 20      # 동시 요청 제한
-            ITEM_TIMEOUT = 3       # 개별 요청 타임아웃
+            ITEM_TIMEOUT = 4.2       # 개별 요청 타임아웃
         
             async def fetch_all_safe():
                 loop = asyncio.get_running_loop()
@@ -3416,6 +3416,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
