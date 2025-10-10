@@ -423,7 +423,7 @@ def fetch_auctions_option():
 
 # 거래소 아이템 조회
 @app.route('/auctions_items', methods=['POST'])
-def get_markets_items():
+def get_auctions_items():
     try:
         request_data = request.get_json()  # 클라이언트에서 전달한 검색 옵션(JSON body)
         data = fetch_auctions_items(request_data)
@@ -456,7 +456,7 @@ def fetch_auctions_items(payload: dict):
         raise Exception(f"서버와 통신 중 오류가 발생했습니다. ({e})") from e
 
 
-@app.route('/markets/jewelry_engraving', methods=['GET'])
+@app.route('/auctions/jewelry_engraving', methods=['GET'])
 def search_jewelry_engraving():
     """
     보석 검색 함수
@@ -464,7 +464,7 @@ def search_jewelry_engraving():
       - item_name: 검색할 보석 이름
       - page_no: 조회할 페이지 번호 (선택, 기본값 0)
     예시: 
-      https://loadora-flask.onrender.com/markets/jewelry_engraving?item_name=7레벨&page_no=1
+      https://loadora-flask.onrender.com/auctions/jewelry_engraving?item_name=7레벨&page_no=1
     """
     try:
         item_name = request.args.get("item_name", "")
@@ -3396,6 +3396,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
