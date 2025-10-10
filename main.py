@@ -486,29 +486,29 @@ def fetch_jewelry_engraving(item_name: str, page_no: int = 0):
     payload = {
         "ItemLevelMin": 0,
         "ItemLevelMax": 0,
-        "ItemGradeQuality": null,
-        "ItemUpgradeLevel": null,
-        "ItemTradeAllowCount": null,
+        "ItemGradeQuality": None,
+        "ItemUpgradeLevel": None,
+        "ItemTradeAllowCount": None,
         "SkillOptions": [
             {
-                "FirstOption": null,
-                "SecondOption": null,
-                "MinValue": null,
-                "MaxValue": null
+                "FirstOption": None,
+                "SecondOption": None,
+                "MinValue": None,
+                "MaxValue": None
             }
         ],
         "EtcOptions": [
             {
-                "FirstOption": null,
-                "SecondOption": null,
-                "MinValue": null,
-                "MaxValue": null
+                "FirstOption": None,
+                "SecondOption": None,
+                "MinValue": None,
+                "MaxValue": None
             }
         ],
         "Sort": "BIDSTART_PRICE", # [ BIDSTART_PRICE, BUY_PRICE, EXPIREDATE, ITEM_GRADE, ITEM_LEVEL, ITEM_QUALITY ]
         "CategoryCode": 210000,
         "CharacterClass": "",
-        "ItemTier": null,
+        "ItemTier": None,
         "ItemGrade": "",
         "ItemName": item_name,
         "PageNo": page_no,
@@ -1109,8 +1109,8 @@ def fallback():
                         result += "❚ 모험섬 입장 시간\n"
                         
                         if start_times_raw is None:
-                            # null 그대로 표시
-                            result += "- null\n"
+                            # None 그대로 표시
+                            result += "- None\n"
                         else:
                             start_times = start_times_raw or []  # 빈 리스트 방어
                             for t in start_times:
@@ -3396,6 +3396,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
