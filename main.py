@@ -108,11 +108,11 @@ def fetch_lopec_ranking(nickname: str, character_class: str):
         return {"error": f"로펙 서버와 통신 중 오류가 발생했습니다. ({e})"}
 
 # -----------------------------
-# SVG → PNG 변환 함수
+# SVG → PNG 변환 (크기 & 여백 파라미터 지원)
 # -----------------------------
-def ensure_png(icon_url):
-    """SVG URL을 받아 서버에서 PNG로 변환 후 제공하는 URL 반환 (URL 인코딩 포함)"""
-    return f"https://loadora-flask.onrender.com/icon?url={quote(icon_url, safe='')}"
+def ensure_png(icon_url, size=32, border_ratio=0.2):
+    """SVG URL을 받아 서버에서 PNG로 변환 후 제공하는 URL 반환"""
+    return f"https://loadora-flask.onrender.com/icon?url={quote(icon_url, safe='')}&size={size}&border={border_ratio}"
 
 @app.route("/icon")
 def icon():
@@ -120,12 +120,25 @@ def icon():
     if not icon_url:
         return "URL 파라미터가 없습니다", 400
 
+    # 파라미터: 크기와 여백
+    try:
+        size = int(request.args.get("size", 32))
+        border_ratio = float(request.args.get("border", 0.2))
+        if not (16 <= size <= 64):
+            size = 32
+        if not (0 <= border_ratio <= 1):
+            border_ratio = 0.2
+    except:
+        size = 32
+        border_ratio = 0.2
+
     try:
         # URL 디코딩
         icon_url = unquote(icon_url)
 
-        # SVG 다운로드
-        resp = requests.get(icon_url)
+        # SVG 다운로드 (카톡 WebView 친화적 User-Agent)
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/138.0.0.0 Safari/537.36"}
+        resp = requests.get(icon_url, headers=headers, timeout=10)
         resp.raise_for_status()
         svg_content = resp.content
 
@@ -133,31 +146,43 @@ def icon():
         png_bytes = cairosvg.svg2png(bytestring=svg_content, scale=4)
         image = Image.open(BytesIO(png_bytes)).convert("RGBA")
 
-        # 여백 추가
-        border_ratio = 0.2
+        # -----------------------------
+        # 정사각형 크롭
+        # -----------------------------
         width, height = image.size
-        new_width = int(width * (1 + border_ratio))
-        new_height = int(height * (1 + border_ratio))
-        new_image = Image.new("RGBA", (new_width, new_height), (255, 255, 255, 0))
-        paste_x = (new_width - width) // 2
-        paste_y = (new_height - height) // 2
-        new_image.alpha_composite(image, (paste_x, paste_y))
+        if width != height:
+            if width > height:
+                left = (width - height) // 2
+                right = left + height
+                top = 0
+                bottom = height
+            else:
+                top = (height - width) // 2
+                bottom = top + width
+                left = 0
+                right = width
+            image = image.crop((left, top, right, bottom))
+
+        # -----------------------------
+        # 지정 크기 + 여백
+        # -----------------------------
+        target_size = size
+        new_size = int(target_size * (1 + border_ratio))
+        new_image = Image.new("RGBA", (new_size, new_size), (255, 255, 255, 0))
+        paste_pos = ((new_size - target_size) // 2, (new_size - target_size) // 2)
+        image_resized = image.resize((target_size, target_size), Image.ANTIALIAS)
+        new_image.alpha_composite(image_resized, paste_pos)
 
         # BytesIO로 PNG 반환
         output = BytesIO()
         new_image.save(output, format="PNG")
         output.seek(0)
 
-        # send_file 대신 make_response + 헤더 설정
-        response = make_response(output.read())
-        response.headers.set('Content-Type', 'image/png')
-        response.headers.set('Content-Disposition', 'inline', filename='icon.png')
-        response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
-        response.headers.set('Pragma', 'no-cache')
-        response.headers.set('Expires', '0')
-        response.headers.set('Access-Control-Allow-Origin', '*')
-
-        return response
+        return send_file(
+            output,
+            mimetype='image/png',
+            as_attachment=False
+        )
 
     except Exception as e:
         return f"SVG 처리 실패: {e}", 500
@@ -3216,6 +3241,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
