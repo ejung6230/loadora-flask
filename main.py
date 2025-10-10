@@ -1587,7 +1587,6 @@ def fallback():
 
             로아_icon = "https://search.pstatic.net/sunny?src=https%3A%2F%2Fcdn-lostark.game.onstove.com%2F2018%2Fobt%2Fassets%2Fimages%2Fcommon%2Ficon%2Ffavicon.ico%3Fv%3D20251001074529&type=f30_30_png_expire24"
             골드_icon = "https://cdn-lostark.game.onstove.com/efui_iconatlas/money/money_4.png"
-            사사게_icon = "https://search.pstatic.net/sunny?src=https%3A%2F%2Fstatic.inven.co.kr%2Fimage_2011%2Ffavicon_192x192.png%3Fv%3D2&type=f30_30_png_expire24"
             크리스탈_icon = "https://cdn-lostark.game.onstove.com/uploadfiles/shop/11ef8e95ad2349e1af58728fc7bbfb44.png"
             레이드_icon = "https://cdn-lostark.game.onstove.com/uploadfiles/notice/fd6945f9ffa24b029bd44fd19245e695.png"
             유각_icon = "https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_9_25.png"
@@ -1603,7 +1602,7 @@ def fallback():
             크리스탈_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/gem.svg")
             위치_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/geo-alt-fill.svg")
             망원경_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/binoculars-fill.svg")
-            말풍선_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/chat-dots-fill.svg")
+            위험꼬깔_icon = ensure_png("cone-striped")
             사람들_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/people-fill.svg")
             정보_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/person-lines-fill.svg")
             
@@ -1614,7 +1613,7 @@ def fallback():
                 {"title": ".떠상", "desc": "떠돌이 상인 정보 조회", "msg": ".떠상", "img": 위치_icon},
                 {"title": ".마리샵", "desc": "마리샵 아이템 조회", "msg": ".마리샵", "img": 카트_icon},
                 {"title": ".모험섬", "desc": "오늘의 모험섬 정보 조회", "msg": ".모험섬", "img": 망원경_icon},
-                {"title": ".사사게 [단어]", "desc": "인벤 사건사고게시판 검색", "msg": ".사사게", "img": 말풍선_icon},
+                {"title": ".사사게 [단어]", "desc": "인벤 사건사고게시판 검색", "msg": ".사사게", "img": 위험꼬깔_icon},
                 {"title": ".시너지", "desc": "시너지 정보 조회", "msg": ".시너지", "img": 사람들_icon},
                 {"title": ".유각", "desc": "유물 각인서 거래소 시세 조회", "msg": ".유각", "img": 유각_icon},
                 {"title": ".이벤트", "desc": "진행중인 이벤트 조회", "msg": ".이벤트", "img": 이벤트_icon},
@@ -3223,6 +3222,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
