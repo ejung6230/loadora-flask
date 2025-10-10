@@ -2014,22 +2014,20 @@ def fallback():
                 for lv in item_levels:
                     for nm in names:
                         item_name = f"{lv}레벨 {nm}의 보석"
-                        # lambda default arg 사용해서 값 고정
                         fetch_funcs.append(lambda item_name=item_name, tier=tier: fetch_jewelry_engraving(item_name, 1, tier))
         
             # ---------------------------
-            # 비동기 실행
+            # 비동기 실행 (run_in_executor로 동기 함수 병렬 실행)
             # ---------------------------
-            async def fetch_item_async(session, fetch_func):
+            async def fetch_item_async(fetch_func):
                 loop = asyncio.get_event_loop()
                 data = await loop.run_in_executor(None, fetch_func)
                 return data
         
             async def fetch_items_bulk(fetch_funcs):
-                async with aiohttp.ClientSession() as session:
-                    tasks = [fetch_item_async(session, func) for func in fetch_funcs]
-                    results = await asyncio.gather(*tasks, return_exceptions=True)
-                    return results
+                tasks = [fetch_item_async(func) for func in fetch_funcs]
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+                return results
         
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
@@ -2051,16 +2049,16 @@ def fallback():
                             lines.append(f"{item_name}: 데이터 없음")
                             continue
         
-                        # BuyPrice가 None이 아닌 첫 번째 최저가 아이템 선택
+                        # BuyPrice가 None이 아닌 첫 번째 아이템 선택
                         cheapest = next(
                             (item for item in data["Items"] if (item.get("AuctionInfo") or {}).get("BuyPrice") is not None),
                             None
                         )
-                        
+        
                         if not cheapest:
                             lines.append(f"{item_name}: 데이터 없음")
                             continue
-                        
+        
                         name = cheapest.get("Name", item_name)
                         price = (cheapest.get("AuctionInfo") or {}).get("BuyPrice") or 0
                         lines.append(f"{name}: {price:,}💰")
@@ -3415,6 +3413,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
