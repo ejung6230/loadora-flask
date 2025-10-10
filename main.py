@@ -458,8 +458,8 @@ def fetch_jewelry_engraving(item_name: str, page_no: int = 0):
     :param page_no: 조회할 페이지 번호 (기본값 0)
     :return: API 응답 데이터
     """
-    
-    # payload = {여기 수정해야함
+    # 여기 수정해야함
+    payload = {
         "Sort": "CURRENT_MIN_PRICE",  # [GRADE, YDAY_AVG_PRICE, RECENT_PRICE, CURRENT_MIN_PRICE]
         "CategoryCode": 220000,
         "CharacterClass": "",
@@ -3312,6 +3312,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
