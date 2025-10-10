@@ -871,20 +871,6 @@ def fallback():
                         if remaining_time:
                             break
         
-                    if remaining_time:
-                        hours_left, remainder = divmod(int(remaining_time.total_seconds()), 3600)
-                        minutes_left = remainder // 60
-                        result += f"\n⏰ {next_hour_display}시까지 {hours_left}시간 {minutes_left}분 남았습니다.\n"
-        
-                    # ---------- 전체 일정 표시 (범위 형태) ----------
-                    overall = []
-                    if overall_day_hours:
-                        overall.append(f"{min(overall_day_hours):02d}시~{max(overall_day_hours):02d}시")
-                    if overall_night_hours:
-                        overall.append(f"다음날 {min(overall_night_hours):02d}시~{max(overall_night_hours):02d}시")
-                    if overall:
-                        result += f"일정: {', '.join(overall)}\n"
-        
                     items = [{"simpleText": {"text": result, "extra": {}}}]
         
                 else:
@@ -953,7 +939,7 @@ def fallback():
                     if remaining_time:
                         hours_left, remainder = divmod(int(remaining_time.total_seconds()), 3600)
                         minutes_left = remainder // 60
-                        remaining_text = f"⏰ {next_hour_display}시까지 {hours_left}시간 {minutes_left}분 남았습니다.\n"
+                        result += f"\n⏰ {next_hour_display}시까지 {hours_left}시간 {minutes_left}분 남았습니다.\n"
         
                     # ---------- 전체 일정 표시 (범위 형태) ----------
                     overall = []
@@ -962,7 +948,8 @@ def fallback():
                     if overall_night_hours:
                         overall.append(f"다음날 {min(overall_night_hours):02d}시~{max(overall_night_hours):02d}시")
                     if overall:
-                        time_text = f"일정: {', '.join(overall)}\n"
+                        result += f"일정: {', '.join(overall)}"
+                        
         
                     card_footer = {
                         "title": f"⏰ {remaining_text}",
@@ -3241,6 +3228,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
