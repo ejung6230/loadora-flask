@@ -4,4 +4,4 @@ gunicorn
 flask-cors
 wcwidth
 cairosvg
-
+aiohttp
