@@ -464,12 +464,18 @@ def search_jewelry_engraving():
       - item_name: 검색할 보석 이름
       - page_no: 조회할 페이지 번호 (선택, 기본값 0)
     예시: 
-      https://loadora-flask.onrender.com/auctions/jewelry_engraving?item_name=7레벨&page_no=1
+      https://loadora-flask.onrender.com/auctions/jewelry_engraving?item_name=7레벨&page_no=1&item_tier=4&item_grade=전설
     """
     try:
         item_name = request.args.get("item_name", "")
-        page_no = int(request.args.get("page_no", 0))  # 기본값 0
-        data = fetch_jewelry_engraving(item_name, page_no)  # 페이지 번호 인자로 전달
+        page_no = int(request.args.get("page_no", 0))  # 기본값 0, 페이지 번호 인자로 전달
+        item_grade = request.args.get("item_grade", "")
+        
+        # 숫자형으로 변환 (없으면 None)
+        item_tier = request.args.get("item_tier")  # 문자열 그대로 받아서 None 체크
+        item_tier = int(item_tier) if item_tier and item_tier.isdigit() else None
+        
+        data = fetch_jewelry_engraving(item_name, page_no, item_tier, item_grade)
         return jsonify(data)
     except Exception as e:
         return jsonify({"error": True, "message": str(e)}), 500
@@ -3396,6 +3402,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
