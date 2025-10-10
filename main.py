@@ -12,6 +12,7 @@ import re
 import logging
 from collections import defaultdict
 from wcwidth import wcswidth
+import cairosvg
 
 
 # 로깅 설정
@@ -102,6 +103,32 @@ def fetch_lopec_ranking(nickname: str, character_class: str):
 
     except requests.exceptions.RequestException as e:
         return {"error": f"로펙 서버와 통신 중 오류가 발생했습니다. ({e})"}
+
+# -----------------------------
+# SVG → PNG 변환 함수
+# -----------------------------
+def ensure_png(icon_url, save_dir="icons_png"):
+    """
+    URL이 SVG이면 PNG로 변환 후 로컬 경로 반환.
+    PNG이면 그대로 반환.
+    """
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    if icon_url.lower().endswith(".svg"):
+        # SVG 파일 이름 추출
+        file_name = icon_url.split("/")[-1].split("?")[0].replace(".svg", ".png")
+        save_path = os.path.join(save_dir, file_name)
+
+        if not os.path.exists(save_path):
+            try:
+                cairosvg.svg2png(url=icon_url, write_to=save_path)
+            except Exception as e:
+                print(f"SVG 변환 실패: {icon_url} -> {e}")
+                return icon_url  # 실패 시 원래 URL 반환
+        return save_path
+    else:
+        return icon_url  # PNG 등은 그대로 반환
 
 # 로펙 점수 post
 def fetch_lopec_character(nickname: str, character_class: str):
@@ -1536,11 +1563,13 @@ def fallback():
             카게_icon = "https://cdn-lostark.game.onstove.com/efui_iconatlas/island_icon/island_icon_147.png"
 
             # 부트스트랩 아이콘
-            공지_icon = "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/megaphone.svg"
-            일정_icon = "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/calendar-check.svg"
-            이벤트_icon = "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/gift.svg"
-            떠상_icon = "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/person-fill.svg"
-            코인_icon = "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/coin.svg"
+            # -----------------------------
+            공지_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/megaphone.svg")
+            일정_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/calendar-check.svg")
+            이벤트_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/gift.svg")
+            떠상_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/person-fill.svg")
+            코인_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/coin.svg")
+            카트_icon = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/cart2.svg")
             
             # 명령어 목록 (가나다 순)
             menu_list = [
@@ -3157,6 +3186,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
