@@ -325,7 +325,7 @@ def parse_shop_items(html):
         second_digits = re.findall(r'<span class="flip-clock-divider seconds">.*?</span>.*?<ul class="flip.*?">.*?<li class="flip-clock-active" data-digit="(\d+)"', html, re.DOTALL)
 
         if not hour_digits or not minute_digits or not second_digits:
-            return "⏰ 정보를 불러올 수 없습니다."
+            return "⏰ 새 상품 입고까지 시간을 불러올 수 없습니다."
         
         hours = ''.join(hour_digits).zfill(2) if hour_digits else "00"
         minutes = ''.join(minute_digits).zfill(2) if minute_digits else "00"
@@ -3581,6 +3581,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
