@@ -263,9 +263,10 @@ def parse_shop_items(html):
     
     # --- 아이템 패턴 ---
     item_pattern = re.compile(
-        r'<img\s+src="([^"]+)"[^>]*>\s*.*?<span class="item-name">(.+?)</span>.*?class="list__price".*?<em>(\d+)</em>',
+        r'<img\s+src="([^"]+)"[^>]*>.*?<span class="item-name">(.+?)</span>.*?class="list__price".*?<em>(\d+)</em>(?:\s*<del>(\d+)</del>)?',
         re.DOTALL
     )
+
     
     # --- HTML 태그 제거 ---
     def clean_html_tags(text):
@@ -3499,6 +3500,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
