@@ -19,6 +19,7 @@ from PIL import Image
 import asyncio
 import aiohttp
 from itertools import product
+from requests.adapters import HTTPAdapter
 
 
 # 로깅 설정
@@ -437,6 +438,14 @@ def get_auctions_items():
             "message": str(e)
         }), 500
 
+# 보석 조회 전역 세션 생성
+jewelry_session = requests.Session()
+
+# 연결 풀 크기 확대
+adapter = HTTPAdapter(pool_connections=100, pool_maxsize=100)
+jewelry_session.mount("https://", adapter)
+jewelry_session.mount("http://", adapter)
+
 def fetch_auctions_items(payload: dict):
     """
     Lost Ark 경매장 아이템 조회
@@ -485,9 +494,8 @@ def search_jewelry_engraving():
         return jsonify({"error": True, "message": str(e)}), 500
 
 
-# 보석 조회 전역 세션 생성
-jewelry_session = requests.Session()
 
+        
 # 보석 조회 함수
 def fetch_jewelry_engraving(item_name: str, page_no: int = 0, item_tier: int = None, item_grade: str = ""):
     """
@@ -3414,6 +3422,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
