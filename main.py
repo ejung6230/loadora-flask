@@ -348,10 +348,6 @@ def parse_shop_items(html):
     # --- 현재 판매 상품 ---
     current_section = html.split('<h3 class="shop-sub-title">이전 판매 상품</h3>')[0]
 
-    print('current_section: ', current_section)
-    current_desc_match = re.search(r'<h4>(.*?)</h4>', current_section, re.DOTALL)
-    current_desc = clean_html_tags(current_desc_match.group(1)) if current_desc_match else ""
-
     current_items = []
     for img, name, price, original_price in item_pattern.findall(current_section):
         price_val = int(price.strip())
@@ -386,8 +382,7 @@ def parse_shop_items(html):
             })
 
         previous_blocks.append({
-            "description": description,
-            "main_name": main_name or description,
+            "description": main_name or description,
             "end_time": end_time.isoformat() if end_time else None,
             "time_until_new_item": time_until_new_item,
             "items": items
@@ -395,8 +390,7 @@ def parse_shop_items(html):
 
     return {
         "current_items": {
-            "description": current_desc,
-            "main_name": "",
+            "description": "현재 판매 상품",
             "end_time": None,
             "time_until_new_item": time_until_new_item,
             "items": current_items
@@ -867,7 +861,6 @@ def fallback():
         
             # ---------- 텍스트 정제 ----------
             response_text = "◕ᴗ◕🌸\n현재 마리샵 판매 정보를 알려드릴게요.\n\n"
-            response_text += "❙ 현재 판매 상품111\n"
 
             curr = parse_data.get("current_items", {})
             response_text += f"\n❙ {curr.get('description', '')}\n"
@@ -3594,6 +3587,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
