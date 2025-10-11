@@ -788,8 +788,16 @@ def fallback():
         DAY_START = datetime.combine(NOW_KST.date(), datetime.min.time()) + timedelta(hours=6)
     DAY_END = DAY_START + timedelta(days=1) - timedelta(minutes=1)
     
-    # 특수문자 참고 ❘ ❙ ❚ ❛ ❜
+    # 특수문자 참고 ❘ ❙ ❚ 『 』
     server_down = False  # 서버 점검 여부 플래그
+
+    # 등급별 배경색깔 참고
+    # 고급 linear-gradient(135deg, #1e2d0b, #304911);
+    # 희귀 linear-gradient(135deg, #112739, #113d5d);
+    # 영웅 linear-gradient(135deg, #2e123c, #480d5d);
+    # 전설 linear-gradient(135deg, #452b06, #9e5f04);
+    # 유물 linear-gradient(135deg, #48220b, #a24006);
+    # 고대 linear-gradient(135deg, #3d3325, #dcc999);
     
     try:
         json_data = request.get_json()
@@ -1168,7 +1176,7 @@ def fallback():
                 ]
                 
                 if selected_island_items:
-                    result = f"◕ᴗ◕🌸\n❛{selected_island}❜ 정보를 알려드릴게요.\n"
+                    result = f"◕ᴗ◕🌸\n『{selected_island}』 정보를 알려드릴게요.\n"
                     result += f"――――――――――――――\n\n"
                     contents_icon = ""
 
@@ -1228,7 +1236,7 @@ def fallback():
                     ]
                 else:
                     items = [
-                        {"simpleText": {"text": f"◕_◕💧\n❛{selected_island}❜ 정보를 조회할 수 없어요. 모험섬 이름을 정확하게 입력해주세요.", "extra": {}}},
+                        {"simpleText": {"text": f"◕_◕💧\n『{selected_island}』 정보를 조회할 수 없어요. 모험섬 이름을 정확하게 입력해주세요.", "extra": {}}},
                     ]
     
             else:
@@ -1466,7 +1474,7 @@ def fallback():
             # ---------- 이름 그룹화 (공통 접두어만 밖으로) ----------
             def group_names(names):
                 if len(names) == 1:
-                    return f"❛{names[0]}❜"
+                    return f"『{names[0]}』"
             
                 # 공통 접두어 추출
                 prefix = names[0]
@@ -1498,7 +1506,7 @@ def fallback():
                         
                         tags = list(dict.fromkeys(tags))
                         tag_str = f"({', '.join(tags)})" if tags else ""
-                        formatted_names.append(f"❛{n}{tag_str}❜")
+                        formatted_names.append(f"『{n}{tag_str}』")
                 
                     return ", ".join(formatted_names)
             
@@ -1509,7 +1517,7 @@ def fallback():
                 if suffixes:
                     return f"{', '.join(suffixes)}"
             
-                return f"❛{prefix}❜"
+                return f"『{prefix}』"
 
         
             # ---------- 일정 요약 텍스트 생성 ----------
@@ -1625,7 +1633,7 @@ def fallback():
                     organized_chars = organize_characters_by_server(data)
                     
                     if organized_chars:
-                        expedition_text = f"◕ᴗ◕🌸\n❛{expedition_char_name}❜ 님의 원정대 정보를 알려드릴게요.\n\n"
+                        expedition_text = f"◕ᴗ◕🌸\n『{expedition_char_name}』 님의 원정대 정보를 알려드릴게요.\n\n"
                         for server, chars in organized_chars.items():
                             # ItemAvgLevel 숫자로 변환 후 높은 순으로 정렬
                             chars.sort(key=lambda x: float(str(x['ItemAvgLevel']).replace(',', '')), reverse=True)
@@ -1923,7 +1931,7 @@ def fallback():
             if not weekly_text:
                 response_text = "◕_◕💧\n캐릭터 이름을 입력해주세요.\nex) .주급 캐릭터명"
             else:
-                response_text = f"◕ᴗ◕🌸\n❛{weekly_text}❜ 님의 주급 정보를 알려드릴게요.\n\n"
+                response_text = f"◕ᴗ◕🌸\n『{weekly_text}』 님의 주급 정보를 알려드릴게요.\n\n"
                 response_text += f"[주급 명령어]\n내용: {weekly_text}"
 
 
@@ -1952,10 +1960,10 @@ def fallback():
                 status_code, data = fetch_sasage_html(search_keyword)
         
                 if status_code != 200 or not data.get("posts"):
-                    response_text = f"◕ᴗ◕👍\n❛{search_keyword}❜의 사사게 검색 결과가 없습니다"
+                    response_text = f"◕ᴗ◕👍\n『{search_keyword}』의 사사게 검색 결과가 없습니다"
                 else:
                     posts = data["posts"]
-                    output_lines = [f"◕_◕❗\n❛{search_keyword}❜의 사사게 검색 결과가 {len(posts)}건 있습니다"]
+                    output_lines = [f"◕_◕❗\n『{search_keyword}』의 사사게 검색 결과가 {len(posts)}건 있습니다"]
 
                     for idx, post in enumerate(posts, start=1):
                         short_link = post.get("link").split('?')[0]  # ? 이후 제거
@@ -2599,7 +2607,7 @@ PVP: {pvp_grade_name}
                     items = [
                         {
                             "simpleText": {
-                                "text": f"◕ᴗ◕🌸\n❛{info_char_name}❜ 님의 캐릭터 정보를 알려드릴게요",
+                                "text": f"◕ᴗ◕🌸\n『{info_char_name}』 님의 캐릭터 정보를 알려드릴게요",
                                 "extra": {}
                             }
                         },
@@ -2634,7 +2642,7 @@ PVP: {pvp_grade_name}
                     items = [
                         {
                             "textCard": {
-                                "description": f"◕_◕💧\n❛{info_char_name}❜ 님의 최신화된 캐릭터 정보가 존재하지 않습니다. \n💡원정대 정보를 조회하려면 버튼을 클릭하세요.",
+                                "description": f"◕_◕💧\n『{info_char_name}』 님의 최신화된 캐릭터 정보가 존재하지 않습니다. \n💡원정대 정보를 조회하려면 버튼을 클릭하세요.",
                                 "buttons": [
                                     {
                                         "label": "원정대 정보",
@@ -3550,6 +3558,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
