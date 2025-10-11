@@ -2556,6 +2556,7 @@ PVP: {pvp_grade_name}
                         "quickReplies": []
                     }
                 }
+                print("response-1!!: ", response)
             else:
                 print("response_text 여기 출력되어야지-2!!")
                 # ✅ 응답이 있으면 simpleText
@@ -3395,6 +3396,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
