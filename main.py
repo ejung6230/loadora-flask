@@ -2004,31 +2004,31 @@ def fallback():
         jewelry_match = re.match(r"^(\.보석|보석|\.ㅄ|ㅄ|\.ㅂㅅ|ㅂㅅ)\s*(.*)$", user_input)
         if jewelry_match:
             start_time = time.time()  # ← 시작 시간 측정
-            
+        
             raw_input = jewelry_match.group(2).strip()
             num_match = re.search(r"(\d+)", raw_input)
             max_count = int(num_match.group(1)) if num_match else None
             base_name = re.sub(r"\d+", "", raw_input).strip()
         
+            # 티어별 보석 이름 세트
             item_tiers = {4: ["작열", "겁화"], 3: ["멸화", "홍염"]}
-            item_levels = [10,9,8,7]
+            item_levels = [10, 9, 8, 7]
         
-            # requests_list 그대로 사용
+            # 1️⃣ 먼저 '10레벨' 등 숫자 기준으로만 검색
             requests_list = [
-                (f"{lv}레벨 {nm}의 보석", tier)
-                for tier, names in item_tiers.items()
-                for lv, nm in product(item_levels, names)
+                (f"{lv}레벨", tier)
+                for tier in item_tiers.keys()
+                for lv in item_levels
             ]
         
-            # 멀티스레딩으로 병렬 처리 (속도 향상)
             results = [None] * len(requests_list)
-            
+        
+            # 멀티스레딩으로 병렬 처리
             with ThreadPoolExecutor(max_workers=16) as thread_executor:
                 future_to_idx = {
                     thread_executor.submit(fetch_jewelry_engraving, name, 1, tier): i
                     for i, (name, tier) in enumerate(requests_list)
                 }
-                
                 for future in as_completed(future_to_idx):
                     idx = future_to_idx[future]
                     try:
@@ -2036,29 +2036,33 @@ def fallback():
                     except Exception as e:
                         results[idx] = e
         
+            # 2️⃣ 결과 데이터에서 "작열", "겁화" / "멸화", "홍염"만 필터링
             lines = []
             idx = 0
             for tier, names in item_tiers.items():
                 lines.append(f"💎 {tier}티어 보석 최저가")
                 for lv in item_levels:
+                    data = results[idx]
+                    idx += 1
+        
                     line_parts = []
-                    for nm in names:
-                        data = results[idx]
-                        idx += 1
-        
-                        if isinstance(data, Exception) or not data.get("Items"):
+                    if isinstance(data, Exception) or not data.get("Items"):
+                        for nm in names:
                             line_parts.append(f"{nm} 데이터 없음")
-                            continue
+                        lines.append(f"{lv}레벨 : " + " / ".join(line_parts))
+                        continue
         
-                        # BuyPrice가 None이 아닌 첫 번째 아이템 선택
-                        first_valid = next(
-                            (x for x in data["Items"]
-                             if (x.get("AuctionInfo") or {}).get("BuyPrice") is not None),
-                            None
-                        )
+                    # 각 보석 이름별로 필터링
+                    for nm in names:
+                        filtered = [
+                            x for x in data["Items"]
+                            if nm in x["Name"] and (x.get("AuctionInfo") or {}).get("BuyPrice") is not None
+                        ]
         
-                        if first_valid:
-                            price = first_valid["AuctionInfo"]["BuyPrice"]
+                        if filtered:
+                            # 최저가 아이템 선택
+                            lowest = min(filtered, key=lambda x: x["AuctionInfo"]["BuyPrice"])
+                            price = lowest["AuctionInfo"]["BuyPrice"]
                             line_parts.append(f"{nm} {price:,}💰")
                         else:
                             line_parts.append(f"{nm} 데이터 없음")
@@ -2067,13 +2071,13 @@ def fallback():
                 lines.append("")
         
             elapsed_time = time.time() - start_time  # ← 종료 시간 측정
-            
+        
             response_text = "\n".join(lines)
-            response_text += f"\n⏱️ 처리 시간: {elapsed_time:.2f}초"  # ← 처리 시간 추가
-            
-            print(f"보석 조회 처리 시간: {elapsed_time:.2f}초")  # ← 로그 출력
+            response_text += f"\n⏱️ 처리 시간: {elapsed_time:.2f}초"
+        
+            print(f"보석 조회 처리 시간: {elapsed_time:.2f}초")
             print("response_text: ", response_text)
-            
+        
             if len(response_text) < 400:
                 use_share_button = True
 
@@ -3424,6 +3428,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
