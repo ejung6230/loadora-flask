@@ -316,24 +316,31 @@ def parse_shop_items(html):
         return text.strip()
 
     # --- FlipClock에서 남은 시간 추출 ---
-    def parse_flipclock_timer(html):
-        # --- 시간(hh)
-        hour_digits = re.findall(r'<span class="flip-clock-divider hours">.*?</span>.*?<ul class="flip.*?">.*?<li class="flip-clock-active" data-digit="(\d+)"', html, re.DOTALL)
-        # --- 분(mm)
-        minute_digits = re.findall(r'<span class="flip-clock-divider minutes">.*?</span>.*?<ul class="flip.*?">.*?<li class="flip-clock-active" data-digit="(\d+)"', html, re.DOTALL)
-        # --- 초(ss)
-        second_digits = re.findall(r'<span class="flip-clock-divider seconds">.*?</span>.*?<ul class="flip.*?">.*?<li class="flip-clock-active" data-digit="(\d+)"', html, re.DOTALL)
-
-        if not hour_digits or not minute_digits or not second_digits:
-            return "⏰ 새 상품 입고까지 시간을 불러올 수 없습니다."
-        
-        hours = ''.join(hour_digits).zfill(2) if hour_digits else "00"
-        minutes = ''.join(minute_digits).zfill(2) if minute_digits else "00"
-        seconds = ''.join(second_digits).zfill(2) if second_digits else "00"
+    def parse_flipclock_timer():
+        """
+        KST 기준으로 오전 6시, 오후 6시까지 남은 시간 계산
+        _html 매개변수는 필요 없음 (호환용)
+        """
+        now = NOW_KST  # 이미 정의된 KST 기준 현재 시각 사용
     
-        return f"⏰ 새 상품 입고까지 {hours}시간 {minutes}분 남았습니다."
-
-    time_until_new_item = parse_flipclock_timer(html)
+        today_am6 = datetime.combine(TODAY, time(6, 0))
+        today_pm6 = datetime.combine(TODAY, time(18, 0))
+    
+        if now < today_am6:
+            next_release = today_am6
+        elif now < today_pm6:
+            next_release = today_pm6
+        else:
+            # 다음 날 오전 6시
+            next_release = today_am6 + timedelta(days=1)
+    
+        remaining = next_release - now
+        hours, remainder = divmod(int(remaining.total_seconds()), 3600)
+        minutes, seconds = divmod(remainder, 60)
+    
+        return f"⏰ 새 상품 입고까지 {hours:02d}시간 {minutes:02d}분 {seconds:02d}초 남았습니다."
+        
+    time_until_new_item = parse_flipclock_timer()
     
     print(html)
 
@@ -3581,6 +3588,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
