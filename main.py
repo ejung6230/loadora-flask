@@ -863,7 +863,7 @@ def fallback():
             response_text = "◕ᴗ◕🌸\n현재 마리샵 판매 정보를 알려드릴게요.\n\n"
 
             curr = parse_data.get("current_items", {})
-            response_text += f"\n❙ {curr.get('description', '')}\n"
+            response_text += f"❙ {curr.get('description', '')}\n"
             
             for item in curr.get("items", []):
                 raw_name = item["name"]
@@ -3587,6 +3587,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
