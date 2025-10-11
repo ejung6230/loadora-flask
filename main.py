@@ -269,14 +269,25 @@ def choose_best_year(month, day, hour, minute=0):
             candidates.append(c)
         except ValueError:
             continue
+
     if not candidates:
         return None
 
-    # 일주일 정도 오차 허용
+    # 7일 오차 허용
     tolerance = timedelta(days=7)
-    future = [c for c in candidates if c >= now - tolerance]
-    return min(future, key=lambda c: c - now) if future else min(candidates, key=lambda c: abs(c - now))
 
+    # 우선순위 1: 현재보다 이후이면서 7일 이내인 가장 가까운 날짜
+    future = [c for c in candidates if now <= c <= now + tolerance]
+    if future:
+        return min(future, key=lambda c: c - now)
+
+    # 우선순위 2: 과거이지만 7일 이내인 가장 가까운 날짜
+    past = [c for c in candidates if now - tolerance <= c < now]
+    if past:
+        return max(past, key=lambda c: c)
+
+    # 그래도 없으면 단순히 현재와 가장 가까운 날짜
+    return min(candidates, key=lambda c: abs(c - now))
 
 def parse_main_and_end(description):
     """
@@ -324,37 +335,28 @@ def parse_shop_items(html):
 
     # --- 새 상품 입고까지 남은 시간 계산 ---
     def parse_flipclock_timer():
-        """
-        KST 기준으로 오전 6시, 오후 6시까지 남은 시간 계산
-        """
         try:
-            # 현재 시각 초 단위
             now_seconds = NOW_KST.hour * 3600 + NOW_KST.minute * 60 + NOW_KST.second
-    
-            # 오전 6시, 오후 6시 초 단위
             am6_seconds = 6 * 3600
             pm6_seconds = 18 * 3600
-    
+
             if now_seconds < am6_seconds:
                 remaining_seconds = am6_seconds - now_seconds
             elif now_seconds < pm6_seconds:
                 remaining_seconds = pm6_seconds - now_seconds
             else:
-                # 다음 날 오전 6시까지
                 remaining_seconds = (24 * 3600 - now_seconds) + am6_seconds
-    
+
             hours, rem = divmod(remaining_seconds, 3600)
             minutes, seconds = divmod(rem, 60)
-    
             return f"⌛️ 새 상품 입고까지 {hours:02d}시간 {minutes:02d}분 남았습니다."
-        except Exception as e:
+        except Exception:
             return f"⌛️ 새 상품 입고 시간을 계산할 수 없습니다."
 
     time_until_new_item = parse_flipclock_timer()
 
     # --- 현재 판매 상품 ---
     current_section = html.split('<h3 class="shop-sub-title">이전 판매 상품</h3>')[0]
-
     current_items = []
     for img, name, price, original_price in item_pattern.findall(current_section):
         price_val = int(price.strip())
@@ -3707,6 +3709,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
