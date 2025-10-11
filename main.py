@@ -446,8 +446,9 @@ def fetch_auctions_items(payload: dict):
     url = "https://developer-lostark.game.onstove.com/auctions/items"
     
     try:
-        response = requests.post(url, headers=HEADERS, json=payload, timeout=3.5)
-        response.raise_for_status()  # HTTP 오류 발생 시 예외 발생
+
+        # requests.post 대신 jewelry_session.post 사용 + 타임아웃
+        response = jewelry_session.post(url, headers=HEADERS, json=payload, timeout=3.5)
         return response.json()
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 503:
@@ -482,6 +483,10 @@ def search_jewelry_engraving():
         return jsonify(data)
     except Exception as e:
         return jsonify({"error": True, "message": str(e)}), 500
+
+
+# 보석 조회 전역 세션 생성
+jewelry_session = requests.Session()
 
 # 보석 조회 함수
 def fetch_jewelry_engraving(item_name: str, page_no: int = 0, item_tier: int = None, item_grade: str = ""):
@@ -3409,6 +3414,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
