@@ -952,7 +952,7 @@ def fallback():
         
                     # chunk 마지막에 남은 시간 표시
                     chunk.append({
-                        "title": f"{time_left_text} ({end_time_str} 종료)",
+                        "title": f"{time_left_text}",
                         "description": "",
                         "imageUrl": "",
                         "link": {"web": ""}
@@ -3693,6 +3693,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
