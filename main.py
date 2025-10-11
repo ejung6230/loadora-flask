@@ -27,7 +27,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # 정보 출력
-logger.info("여기출력2: %s", "여기출력2")
+logger.info("출력: %s", "서버가 실행되었습니다.")
 
 app = Flask(__name__)
 CORS(app)  # 모든 도메인 허용
@@ -3498,6 +3498,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
