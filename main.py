@@ -865,7 +865,6 @@ def fallback():
             for item in curr.get("items", []):
                 raw_name = item["name"]
                 img_url = item["img"]
-
                 if img_url.startswith("//"):
                     img_url = "https:" + img_url
         
@@ -879,27 +878,25 @@ def fallback():
                     name = raw_name.strip()
                     count = f"[{item['count']}개]" if "count" in item else ""
         
-                price = item["price"]  # 숫자 상태 유지
+                price = item["price"]
                 discount_rate = item.get("discount_rate")
                 discount = f" ({discount_rate:.1f}% 할인)" if discount_rate is not None else ""
         
                 curr_list.append({
                     "title": f"{name} {count}",
-                    "description": f"{price:,}💎 {discount}",
+                    "description": f"{price:,}💎{discount}",
                     "imageUrl": img_url,
                     "link": {"web": ""}
                 })
         
             # ---------- 이전 판매 아이템 처리 ----------
             prev_list_cards = []
-        
             for prev in parse_data.get("previous_items", []):
                 prev_items_data = []
         
                 for item in prev.get("items", []):
                     raw_name = item["name"]
                     img_url = item["img"]
-
                     if img_url.startswith("//"):
                         img_url = "https:" + img_url
         
@@ -912,13 +909,13 @@ def fallback():
                         name = raw_name.strip()
                         count = f"[{item['count']}개]" if "count" in item else ""
         
-                    price = item["price"]  # 숫자 상태 유지
+                    price = item["price"]
                     discount_rate = item.get("discount_rate")
                     discount = f" ({discount_rate:.1f}% 할인)" if discount_rate is not None else ""
         
                     prev_items_data.append({
                         "title": f"{name} {count}",
-                        "description": f"{price:,}💎 {discount}",
+                        "description": f"{price:,}💎{discount}",
                         "imageUrl": img_url,
                         "link": {"web": ""}
                     })
@@ -927,18 +924,18 @@ def fallback():
                 cards_per_page = 3
                 for i in range(0, len(prev_items_data), cards_per_page):
                     chunk = prev_items_data[i:i + cards_per_page]
+        
+                    # 이전 판매 아이템 chunk 마지막에 종료 시간 표시
                     chunk.append({
-                        "title": f"{curr.get("time_until_new_item", "")}",
+                        "title": f"{prev.get('end_time', '')} 종료",
                         "description": "",
                         "imageUrl": "",
                         "link": {"web": ""}
                     })
-                    if not chunk:
-                        continue
         
                     prev_list_cards.append({
                         "header": {
-                            "title": f"{prev.get("description", "")} (i+1)",
+                            "title": prev.get("description", ""),
                             "link": {"web": ""}
                         },
                         "items": chunk,
@@ -949,23 +946,23 @@ def fallback():
                         "forwardable": True
                     })
         
-            # ---------- 현재 + 이전 아이템 캐러셀 통합 ----------
+            # ---------- 현재 판매 아이템 캐러셀 ----------
             curr_list_cards = []
             cards_per_page = 3
             for i in range(0, len(curr_list), cards_per_page):
                 chunk = curr_list[i:i + cards_per_page]
+        
+                # chunk 마지막에 새 상품 입고 시간 표시
                 chunk.append({
-                    "title": f"{curr.get("time_until_new_item", "")}",
+                    "title": f"{curr.get('time_until_new_item', '')}",
                     "description": "",
                     "imageUrl": "",
                     "link": {"web": ""}
                 })
-                if not chunk:
-                    continue
         
                 curr_list_cards.append({
                     "header": {
-                        "title": f"현재 판매 상품 (i+1)",
+                        "title": "현재 판매 상품",
                         "link": {"web": ""}
                     },
                     "items": chunk,
@@ -976,7 +973,7 @@ def fallback():
                     "forwardable": True
                 })
         
-            # 모든 카드 합치기
+            # ---------- 모든 카드 합치기 ----------
             all_list_cards = curr_list_cards + prev_list_cards
         
             carousel = {
@@ -3670,6 +3667,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
