@@ -865,6 +865,9 @@ def fallback():
             for item in curr.get("items", []):
                 raw_name = item["name"]
                 img_url = item["img"]
+
+                if img_url.startswith("//"):
+                img_url = "https:" + img_url
         
                 # [숫자개] 분리
                 match = re.search(r"\[(\d+)개\]", raw_name)
@@ -898,6 +901,9 @@ def fallback():
                 for item in prev.get("items", []):
                     raw_name = item["name"]
                     img_url = item["img"]
+
+                    if img_url.startswith("//"):
+                        img_url = "https:" + img_url
         
                     match = re.search(r"\[(\d+)개\]", raw_name)
                     if match:
@@ -3656,6 +3662,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
