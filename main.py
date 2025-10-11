@@ -278,22 +278,24 @@ def choose_best_year(month, day, hour, minute=0):
     return min(future, key=lambda c: c - now) if future else min(candidates, key=lambda c: abs(c - now))
 
 
-def parse_main_and_end(text):
-    pattern = re.compile(
-        r"❙\s*(?P<main_name>.*?)\s*\(\s*(?P<end_month>\d{1,2})월\s*(?P<end_day>\d{1,2})일\s*"
-        r"(?P<end_hour>\d{1,2})(?::(?P<end_min>\d{1,2}))?\s*시?\s*까지\s*판매\s*\)",
-        re.DOTALL
-    )
-    m = pattern.search(text)
-    if not m:
-        return None, None
+def parse_main_and_end(description):
+    """
+    description 예시:
+    '10월 11일 6시 ~ 18시 판매 상품 (10월 12일 18:00까지 판매)'
+    → main_name, end_time(datetime)
+    """
+    # main_name: '(' 이전 텍스트
+    main_name = description.split("(")[0].strip()
 
-    main_name = m.group("main_name").strip()
-    month = int(m.group("end_month"))
-    day = int(m.group("end_day"))
-    hour = int(m.group("end_hour"))
-    minute = int(m.group("end_min") or 0)
-    end_time = choose_best_year(month, day, hour, minute)
+    # end_time: 괄호 안에서 날짜/시간 추출
+    end_time = None
+    time_match = re.search(r"(\d{1,2})월\s*(\d{1,2})일\s*(\d{1,2})(?::(\d{1,2}))?", description)
+    if time_match:
+        month = int(time_match.group(1))
+        day = int(time_match.group(2))
+        hour = int(time_match.group(3))
+        minute = int(time_match.group(4) or 0)
+        end_time = choose_best_year(month, day, hour, minute)
 
     return main_name, end_time
 
@@ -3554,6 +3556,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
