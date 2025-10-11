@@ -2719,6 +2719,8 @@ PVP: {pvp_grade_name}
                     }
                 }
 
+        print('응답 결과: ', response)
+        
         return jsonify(response)
     except TimeoutError:
         # 타임아웃 전용 응답
@@ -2730,6 +2732,8 @@ PVP: {pvp_grade_name}
                 "quickReplies": []
             }
         }
+        
+        print('응답 결과: ', response)
         return jsonify(response)
     except Exception as e:
         # 1️⃣ 로그 기록 (stack trace 포함)
@@ -2752,6 +2756,7 @@ PVP: {pvp_grade_name}
         }
         
         # 3️⃣ JSON으로 반환 (HTTP 500) 인데, 그냥 챗봇으로 응답함
+        print('응답 결과: ', response)
         return jsonify(response)
 
 
@@ -3545,6 +3550,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
