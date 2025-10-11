@@ -323,7 +323,7 @@ def parse_shop_items(html):
         """
         now = NOW_KST  # 이미 정의된 KST 기준 현재 시각 사용
     
-        today_am6 = datetime.combine(TODAY, time(6, 0))
+        today_am6 = datetime.combine(TODAY, time(6, 0))  # datetime.time 사용
         today_pm6 = datetime.combine(TODAY, time(18, 0))
     
         if now < today_am6:
@@ -3588,6 +3588,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
