@@ -272,8 +272,8 @@ def choose_best_year(month, day, hour, minute=0):
     if not candidates:
         return None
 
-    # 하루 정도 오차 허용
-    tolerance = timedelta(days=1)
+    # 일주일 정도 오차 허용
+    tolerance = timedelta(days=7)
     future = [c for c in candidates if c >= now - tolerance]
     return min(future, key=lambda c: c - now) if future else min(candidates, key=lambda c: abs(c - now))
 
@@ -3537,6 +3537,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
