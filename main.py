@@ -1997,7 +1997,7 @@ def fallback():
         
             # 티어, 레벨 정의
             item_tiers = {4: ["작열", "겁화"], 3: ["멸화", "홍염"]}
-            item_levels = [10,9,8,7,6,5,4,3,2,1]
+            item_levels = [10,9,8,7,6,5]
         
             lines = []
         
@@ -3385,6 +3385,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
