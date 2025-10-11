@@ -111,68 +111,6 @@ def fetch_lopec_ranking(nickname: str, character_class: str):
     except requests.exceptions.RequestException as e:
         return {"error": f"로펙 서버와 통신 중 오류가 발생했습니다. ({e})"}
 
-# -----------------------------
-# SVG → PNG 변환 (카톡 친화적)
-# -----------------------------
-def ensure_png(icon_url, size=32, border_ratio=0.2):
-    return f"https://loadora-flask.onrender.com/icon?url={quote(icon_url, safe='')}&size={size}&border={border_ratio}"
-
-@app.route("/icon")
-def icon():
-    icon_url = request.args.get("url")
-    if not icon_url:
-        return "URL 파라미터가 없습니다", 400
-
-    try:
-        size = int(request.args.get("size", 32))
-        border_ratio = float(request.args.get("border", 0.2))
-        size = max(16, min(size, 64))
-        border_ratio = max(0, min(border_ratio, 0.5))
-    except:
-        size = 32
-        border_ratio = 0.2
-
-    try:
-        icon_url = unquote(icon_url)
-        headers = {"User-Agent": "Mozilla/5.0"}
-        resp = requests.get(icon_url, headers=headers, timeout=10)
-        resp.raise_for_status()
-        svg_content = resp.content
-
-        png_bytes = cairosvg.svg2png(bytestring=svg_content)
-        image = Image.open(BytesIO(png_bytes)).convert("RGBA")
-
-        w, h = image.size
-        if w != h:
-            if w > h:
-                left = (w - h) // 2
-                image = image.crop((left, 0, left + h, h))
-            else:
-                top = (h - w) // 2
-                image = image.crop((0, top, w, top + w))
-
-        final_size = size
-        canvas_size = int(final_size * (1 + border_ratio))
-        new_image = Image.new("RGBA", (canvas_size, canvas_size), (255, 255, 255, 255))
-        resized = image.resize((final_size, final_size), Image.ANTIALIAS)
-        paste_pos = ((canvas_size - final_size) // 2, (canvas_size - final_size) // 2)
-        new_image.paste(resized, paste_pos, resized)
-
-        output = BytesIO()
-        new_image.save(output, format="PNG", optimize=True)
-        output.seek(0)
-
-        return send_file(
-            output,
-            mimetype='image/png',
-            as_attachment=False,
-            download_name=None,
-            conditional=False
-        )
-
-    except Exception as e:
-        return f"SVG 처리 실패: {e}", 500
-
 # 로펙 점수 post
 def fetch_lopec_character(nickname: str, character_class: str):
     """
@@ -1950,18 +1888,6 @@ def fallback():
             카게_icon = "https://cdn-lostark.game.onstove.com/efui_iconatlas/island_icon/island_icon_147.png"
             보석_icon = ""
 
-            # 부트스트랩 아이콘
-            # -----------------------------
-            공지_svg = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/megaphone-fill.svg")
-            일정_svg = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/clipboard2-check-fill.svg")
-            이벤트_svg = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/gift-fill.svg")
-            코인_svg = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/coin.svg")
-            카트_svg = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/cart-fill.svg")
-            위치_svg = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/geo-alt-fill.svg")
-            망원경_svg = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/binoculars-fill.svg")
-            위험꼬깔_svg = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/cone-striped.svg")
-            사람들_svg = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/people-fill.svg")
-            정보_svg = ensure_png("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/icons/person-lines-fill.svg")
 
             
             # 명령어 목록 (가나다 순)
@@ -3735,6 +3661,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
