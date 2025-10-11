@@ -2045,6 +2045,7 @@ def fallback():
                 lines.append("")
         
             response_text = "\n".join(lines)
+            print("response_text: ", response_text)
             if len(response_text) < 400:
                 use_share_button = True
 
@@ -3393,6 +3394,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
