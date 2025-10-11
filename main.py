@@ -926,8 +926,12 @@ def fallback():
         
                 if end_time_str:
                     try:
-                        # end_time 예시: "2025-10-12 18:00:00"
-                        end_dt = datetime.strptime(end_time_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=None)
+                        # ISO 포맷('2025-10-10T18:00:00') 또는 일반 포맷 둘 다 처리
+                        try:
+                            end_dt = datetime.fromisoformat(end_time_str).replace(tzinfo=None)
+                        except ValueError:
+                            end_dt = datetime.strptime(end_time_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=None)
+        
                         delta = end_dt - NOW_KST
         
                         if delta.total_seconds() > 0:
@@ -939,8 +943,9 @@ def fallback():
                                 time_left_text = f"⏰ 판매 마감까지 {minutes}분 남았습니다."
                         else:
                             time_left_text = "⏰ 판매가 종료되었습니다."
+        
                     except Exception:
-                        time_left_text = f"⏰ 종료 시간: {end_time_str}"
+                        time_left_text = "⏰ 종료 시간 형식 오류"
                 else:
                     time_left_text = "⏰ 종료 시간 정보 없음"
         
@@ -952,7 +957,7 @@ def fallback():
         
                     # chunk 마지막에 남은 시간 표시
                     chunk.append({
-                        "title": f"{time_left_text}",
+                        "title": f"{time_left_text} ({end_time_str.replace('T', ' ')} 종료)",
                         "description": "",
                         "imageUrl": "",
                         "link": {"web": ""}
@@ -3693,6 +3698,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
