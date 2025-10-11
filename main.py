@@ -225,9 +225,13 @@ def get_shop():
         "content": content
     })
 
+
+    
 @app.route('/img')
 def serve_mokoko():
-    return send_file('/모코코큐티_투명배경.png', mimetype='image/png')
+    # 현재 main.py 기준으로 절대경로 생성
+    file_path = os.path.join(os.path.dirname(__file__), '모코코큐티_투명배경.png')
+    return send_file(file_path, mimetype='image/png')
 
 @app.route("/health", methods=["GET"])
 def health():
@@ -3723,6 +3727,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
