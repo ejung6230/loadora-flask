@@ -2012,27 +2012,29 @@ def fallback():
         # ---------- 9. 보석 거래소 조회 관련 패턴 ----------
         jewelry_match = re.match(r"^(\.보석|보석|\.ㅄ|ㅄ|\.ㅂㅅ|ㅂㅅ)\s*(.*)$", user_input)
         if jewelry_match:
-            start_time = time.time()  # ← 시작 시간 측정
-        
+            start_time = time.time()
+            items = []
+
             raw_input = jewelry_match.group(2).strip()
             num_match = re.search(r"(\d+)", raw_input)
             max_count = int(num_match.group(1)) if num_match else None
             base_name = re.sub(r"\d+", "", raw_input).strip()
-        
-            # 티어별 보석 이름 세트
+
+            # 티어별 보석 이름
             item_tiers = {4: ["작열", "겁화"], 3: ["멸화", "홍염"]}
             item_levels = [10, 9, 8, 7]
-        
-            # 1️⃣ 먼저 '10레벨' 등 숫자 기준으로만 검색
+
+            cards_per_page = 4
+            list_cards = []
+
             requests_list = [
                 (f"{lv}레벨", tier)
                 for tier in item_tiers.keys()
                 for lv in item_levels
             ]
-        
             results = [None] * len(requests_list)
-        
-            # 멀티스레딩으로 병렬 처리
+
+            # 병렬 처리
             with ThreadPoolExecutor(max_workers=16) as thread_executor:
                 future_to_idx = {
                     thread_executor.submit(fetch_jewelry_engraving, name, 1, tier): i
@@ -2044,31 +2046,25 @@ def fallback():
                         results[idx] = future.result()
                     except Exception as e:
                         results[idx] = e
-        
-            # 2️⃣ 결과 데이터에서 "작열", "겁화" / "멸화", "홍염"만 필터링
-            lines = []
+
+            menu_list = []
             idx = 0
+
             for tier, names in item_tiers.items():
-                lines.append(f"💎 {tier}티어 보석 최저가")
                 for lv in item_levels:
                     data = results[idx]
                     idx += 1
-        
-                    line_parts = []
+
                     if isinstance(data, Exception) or not data.get("Items"):
-                        for nm in names:
-                            line_parts.append(f"{nm} 데이터 없음")
-                        lines.append(f"{lv}레벨 : " + " / ".join(line_parts))
                         continue
-        
-                    # 각 보석 이름별로 필터링
+
                     for nm in names:
                         filtered = [
                             x for x in data["Items"]
                             if nm in x["Name"] and (x.get("AuctionInfo") or {}).get("BuyPrice") is not None
                         ]
-        
-                        # 🔄 데이터가 없을 경우 2페이지 재조회
+
+                        # 2페이지 재조회
                         if not filtered:
                             try:
                                 data_page2 = fetch_jewelry_engraving(f"{lv}레벨", 2, tier)
@@ -2079,27 +2075,76 @@ def fallback():
                                     ]
                             except Exception as e:
                                 print(f"{lv}레벨 {nm} 2페이지 조회 실패:", e)
-        
+
                         if filtered:
-                            # 최저가 아이템 선택
                             lowest = min(filtered, key=lambda x: x["AuctionInfo"]["BuyPrice"])
                             price = lowest["AuctionInfo"]["BuyPrice"]
-                            line_parts.append(f"{nm} {price:,}💰")
-                        else:
-                            line_parts.append(f"{nm} 데이터 없음")
-        
-                    lines.append(f"{lv}레벨 : " + " / ".join(line_parts))
-                lines.append("")
-        
-            elapsed_time = time.time() - start_time  # ← 종료 시간 측정
-        
-            response_text = "\n".join(lines)
-        
-            print(f"보석 조회 처리 시간: {elapsed_time:.2f}초")
-            print("response_text: ", response_text)
-        
-            if len(response_text) < 400:
-                use_share_button = True
+                            img_url = lowest.get("Icon", "")
+                            if img_url.startswith("//"):
+                                img_url = "https:" + img_url
+
+                            menu_list.append({
+                                "title": f"{lv} {nm}",          # 예: "10레벨 작열"
+                                "desc": f"{price:,}💰",          # 예: "9,050💰"
+                                "img": img_url,
+                                "msg": f"보석 {lv} {nm}"
+                            })
+
+            # 4개씩 끊어서 listCard 생성
+            for i in range(0, len(menu_list), cards_per_page):
+                chunk = menu_list[i:i + cards_per_page]
+                if not chunk:
+                    continue
+
+                list_items = []
+                for menu in chunk:
+                    list_items.append({
+                        "title": menu["title"],
+                        "description": menu["desc"],
+                        "imageUrl": menu["img"],
+                        "action": "message",
+                        "messageText": menu["msg"],
+                        "link": {"web": ""}
+                    })
+
+                list_cards.append({
+                    "header": {
+                        "title": "💎 보석 최저가 목록",
+                        "link": {"web": ""}
+                    },
+                    "items": list_items,
+                    "buttons": [],
+                    "lock": False,
+                    "forwardable": True
+                })
+
+            if not list_cards:
+                list_cards.append({
+                    "header": {"title": "보석이 없습니다", "link": {"web": ""}},
+                    "items": [{"title": "현재 표시할 보석 정보가 없습니다.", "link": {"web": ""}}],
+                    "buttons": [],
+                    "lock": False,
+                    "forwardable": True
+                })
+
+            # 캐러셀 구성
+            carousel = {
+                "carousel": {
+                    "type": "listCard",
+                    "items": list_cards
+                }
+            }
+
+            range_text = f"({min(item_levels)}~{max(item_levels)}레벨)"
+            items.append({
+                "simpleText": {
+                    "text": f"◕ᴗ◕🌸\n보석 경매장 최저가를 알려드릴게요 {range_text}"
+                }
+            })
+            items.append(carousel)
+
+            print(f"보석 조회 처리 완료 ({len(menu_list)}개 항목, {time.time()-start_time:.2f}초 소요)")
+
 
         
         # ---------- 9. 유각 거래소 조회 관련 패턴 ----------
@@ -3448,6 +3493,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
