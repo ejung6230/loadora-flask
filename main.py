@@ -344,11 +344,11 @@ def parse_shop_items(html):
             return f"⏰ 새 상품 입고까지 시간을 계산할 수 없습니다: {e}"
 
     time_until_new_item = parse_flipclock_timer()
-    
-    print(html)
 
     # --- 현재 판매 상품 ---
     current_section = html.split('<h3 class="shop-sub-title">이전 판매 상품</h3>')[0]
+
+    print('current_section: ', current_section)
     current_desc_match = re.search(r'<h4>(.*?)</h4>', current_section, re.DOTALL)
     current_desc = clean_html_tags(current_desc_match.group(1)) if current_desc_match else ""
 
@@ -3593,6 +3593,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
