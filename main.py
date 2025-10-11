@@ -256,60 +256,92 @@ def get_sasage():
         "data": data
     })
 
+def choose_best_year(month, day, hour, minute=0):
+    """
+    전역 NOW_KST 기준으로 가장 적절한 연도 추정.
+    (12월 말 ~ 1월 초 경계 보정)
+    """
+    now = NOW_KST
+    candidates = []
+    for y in (now.year - 1, now.year, now.year + 1):
+        try:
+            c = datetime(y, month, day, hour, minute)
+            candidates.append(c)
+        except ValueError:
+            continue
+    if not candidates:
+        return None
+
+    # 하루 정도 오차 허용
+    tolerance = timedelta(days=1)
+    future = [c for c in candidates if c >= now - tolerance]
+    return min(future, key=lambda c: c - now) if future else min(candidates, key=lambda c: abs(c - now))
+
+
+def parse_main_and_end(text):
+    """
+    ❙ 10월 10일 18시 ~ 6시 판매 상품 (10월 12일 6:00까지 판매)
+    → main_name, end_time(datetime)
+    """
+    pattern = re.compile(
+        r"❙\s*(?P<main_name>.+?)\s*\(\s*(?P<end_month>\d{1,2})월\s*(?P<end_day>\d{1,2})일\s*"
+        r"(?P<end_hour>\d{1,2})(?::(?P<end_min>\d{1,2}))?(?:시)?\s*까지\s*판매\s*\)",
+        re.DOTALL
+    )
+    m = pattern.search(text)
+    if not m:
+        return None, None
+
+    main_name = m.group("main_name").strip()
+    month = int(m.group("end_month"))
+    day = int(m.group("end_day"))
+    hour = int(m.group("end_hour"))
+    minute = int(m.group("end_min") or 0)
+    end_time = choose_best_year(month, day, hour, minute)
+
+    return main_name, end_time
+
+
 def parse_shop_items(html):
     """
     HTML을 받아 현재/이전 판매 상품 정보를 파싱
     """
-    
-    # --- 아이템 패턴 ---
     item_pattern = re.compile(
         r'<img\s+src="([^"]+)"[^>]*>.*?<span class="item-name">(.+?)</span>.*?class="list__price".*?<em>(\d+)</em>(?:\s*<del>(\d+)</del>)?',
         re.DOTALL
     )
 
-    
-    # --- HTML 태그 제거 ---
     def clean_html_tags(text):
         text = re.sub(r'<[^>]+>', '', text)
         text = re.sub(r'\s+', ' ', text)
         return text.strip()
-    
-    print("html 보기 : ", html)
-    
+
     # --- 현재 판매 상품 ---
     current_section = html.split('<h3 class="shop-sub-title">이전 판매 상품</h3>')[0]
-    
-    current_desc_match = re.search(
-        r'<p class="shop-dsc">\s*(.*?)\s*</p>', 
-        current_section, 
-        re.DOTALL
-    )
+    current_desc_match = re.search(r'<p class="shop-dsc">\s*(.*?)\s*</p>', current_section, re.DOTALL)
     current_desc = clean_html_tags(current_desc_match.group(1)) if current_desc_match else ""
-    
+
     current_items = []
     for img, name, price, original_price in item_pattern.findall(current_section):
         price_val = int(price.strip())
         original_val = int(original_price.strip()) if original_price and original_price.strip().isdigit() else None
-        
         current_items.append({
             "name": name.strip(),
             "price": price_val,
-            "img": img,  # 이미지 URL이 있다면 여기에 추가 가능
+            "img": img,
             "original_price": original_val,
             "discount_rate": round((original_val - price_val) / original_val * 100, 2) if original_val else None
         })
-    
+
     # --- 이전 판매 상품 ---
     previous_section = html.split('<h3 class="shop-sub-title">이전 판매 상품</h3>')[1]
-    
-    block_pattern = re.compile(
-        r'<p class="shop-dsc">\s*(.*?)\s*</p>(.*?)(?=<p class="shop-dsc">|$)', 
-        re.DOTALL
-    )
-    
+    block_pattern = re.compile(r'<p class="shop-dsc">\s*(.*?)\s*</p>(.*?)(?=<p class="shop-dsc">|$)', re.DOTALL)
+
     previous_blocks = []
     for desc_html, items_html in block_pattern.findall(previous_section):
         description = clean_html_tags(desc_html)
+        main_name, end_time = parse_main_and_end(description)
+
         items = []
         for img, name, price, original_price in item_pattern.findall(items_html):
             price_val = int(price.strip())
@@ -317,18 +349,23 @@ def parse_shop_items(html):
             items.append({
                 "name": name.strip(),
                 "price": price_val,
-                "img": img,  # 이미지 URL이 있다면 여기에 추가 가능
+                "img": img,
                 "original_price": original_val,
                 "discount_rate": round((original_val - price_val) / original_val * 100, 2) if original_val else None
             })
+
         previous_blocks.append({
             "description": description,
+            "main_name": main_name or description,
+            "end_time": end_time.isoformat() if end_time else None,
             "items": items
         })
-    
+
     return {
         "current_items": {
             "description": current_desc,
+            "main_name": "현재 판매 상품",
+            "end_time": None,
             "items": current_items
         },
         "previous_items": previous_blocks
@@ -3500,6 +3537,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
