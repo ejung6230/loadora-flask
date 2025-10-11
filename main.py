@@ -1083,7 +1083,7 @@ def fallback():
                                 "items": cards,
                                 "buttons": [{"label": "공유하기", "highlight": False, "action": "share"}],
                                 "lock": False,
-                                "forwardable": False
+                                "forwardable": True
                             }
                         }
                     ]
@@ -1103,7 +1103,7 @@ def fallback():
                                 }],
                                 "buttons": [{"label": "공유하기", "highlight": False, "action": "share"}],
                                 "lock": False,
-                                "forwardable": False
+                                "forwardable": True
                             }
                         }
                     ]
@@ -1329,7 +1329,7 @@ def fallback():
                                 "items": cards,
                                 "buttons": [{"label": "공유하기", "highlight": False, "action": "share"}],
                                 "lock": False,
-                                "forwardable": False
+                                "forwardable": True
                             }
                         }
                     ]
@@ -2596,7 +2596,7 @@ PVP: {pvp_grade_name}
                                     }
                                 ],
                                 "lock": False,
-                                "forwardable": False
+                                "forwardable": True
                             }
                         }
                     ]
@@ -2622,7 +2622,7 @@ PVP: {pvp_grade_name}
                                     }
                                 ],
                                 "lock": False,
-                                "forwardable": False
+                                "forwardable": True
                             }
                         }
                     ],
@@ -2651,7 +2651,7 @@ PVP: {pvp_grade_name}
                                         {"label": "공유하기", "highlight": False, "action": "share"}
                                     ],
                                     "lock": False,
-                                    "forwardable": False
+                                    "forwardable": True
                                 }
                             }
                         ],
@@ -3467,7 +3467,7 @@ def korlark_summary():
                                     }
                                 ],
                                 "lock": False,
-                                "forwardable": False
+                                "forwardable": True
                             }
                         }
                     ],
@@ -3496,6 +3496,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
