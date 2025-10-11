@@ -263,7 +263,7 @@ def parse_shop_items(html):
     
     # --- 아이템 패턴 ---
     item_pattern = re.compile(
-        r'<span class="item-name">(.+?)</span>.*?class="list__price".*?<em>(\d+)</em>(?:\s*<del>(\d+)</del>)?',
+        r'<img\s+src="([^"]+)"[^>]*>\s*.*?<span class="item-name">(.+?)</span>.*?class="list__price".*?<em>(\d+)</em>',
         re.DOTALL
     )
     
@@ -286,14 +286,14 @@ def parse_shop_items(html):
     current_desc = clean_html_tags(current_desc_match.group(1)) if current_desc_match else ""
     
     current_items = []
-    for name, price, original_price in item_pattern.findall(current_section):
+    for img, name, price, original_price in item_pattern.findall(current_section):
         price_val = int(price.strip())
         original_val = int(original_price.strip()) if original_price and original_price.strip().isdigit() else None
         
         current_items.append({
             "name": name.strip(),
             "price": price_val,
-            "img": "",  # 이미지 URL이 있다면 여기에 추가 가능
+            "img": img,  # 이미지 URL이 있다면 여기에 추가 가능
             "original_price": original_val,
             "discount_rate": round((original_val - price_val) / original_val * 100, 2) if original_val else None
         })
@@ -310,12 +310,13 @@ def parse_shop_items(html):
     for desc_html, items_html in block_pattern.findall(previous_section):
         description = clean_html_tags(desc_html)
         items = []
-        for name, price, original_price in item_pattern.findall(items_html):
+        for img, name, price, original_price in item_pattern.findall(items_html):
             price_val = int(price.strip())
             original_val = int(original_price.strip()) if original_price and original_price.strip().isdigit() else None
             items.append({
                 "name": name.strip(),
                 "price": price_val,
+                "img": img,  # 이미지 URL이 있다면 여기에 추가 가능
                 "original_price": original_val,
                 "discount_rate": round((original_val - price_val) / original_val * 100, 2) if original_val else None
             })
@@ -3498,6 +3499,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
