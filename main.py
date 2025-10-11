@@ -337,7 +337,7 @@ def parse_shop_items(html):
 
     # --- 현재 판매 상품 ---
     current_section = html.split('<h3 class="shop-sub-title">이전 판매 상품</h3>')[0]
-    current_desc_match = re.search(r'<p class="shop-dsc">\s*(.*?)\s*</p>', current_section, re.DOTALL)
+    current_desc_match = re.search(r'<h4>(.*?)</h4>', current_section, re.DOTALL)
     current_desc = clean_html_tags(current_desc_match.group(1)) if current_desc_match else ""
 
     current_items = []
@@ -384,7 +384,7 @@ def parse_shop_items(html):
     return {
         "current_items": {
             "description": current_desc,
-            "main_name": "현재 판매 상품",
+            "main_name": "",
             "end_time": None,
             "time_until_new_item": time_until_new_item,
             "items": current_items
@@ -3579,6 +3579,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
