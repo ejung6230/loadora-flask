@@ -303,12 +303,8 @@ def parse_main_and_end(description):
 def parse_shop_items(html):
     """
     HTML을 받아 현재/이전 판매 상품 정보를 파싱
+    FlipClock에서 새 상품 입고까지 시간 추출 포함
     """
-    item_pattern = re.compile(
-        r'<img\s+src="([^"]+)"[^>]*>.*?<span class="item-name">(.+?)</span>.*?class="list__price".*?<em>(\d+)</em>(?:\s*<del>(\d+)</del>)?',
-        re.DOTALL
-    )
-
     item_pattern = re.compile(
         r'<img\s+src="([^"]+)"[^>]*>.*?<span class="item-name">(.+?)</span>.*?class="list__price".*?<em>(\d+)</em>(?:\s*<del>(\d+)</del>)?',
         re.DOTALL
@@ -321,14 +317,17 @@ def parse_shop_items(html):
 
     # --- FlipClock에서 남은 시간 추출 ---
     def parse_flipclock_timer(html):
-        soup = BeautifulSoup(html, "html.parser")
+        # 시(hour)
+        hours = ''.join(re.findall(r'<span class="flip-clock-divider hours">.*?<li class="flip-clock-active" data-digit="(\d+)"', html, re.DOTALL))
+        # 분(minutes)
+        minutes = ''.join(re.findall(r'<span class="flip-clock-divider minutes">.*?<li class="flip-clock-active" data-digit="(\d+)"', html, re.DOTALL))
+        # 초(seconds)
+        seconds = ''.join(re.findall(r'<span class="flip-clock-divider seconds">.*?<li class="flip-clock-active" data-digit="(\d+)"', html, re.DOTALL))
 
-        def get_digits(selector):
-            return ''.join([li['data-digit'] for li in soup.select(selector)])
-
-        hours = get_digits('span.flip-clock-divider.hours ~ ul li.flip-clock-active').zfill(2)
-        minutes = get_digits('span.flip-clock-divider.minutes ~ ul li.flip-clock-active').zfill(2)
-        seconds = get_digits('span.flip-clock-divider.seconds ~ ul li.flip-clock-active').zfill(2)
+        # 자리수 보정
+        hours = hours.zfill(2) if hours else "00"
+        minutes = minutes.zfill(2) if minutes else "00"
+        seconds = seconds.zfill(2) if seconds else "00"
 
         return f"{hours}:{minutes}:{seconds}"
 
@@ -3580,6 +3579,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
