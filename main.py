@@ -866,6 +866,7 @@ def fallback():
                 raw_name = item["name"]
                 img_url = item["img"]
         
+                # [숫자개] 분리
                 match = re.search(r"\[(\d+)개\]", raw_name)
                 if match:
                     count_value = match.group(1)
@@ -875,7 +876,7 @@ def fallback():
                     name = raw_name.strip()
                     count = f"[{item['count']}개]" if "count" in item else ""
         
-                price = str(item["price"]).ljust(3)
+                price = item["price"]  # 숫자 상태 유지
                 discount_rate = item.get("discount_rate")
                 discount = f" ({discount_rate:.1f}% 할인)" if discount_rate is not None else ""
         
@@ -907,7 +908,7 @@ def fallback():
                         name = raw_name.strip()
                         count = f"[{item['count']}개]" if "count" in item else ""
         
-                    price = str(item["price"]).ljust(3)
+                    price = item["price"]  # 숫자 상태 유지
                     discount_rate = item.get("discount_rate")
                     discount = f" ({discount_rate:.1f}% 할인)" if discount_rate is not None else ""
         
@@ -941,7 +942,6 @@ def fallback():
                     })
         
             # ---------- 현재 + 이전 아이템 캐러셀 통합 ----------
-            # 현재 아이템 캐러셀
             curr_list_cards = []
             cards_per_page = 3
             for i in range(0, len(curr_list), cards_per_page):
@@ -3657,6 +3657,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
