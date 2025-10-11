@@ -279,13 +279,9 @@ def choose_best_year(month, day, hour, minute=0):
 
 
 def parse_main_and_end(text):
-    """
-    ❙ 10월 10일 18시 ~ 6시 판매 상품 (10월 12일 6:00까지 판매)
-    → main_name, end_time(datetime)
-    """
     pattern = re.compile(
-        r"❙\s*(?P<main_name>.+?)\s*\(\s*(?P<end_month>\d{1,2})월\s*(?P<end_day>\d{1,2})일\s*"
-        r"(?P<end_hour>\d{1,2})(?::(?P<end_min>\d{1,2}))?(?:시)?\s*까지\s*판매\s*\)",
+        r"❙\s*(?P<main_name>.*?)\s*\(\s*(?P<end_month>\d{1,2})월\s*(?P<end_day>\d{1,2})일\s*"
+        r"(?P<end_hour>\d{1,2})(?::(?P<end_min>\d{1,2}))?\s*시?\s*까지\s*판매\s*\)",
         re.DOTALL
     )
     m = pattern.search(text)
@@ -3558,6 +3554,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
