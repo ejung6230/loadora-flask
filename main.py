@@ -951,7 +951,7 @@ def fallback():
         
                 curr_list_cards.append({
                     "header": {
-                        "title": f"현재 판매 상품 ({curr.get('time_until_new_item', '')})",
+                        "title": f"현재 판매 상품",
                         "link": {"web": ""}
                     },
                     "items": chunk,
@@ -975,8 +975,7 @@ def fallback():
             # ---------- 최종 메시지 구성 ----------
             items.append({
                 "simpleText": {
-                    "text": f"◕ᴗ◕🌸\n현재 마리샵 판매 정보를 알려드릴게요.\n"
-                            f"{curr.get('time_until_new_item', '')}\n\n"
+                    "text": f"◕ᴗ◕🌸\n현재 마리샵 판매 정보를 알려드릴게요."
                 }
             })
             items.append(carousel)
@@ -3657,6 +3656,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
