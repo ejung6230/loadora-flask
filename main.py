@@ -965,6 +965,7 @@ def fallback():
                 for i in range(0, len(prev_items_data), cards_per_page):
                     chunk = prev_items_data[i:i + cards_per_page]
                     total_pages = (len(prev_items_data) + cards_per_page - 1) // cards_per_page
+                    now_page = i // cards_per_page + 1  # 현재 페이지 번호
         
                     # chunk 마지막에 남은 시간 표시
                     chunk.append({
@@ -976,7 +977,7 @@ def fallback():
         
                     prev_list_cards.append({
                         "header": {
-                            "title": f"{prev.get('description', '')} ({i+1}/{total_pages})",
+                            "title": f"{prev.get('description', '')} ({now_page}/{total_pages})",
                             "link": {"web": ""}
                         },
                         "items": chunk,
@@ -993,7 +994,9 @@ def fallback():
             for i in range(0, len(curr_list), cards_per_page):
                 chunk = curr_list[i:i + cards_per_page]
                 total_pages = (len(curr_list) + cards_per_page - 1) // cards_per_page
-        
+                now_page = i // cards_per_page + 1  # ← 현재 페이지 번호 계산
+
+                
                 # 새 상품 입고 시간 표시
                 chunk.append({
                     "title": f"{curr.get('time_until_new_item', '')}",
@@ -1004,7 +1007,7 @@ def fallback():
         
                 curr_list_cards.append({
                     "header": {
-                        "title": f"현재 판매 상품 ({i+1}/{total_pages})",
+                        "title": f"현재 판매 상품 ({now_page}/{total_pages})",
                         "link": {"web": ""}
                     },
                     "items": chunk,
@@ -3709,6 +3712,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
