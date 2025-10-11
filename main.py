@@ -2060,6 +2060,18 @@ def fallback():
                             if nm in x["Name"] and (x.get("AuctionInfo") or {}).get("BuyPrice") is not None
                         ]
         
+                        # 🔄 데이터가 없을 경우 2페이지 재조회
+                        if not filtered:
+                            try:
+                                data_page2 = fetch_jewelry_engraving(f"{lv}레벨", 2, tier)
+                                if data_page2 and data_page2.get("Items"):
+                                    filtered = [
+                                        x for x in data_page2["Items"]
+                                        if nm in x["Name"] and (x.get("AuctionInfo") or {}).get("BuyPrice") is not None
+                                    ]
+                            except Exception as e:
+                                print(f"{lv}레벨 {nm} 2페이지 조회 실패:", e)
+        
                         if filtered:
                             # 최저가 아이템 선택
                             lowest = min(filtered, key=lambda x: x["AuctionInfo"]["BuyPrice"])
@@ -2074,7 +2086,6 @@ def fallback():
             elapsed_time = time.time() - start_time  # ← 종료 시간 측정
         
             response_text = "\n".join(lines)
-            response_text += f"\n⏱️ 처리 시간: {elapsed_time:.2f}초"
         
             print(f"보석 조회 처리 시간: {elapsed_time:.2f}초")
             print("response_text: ", response_text)
@@ -3429,6 +3440,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
