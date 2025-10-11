@@ -869,7 +869,6 @@ def fallback():
         
             parse_data = parse_shop_items(html)  # dict 형태
             print('parse_data : ', parse_data)
-            print('html : ', html)
         
             items = []
         
@@ -3721,6 +3720,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
