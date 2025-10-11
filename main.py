@@ -2396,6 +2396,8 @@ def fallback():
         # ---------- 9. 특정 캐릭터 정보 관련 패턴 ----------
         match_info = re.match(r"^(\.정보|정보|\.ㅈㅂ|ㅈㅂ)\s*(.*)$", user_input)
         if match_info:
+            start_time = time.time()
+            
             info_char_name = match_info.group(2).strip()
             
             if not info_char_name:
@@ -2702,8 +2704,7 @@ PVP: {pvp_grade_name}
                 
                 preview_text = "\n".join(lines)
 
-
-
+                print(f"정보 조회 완료, {time.time()-start_time:.2f}초 소요)")
                 
                 if data:
                     
@@ -3661,6 +3662,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
