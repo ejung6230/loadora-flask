@@ -339,9 +339,9 @@ def parse_shop_items(html):
             hours, rem = divmod(remaining_seconds, 3600)
             minutes, seconds = divmod(rem, 60)
     
-            return f"⏰ 새 상품 입고까지 {hours:02d}시간 {minutes:02d}분 남았습니다."
+            return f"⌛️ 새 상품 입고까지 {hours:02d}시간 {minutes:02d}분 남았습니다."
         except Exception as e:
-            return f"⏰ 새 상품 입고까지 시간을 계산할 수 없습니다: {e}"
+            return f"⌛️ 새 상품 입고 시간을 계산할 수 없습니다."
 
     time_until_new_item = parse_flipclock_timer()
 
@@ -927,12 +927,18 @@ def fallback():
                 cards_per_page = 3
                 for i in range(0, len(prev_items_data), cards_per_page):
                     chunk = prev_items_data[i:i + cards_per_page]
+                    chunk.append({
+                        "title": f"{curr.get("time_until_new_item", "")}",
+                        "description": "",
+                        "imageUrl": "",
+                        "link": {"web": ""}
+                    })
                     if not chunk:
                         continue
         
                     prev_list_cards.append({
                         "header": {
-                            "title": prev.get("description", ""),
+                            "title": f"{prev.get("description", "")} (i+1)",
                             "link": {"web": ""}
                         },
                         "items": chunk,
@@ -948,12 +954,18 @@ def fallback():
             cards_per_page = 3
             for i in range(0, len(curr_list), cards_per_page):
                 chunk = curr_list[i:i + cards_per_page]
+                chunk.append({
+                    "title": f"{curr.get("time_until_new_item", "")}",
+                    "description": "",
+                    "imageUrl": "",
+                    "link": {"web": ""}
+                })
                 if not chunk:
                     continue
         
                 curr_list_cards.append({
                     "header": {
-                        "title": f"현재 판매 상품",
+                        "title": f"현재 판매 상품 (i+1)",
                         "link": {"web": ""}
                     },
                     "items": chunk,
@@ -3658,6 +3670,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
