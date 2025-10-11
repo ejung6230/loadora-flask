@@ -322,11 +322,10 @@ def parse_shop_items(html):
     """
     HTML을 받아 현재/이전 판매 상품 정보를 파싱
     FlipClock에서 새 상품 입고까지 시간 추출 포함
+    마리샵 영역에서는 alt 속성과 list__thumb 기준으로 src/상품명/수량 추출
     """
-    item_pattern = re.compile(
-        r'<img\s+src="([^"]+)"[^>]*>.*?<span class="item-name">(.+?)</span>.*?class="list__price".*?<em>(\d+)</em>(?:\s*<del>(\d+)</del>)?',
-        re.DOTALL
-    )
+    import re
+    from datetime import datetime, timedelta
 
     def clean_html_tags(text):
         text = re.sub(r'<[^>]+>', '', text)
@@ -355,30 +354,51 @@ def parse_shop_items(html):
 
     time_until_new_item = parse_flipclock_timer()
 
-    # --- 현재 판매 상품 ---
-    current_section = html.split('<h3 class="shop-sub-title">이전 판매 상품</h3>')[0]
+    # --- 마리샵 영역 추출 ---
+    mari_block_match = re.search(r'<div class="shop-list for-mari">(.*?)</div>', html, re.DOTALL)
+    mari_html = mari_block_match.group(1) if mari_block_match else ""
+
+    # --- 마리샵 아이템 추출 ---
+    mari_pattern = re.compile(
+        r'<div class="list__thumb"[^>]*>\s*<img\s+src="([^"]+)"\s+alt="([^"]+)"',
+        re.DOTALL
+    )
     current_items = []
-    for img, name, price, original_price in item_pattern.findall(current_section):
-        price_val = int(price.strip())
-        original_val = int(original_price.strip()) if original_price and original_price.strip().isdigit() else None
+    for img_src, alt_text in mari_pattern.findall(mari_html):
+        # src 절대경로 보정
+        if img_src.startswith("//"):
+            img_src = "https:" + img_src
+
+        # alt에서 상품명과 수량 추출
+        name = alt_text.strip()
+        match = re.search(r"\[(\d+)개\]", name)
+        quantity = int(match.group(1)) if match else 1
+        name = re.sub(r"\s*\[\d+개\]", "", name).strip()
+
         current_items.append({
-            "name": name.strip(),
-            "price": price_val,
-            "img": img,
-            "original_price": original_val,
-            "discount_rate": round((original_val - price_val) / original_val * 100, 2) if original_val else None
+            "name": name,
+            "img": img_src,
+            "quantity": quantity
         })
 
     # --- 이전 판매 상품 ---
-    previous_section = html.split('<h3 class="shop-sub-title">이전 판매 상품</h3>')[1]
-    block_pattern = re.compile(r'<p class="shop-dsc">\s*(.*?)\s*</p>(.*?)(?=<p class="shop-dsc">|$)', re.DOTALL)
+    previous_section = ""
+    if '<h3 class="shop-sub-title">이전 판매 상품</h3>' in html:
+        previous_section = html.split('<h3 class="shop-sub-title">이전 판매 상품</h3>')[1]
 
+    block_pattern = re.compile(r'<p class="shop-dsc">\s*(.*?)\s*</p>(.*?)(?=<p class="shop-dsc">|$)', re.DOTALL)
     previous_blocks = []
+
     for desc_html, items_html in block_pattern.findall(previous_section):
         description = clean_html_tags(desc_html)
         main_name, end_time = parse_main_and_end(description)
 
         items = []
+        # 이전 상품은 기존 item_pattern 유지 (span.item-name 기준)
+        item_pattern = re.compile(
+            r'<img\s+src="([^"]+)"[^>]*>.*?<span class="item-name">(.+?)</span>.*?class="list__price".*?<em>(\d+)</em>(?:\s*<del>(\d+)</del>)?',
+            re.DOTALL
+        )
         for img, name, price, original_price in item_pattern.findall(items_html):
             price_val = int(price.strip())
             original_val = int(original_price.strip()) if original_price and original_price.strip().isdigit() else None
@@ -399,7 +419,7 @@ def parse_shop_items(html):
 
     return {
         "current_items": {
-            "description": "현재 판매 상품",
+            "description": "마리샵 현재 판매 상품",
             "end_time": None,
             "time_until_new_item": time_until_new_item,
             "items": current_items
@@ -3713,6 +3733,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
