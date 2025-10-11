@@ -867,28 +867,30 @@ def fallback():
         
             # ---------- 텍스트 정제 ----------
             response_text = "◕ᴗ◕🌸\n현재 마리샵 판매 정보를 알려드릴게요.\n\n"
-            response_text += "❙ 현재 판매 상품\n"
-            
-            for item in parse_data["current_items"]["items"]:
-                raw_name = item["name"]
-                            
-                # 정규식으로 [숫자개] 패턴 분리
-                match = re.search(r"\[(\d+)개\]", raw_name)
-                if match:
-                    count_value = match.group(1)
-                    name = re.sub(r"\[\d+개\]", "", raw_name).strip()  # [] 부분 제거
-                    count = f"[{count_value}개]"
-                else:
-                    name = raw_name.strip()
-                    count = f"[{item['count']}개]" if "count" in item else ""
-                
-                price = str(item["price"]).ljust(3)
+            response_text += "❙ 현재 판매 상품111\n"
 
-                # 할인률이 존재할 때 소수점 1자리까지 표시
-                discount_rate = item.get("discount_rate")
-                discount = f" ({discount_rate:.1f}% 할인)" if discount_rate is not None else ""
+            for curr in parse_data.get("current_items", []):
+                response_text += f"\n❙ {curr.get('description', '')}\n"
+                for item in curr.get("items", []):
+                    raw_name = item["name"]
+                                
+                    # 정규식으로 [숫자개] 패턴 분리
+                    match = re.search(r"\[(\d+)개\]", raw_name)
+                    if match:
+                        count_value = match.group(1)
+                        name = re.sub(r"\[\d+개\]", "", raw_name).strip()  # [] 부분 제거
+                        count = f"[{count_value}개]"
+                    else:
+                        name = raw_name.strip()
+                        count = f"[{item['count']}개]" if "count" in item else ""
+                    
+                    price = str(item["price"]).ljust(3)
     
-                response_text += f"- {price}💎: {count} {name} {discount}\n"
+                    # 할인률이 존재할 때 소수점 1자리까지 표시
+                    discount_rate = item.get("discount_rate")
+                    discount = f" ({discount_rate:.1f}% 할인)" if discount_rate is not None else ""
+        
+                    response_text += f"- {price}💎: {count} {name} {discount}\n"
         
             # 이전 아이템
             for prev in parse_data.get("previous_items", []):
@@ -3591,6 +3593,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
