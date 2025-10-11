@@ -317,18 +317,20 @@ def parse_shop_items(html):
 
     # --- FlipClock에서 남은 시간 추출 ---
     def parse_flipclock_timer(html):
-        # 시(hour)
-        hours = ''.join(re.findall(r'<span class="flip-clock-divider hours">.*?<li class="flip-clock-active" data-digit="(\d+)"', html, re.DOTALL))
-        # 분(minutes)
-        minutes = ''.join(re.findall(r'<span class="flip-clock-divider minutes">.*?<li class="flip-clock-active" data-digit="(\d+)"', html, re.DOTALL))
-        # 초(seconds)
-        seconds = ''.join(re.findall(r'<span class="flip-clock-divider seconds">.*?<li class="flip-clock-active" data-digit="(\d+)"', html, re.DOTALL))
+        # --- 시간(hh)
+        hour_digits = re.findall(r'<span class="flip-clock-divider hours">.*?</span>.*?<ul class="flip.*?">.*?<li class="flip-clock-active" data-digit="(\d+)"', html, re.DOTALL)
+        # --- 분(mm)
+        minute_digits = re.findall(r'<span class="flip-clock-divider minutes">.*?</span>.*?<ul class="flip.*?">.*?<li class="flip-clock-active" data-digit="(\d+)"', html, re.DOTALL)
+        # --- 초(ss)
+        second_digits = re.findall(r'<span class="flip-clock-divider seconds">.*?</span>.*?<ul class="flip.*?">.*?<li class="flip-clock-active" data-digit="(\d+)"', html, re.DOTALL)
 
-        # 자리수 보정
-        hours = hours.zfill(2) if hours else "00"
-        minutes = minutes.zfill(2) if minutes else "00"
-        seconds = seconds.zfill(2) if seconds else "00"
-
+        if not hour_digits or not minute_digits or not second_digits:
+            return "⏰ 정보를 불러올 수 없습니다."
+        
+        hours = ''.join(hour_digits).zfill(2) if hour_digits else "00"
+        minutes = ''.join(minute_digits).zfill(2) if minute_digits else "00"
+        seconds = ''.join(second_digits).zfill(2) if second_digits else "00"
+    
         return f"⏰ 새 상품 입고까지 {hours}시간 {minutes}분 남았습니다."
 
     time_until_new_item = parse_flipclock_timer(html)
@@ -3579,6 +3581,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
