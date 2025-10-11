@@ -261,12 +261,10 @@ def parse_shop_items(html):
 
     # 이름, 가격, 이미지 함께 추출
     item_pattern = re.compile(
-        r'<div class="list__thumb">\s*<img[^>]+src="([^"]+)"[^>]*>\s*</div>.*?'
+        r'<div class="list__thumb">.*?<img[^>]+src="([^"]+)"[^>]*>.*?</div>.*?'
         r'<span class="item-name">(.+?)</span>.*?class="list__price".*?<em>(\d+)</em>(?:\s*<del>(\d+)</del>)?',
         re.DOTALL
     )
-
-    print('html: ', html)
 
     def clean_html_tags(text):
         text = re.sub(r'<[^>]+>', '', text)
@@ -283,9 +281,11 @@ def parse_shop_items(html):
 
     current_items = []
     for img_src, name, price, original_price in item_pattern.findall(current_section):
+        # 이미지 URL 보정
         img_full = img_src.strip()
         if img_full.startswith("//"):
-            img_full = "https:" + img_full  # 프로토콜 없는 URL 보완
+            img_full = "https:" + img_full
+
         price_val = int(price.strip())
         original_val = int(original_price.strip()) if original_price and original_price.strip().isdigit() else None
 
@@ -313,7 +313,6 @@ def parse_shop_items(html):
                 img_full = "https:" + img_full
             price_val = int(price.strip())
             original_val = int(original_price.strip()) if original_price and original_price.strip().isdigit() else None
-
             items.append({
                 "name": name.strip(),
                 "price": price_val,
@@ -3501,6 +3500,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
