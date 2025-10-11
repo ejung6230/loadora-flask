@@ -2083,12 +2083,13 @@ def fallback():
                         if filtered:
                             lowest = min(filtered, key=lambda x: x["AuctionInfo"]["BuyPrice"])
                             price = lowest["AuctionInfo"]["BuyPrice"]
+                            name = lowest.get("Name", f"{lv} {nm}")
                             img_url = lowest.get("Icon", "")
                             if img_url.startswith("//"):
                                 img_url = "https:" + img_url
 
                             menu_list.append({
-                                "title": f"{lv} {nm}",          # 예: "10레벨 작열"
+                                "title": name,          # 예: "10레벨 작열"
                                 "desc": f"{price:,}💰",          # 예: "9,050💰"
                                 "img": img_url,
                                 "msg": f"보석 {lv} {nm}"
@@ -2111,9 +2112,13 @@ def fallback():
                         "link": {"web": ""}
                     })
 
+                range_text = f"({min(item_levels)}~{max(item_levels)}레벨)"
+                {range_text}
+
+                
                 list_cards.append({
                     "header": {
-                        "title": "💎 보석 최저가 목록",
+                        "title": "보석 ()",
                         "link": {"web": ""}
                     },
                     "items": list_items,
@@ -2139,10 +2144,9 @@ def fallback():
                 }
             }
 
-            range_text = f"({min(item_levels)}~{max(item_levels)}레벨)"
             items.append({
                 "simpleText": {
-                    "text": f"◕ᴗ◕🌸\n보석 경매장 최저가를 알려드릴게요 {range_text}"
+                    "text": f"◕ᴗ◕🌸\n보석 가격을 알려드릴게요.\n특정 보석을 조회하려면 명령어를 입력하세요.\nex).보석 10멸"
                 }
             })
             items.append(carousel)
@@ -3497,6 +3501,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
