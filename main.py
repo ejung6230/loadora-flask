@@ -887,8 +887,6 @@ def fallback():
                     "title": f"{name} {count}",
                     "description": f"{price:,}💎 {discount}",
                     "imageUrl": img_url,
-                    "action": "message",
-                    "messageText": "",
                     "link": {"web": ""}
                 })
         
@@ -922,8 +920,6 @@ def fallback():
                         "title": f"{name} {count}",
                         "description": f"{price:,}💎 {discount}",
                         "imageUrl": img_url,
-                        "action": "message",
-                        "messageText": "",
                         "link": {"web": ""}
                     })
         
@@ -3662,6 +3658,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
