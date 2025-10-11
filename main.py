@@ -315,31 +315,33 @@ def parse_shop_items(html):
         text = re.sub(r'\s+', ' ', text)
         return text.strip()
 
-    # --- FlipClock에서 남은 시간 추출 ---
+    # --- 새 상품 입고까지 남은 시간 계산 ---
     def parse_flipclock_timer():
-        """
-        KST 기준으로 오전 6시, 오후 6시까지 남은 시간 계산
-        _html 매개변수는 필요 없음 (호환용)
-        """
-        now = NOW_KST  # 이미 정의된 KST 기준 현재 시각 사용
-    
-        today_am6 = datetime.combine(TODAY, time(6, 0))  # datetime.time 사용
-        today_pm6 = datetime.combine(TODAY, time(18, 0))
-    
-        if now < today_am6:
-            next_release = today_am6
-        elif now < today_pm6:
-            next_release = today_pm6
-        else:
-            # 다음 날 오전 6시
-            next_release = today_am6 + timedelta(days=1)
-    
-        remaining = next_release - now
-        hours, remainder = divmod(int(remaining.total_seconds()), 3600)
-        minutes, seconds = divmod(remainder, 60)
-    
-        return f"⏰ 새 상품 입고까지 {hours:02d}시간 {minutes:02d}분 남았습니다."
-        
+        try:
+            # 현재 KST 시각
+            now_struct = time.localtime(time.time() + 9*3600)  # UTC +9
+            now_seconds = now_struct.tm_hour*3600 + now_struct.tm_min*60 + now_struct.tm_sec
+
+            # 오전 6시, 오후 6시를 초 단위로 계산
+            am6_seconds = 6*3600
+            pm6_seconds = 18*3600
+
+            if now_seconds < am6_seconds:
+                remaining_seconds = am6_seconds - now_seconds
+            elif now_seconds < pm6_seconds:
+                remaining_seconds = pm6_seconds - now_seconds
+            else:
+                # 다음 날 오전 6시까지
+                remaining_seconds = (24*3600 - now_seconds) + am6_seconds
+
+            hours, rem = divmod(remaining_seconds, 3600)
+            minutes, seconds = divmod(rem, 60)
+
+            return f"⏰ 새 상품 입고까지 {hours:02d}시간 {minutes:02d}분 남았습니다."
+        except Exception as e:
+            # 예외 발생 시 메시지 반환
+            return f"⏰ 새 상품 입고까지 시간을 계산할 수 없습니다: {e}"
+
     time_until_new_item = parse_flipclock_timer()
     
     print(html)
@@ -3588,6 +3590,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
