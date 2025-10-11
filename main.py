@@ -1918,6 +1918,7 @@ def fallback():
         
             list_cards = []
             cards_per_page = 4  # 최대 4개로 제한
+
         
             # 4개씩 끊어서 listCard 구성
             for i in range(0, len(menu_list), cards_per_page):
@@ -1937,10 +1938,11 @@ def fallback():
                     })
         
                 page_no = (i // cards_per_page) + 1
+                total_pages = (len(menu_list) + cards_per_page - 1) // cards_per_page
         
                 list_card = {
                     "header": {
-                        "title": f"명령어 목록 {page_no}",
+                        "title": f"명령어 목록 ({page_no}/{total_pages})",
                         "link": {"web": ""}
                     },
                     "items": list_items,
@@ -3662,6 +3664,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
