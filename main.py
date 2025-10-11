@@ -338,7 +338,7 @@ def parse_shop_items(html):
         hours, remainder = divmod(int(remaining.total_seconds()), 3600)
         minutes, seconds = divmod(remainder, 60)
     
-        return f"⏰ 새 상품 입고까지 {hours:02d}시간 {minutes:02d}분 {seconds:02d}초 남았습니다."
+        return f"⏰ 새 상품 입고까지 {hours:02d}시간 {minutes:02d}분 남았습니다."
         
     time_until_new_item = parse_flipclock_timer()
     
@@ -3588,6 +3588,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
