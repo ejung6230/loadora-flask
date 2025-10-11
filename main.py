@@ -1995,7 +1995,7 @@ def fallback():
             base_name = re.sub(r"\d+", "", raw_input).strip()
         
             item_tiers = {4: ["작열", "겁화"], 3: ["멸화", "홍염"]}
-            item_levels = [10,9,8,7,6,5,4,3,2,1]
+            item_levels = [10,9,8,7,6,5]
         
             requests_list = [
                 (f"{lv}레벨 {nm}의 보석", tier)
@@ -3384,6 +3384,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
