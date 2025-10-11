@@ -169,7 +169,7 @@ def get_shop():
 @app.route('/img')
 def serve_mokoko():
     # main.py와 같은 폴더 기준으로 절대 경로 계산
-    file_path = os.path.join(os.path.dirname(__file__), '모코코큐티_투명배경.png')
+    file_path = os.path.join(os.path.dirname(__file__), '모코코별풍선_투명배경.png')
 
     # 파일이 실제로 존재하는지 확인 (디버깅용)
     if not os.path.exists(file_path):
@@ -3662,6 +3662,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
