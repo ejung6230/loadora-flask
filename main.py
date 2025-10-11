@@ -2526,6 +2526,7 @@ PVP: {pvp_grade_name}
                 }
             }
         else:
+            print("response_text 출력되어야지!!")
             if use_share_button:
                 # ✅ 응답이 있으면 공유 버튼 있는 textCard
                 response = {
@@ -3384,6 +3385,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
