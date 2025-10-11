@@ -329,7 +329,7 @@ def parse_shop_items(html):
         minutes = minutes.zfill(2) if minutes else "00"
         seconds = seconds.zfill(2) if seconds else "00"
 
-        return f"{hours}:{minutes}:{seconds}"
+        return f"⏰ 새 상품 입고까지 {hours}시간 {minutes}분 남았습니다."
 
     time_until_new_item = parse_flipclock_timer(html)
     
@@ -3579,6 +3579,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
