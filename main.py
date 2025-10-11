@@ -871,7 +871,7 @@ def fallback():
             parse_data = parse_shop_items(html)  # dict 형태
             print('parse_data : ', parse_data)
             print('html : ', html)
-            
+        
             items = []
         
             # ---------- 현재 판매 아이템 처리 ----------
@@ -942,7 +942,6 @@ def fallback():
         
                 if end_time_str:
                     try:
-                        # ISO 포맷('2025-10-10T18:00:00') 또는 일반 포맷 둘 다 처리
                         try:
                             end_dt = datetime.fromisoformat(end_time_str).replace(tzinfo=None)
                         except ValueError:
@@ -970,7 +969,7 @@ def fallback():
                 for i in range(0, len(prev_items_data), cards_per_page):
                     chunk = prev_items_data[i:i + cards_per_page]
                     total_pages = (len(prev_items_data) + cards_per_page - 1) // cards_per_page
-                    now_page = i // cards_per_page + 1  # 현재 페이지 번호
+                    now_page = i // cards_per_page + 1
         
                     # chunk 마지막에 남은 시간 표시
                     chunk.append({
@@ -999,9 +998,8 @@ def fallback():
             for i in range(0, len(curr_list), cards_per_page):
                 chunk = curr_list[i:i + cards_per_page]
                 total_pages = (len(curr_list) + cards_per_page - 1) // cards_per_page
-                now_page = i // cards_per_page + 1  # ← 현재 페이지 번호 계산
-
-                
+                now_page = i // cards_per_page + 1
+        
                 # 새 상품 입고 시간 표시
                 chunk.append({
                     "title": f"{curr.get('time_until_new_item', '')}",
@@ -1023,23 +1021,30 @@ def fallback():
                     "forwardable": True
                 })
         
-            # ---------- 모든 카드 합치기 ----------
-            all_list_cards = curr_list_cards + prev_list_cards
-        
-            carousel = {
-                "carousel": {
-                    "type": "listCard",
-                    "items": all_list_cards
-                }
-            }
-        
             # ---------- 최종 메시지 구성 ----------
             items.append({
                 "simpleText": {
                     "text": f"◕ᴗ◕🌸\n현재 마리샵 판매 정보를 알려드릴게요."
                 }
             })
-            items.append(carousel)
+        
+            # 현재 판매 아이템 캐러셀 추가
+            if curr_list_cards:
+                items.append({
+                    "carousel": {
+                        "type": "listCard",
+                        "items": curr_list_cards
+                    }
+                })
+        
+            # 이전 판매 아이템 캐러셀 추가
+            if prev_list_cards:
+                items.append({
+                    "carousel": {
+                        "type": "listCard",
+                        "items": prev_list_cards
+                    }
+                })
         
         # ---------- 1. 공지 관련 패턴 ----------
         match_notice = re.match(r"^(\.공지|공지|\.ㄱㅈ|ㄱㅈ)$", user_input)
@@ -3717,6 +3722,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
