@@ -935,7 +935,7 @@ def fallback():
         
                     prev_list_cards.append({
                         "header": {
-                            "title": prev.get("description", ""),
+                            "title": f"{prev.get("description", "")} ({i+1})",
                             "link": {"web": ""}
                         },
                         "items": chunk,
@@ -962,7 +962,7 @@ def fallback():
         
                 curr_list_cards.append({
                     "header": {
-                        "title": "현재 판매 상품",
+                        "title": f"현재 판매 상품 ({i+1})",
                         "link": {"web": ""}
                     },
                     "items": chunk,
@@ -3667,6 +3667,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
