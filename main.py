@@ -2009,7 +2009,7 @@ def fallback():
             base_name = re.sub(r"\d+", "", raw_input).strip()
         
             item_tiers = {4: ["작열", "겁화"], 3: ["멸화", "홍염"]}
-            item_levels = [10,9,8,7,6,5]
+            item_levels = [10,9,8,7]
         
             # requests_list 그대로 사용
             requests_list = [
@@ -2021,7 +2021,7 @@ def fallback():
             # 멀티스레딩으로 병렬 처리 (속도 향상)
             results = [None] * len(requests_list)
             
-            with ThreadPoolExecutor(max_workers=24) as thread_executor:
+            with ThreadPoolExecutor(max_workers=16) as thread_executor:
                 future_to_idx = {
                     thread_executor.submit(fetch_jewelry_engraving, name, 1, tier): i
                     for i, (name, tier) in enumerate(requests_list)
@@ -3422,6 +3422,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
