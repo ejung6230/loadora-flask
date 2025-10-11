@@ -920,14 +920,39 @@ def fallback():
                         "link": {"web": ""}
                     })
         
-                # 3개씩 묶어서 카드 생성
+                # ---------- 판매 마감 시간 계산 ----------
+                end_time_str = prev.get("end_time", "")
+                time_left_text = ""
+        
+                if end_time_str:
+                    try:
+                        # end_time 예시: "2025-10-12 18:00:00"
+                        end_dt = datetime.strptime(end_time_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=None)
+                        delta = end_dt - NOW_KST
+        
+                        if delta.total_seconds() > 0:
+                            hours = int(delta.total_seconds() // 3600)
+                            minutes = int((delta.total_seconds() % 3600) // 60)
+                            if hours > 0:
+                                time_left_text = f"⏰ 판매 마감까지 {hours}시간 {minutes}분 남았습니다."
+                            else:
+                                time_left_text = f"⏰ 판매 마감까지 {minutes}분 남았습니다."
+                        else:
+                            time_left_text = "⏰ 판매가 종료되었습니다."
+                    except Exception:
+                        time_left_text = f"⏰ 종료 시간: {end_time_str}"
+                else:
+                    time_left_text = "⏰ 종료 시간 정보 없음"
+        
+                # ---------- 3개씩 묶어서 카드 생성 ----------
                 cards_per_page = 3
                 for i in range(0, len(prev_items_data), cards_per_page):
                     chunk = prev_items_data[i:i + cards_per_page]
+                    total_pages = (len(prev_items_data) + cards_per_page - 1) // cards_per_page
         
-                    # 이전 판매 아이템 chunk 마지막에 종료 시간 표시
+                    # chunk 마지막에 남은 시간 표시
                     chunk.append({
-                        "title": f"{prev.get('end_time', '')} 종료",
+                        "title": f"{time_left_text} ({end_time_str} 종료)",
                         "description": "",
                         "imageUrl": "",
                         "link": {"web": ""}
@@ -935,7 +960,7 @@ def fallback():
         
                     prev_list_cards.append({
                         "header": {
-                            "title": f"{prev.get('description', '')} ({i+1}/{len(prev_items_data)})",
+                            "title": f"{prev.get('description', '')} ({i+1}/{total_pages})",
                             "link": {"web": ""}
                         },
                         "items": chunk,
@@ -951,8 +976,9 @@ def fallback():
             cards_per_page = 3
             for i in range(0, len(curr_list), cards_per_page):
                 chunk = curr_list[i:i + cards_per_page]
+                total_pages = (len(curr_list) + cards_per_page - 1) // cards_per_page
         
-                # chunk 마지막에 새 상품 입고 시간 표시
+                # 새 상품 입고 시간 표시
                 chunk.append({
                     "title": f"{curr.get('time_until_new_item', '')}",
                     "description": "",
@@ -962,7 +988,7 @@ def fallback():
         
                 curr_list_cards.append({
                     "header": {
-                        "title": f"현재 판매 상품 ({i+1}/{len(curr_list)})",
+                        "title": f"현재 판매 상품 ({i+1}/{total_pages})",
                         "link": {"web": ""}
                     },
                     "items": chunk,
@@ -3667,6 +3693,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
