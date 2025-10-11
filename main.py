@@ -280,22 +280,29 @@ def choose_best_year(month, day, hour, minute=0):
 
 def parse_main_and_end(description):
     """
-    description 예시:
+    예시:
     '10월 11일 6시 ~ 18시 판매 상품 (10월 12일 18:00까지 판매)'
     → main_name, end_time(datetime)
     """
-    # main_name: '(' 이전 텍스트
     main_name = description.split("(")[0].strip()
-
-    # end_time: 괄호 안에서 날짜/시간 추출
     end_time = None
-    time_match = re.search(r"(\d{1,2})월\s*(\d{1,2})일\s*(\d{1,2})(?::(\d{1,2}))?", description)
-    if time_match:
-        month = int(time_match.group(1))
-        day = int(time_match.group(2))
-        hour = int(time_match.group(3))
-        minute = int(time_match.group(4) or 0)
-        end_time = choose_best_year(month, day, hour, minute)
+
+    try:
+        # 괄호 안 날짜/시간 우선 탐색
+        inner_match = re.search(r"\(([^)]*?)\)", description)
+        target_text = inner_match.group(1) if inner_match else description
+
+        # '10월 12일 18:00' 또는 '10월 12일 18시' 형태 탐색
+        time_match = re.search(r"(\d{1,2})월\s*(\d{1,2})일\s*(\d{1,2})(?::(\d{1,2}))?", target_text)
+        if time_match:
+            month = int(time_match.group(1))
+            day = int(time_match.group(2))
+            hour = int(time_match.group(3))
+            minute = int(time_match.group(4) or 0)
+            end_time = choose_best_year(month, day, hour, minute)
+
+    except Exception as e:
+        print("⚠️ parse_main_and_end 오류:", e)
 
     return main_name, end_time
 
@@ -3700,6 +3707,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
