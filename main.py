@@ -2008,7 +2008,7 @@ def fallback():
             # 멀티스레딩으로 병렬 처리 (속도 향상)
             results = [None] * len(requests_list)
             
-            with ThreadPoolExecutor(max_workers=10) as thread_executor:
+            with ThreadPoolExecutor(max_workers=24) as thread_executor:
                 future_to_idx = {
                     thread_executor.submit(fetch_jewelry_engraving, name, 1, tier): i
                     for i, (name, tier) in enumerate(requests_list)
@@ -3409,6 +3409,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
