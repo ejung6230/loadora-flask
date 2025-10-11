@@ -779,6 +779,8 @@ def fallback():
                 return "마리샵 페이지를 가져오는데 실패했습니다."
         
             parse_data = parse_shop_items(html)  # dict 형태
+
+            print('parse_data: ', parse_data)
         
             # ---------- 텍스트 정제 ----------
             response_text = "◕ᴗ◕🌸\n현재 마리샵 판매 정보를 알려드릴게요.\n\n"
@@ -3493,6 +3495,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
