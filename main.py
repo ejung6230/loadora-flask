@@ -270,6 +270,8 @@ def parse_shop_items(html):
         text = re.sub(r'\s+', ' ', text)
         return text.strip()
 
+    print("html 보기 : ", html)
+
     # --- 현재 판매 상품 ---
     current_section = html.split('<h3 class="shop-sub-title">이전 판매 상품</h3>')[0]
     current_desc_match = re.search(r'<p class="shop-dsc">\s*(.*?)\s*</p>', current_section, re.DOTALL)
@@ -283,6 +285,7 @@ def parse_shop_items(html):
         current_items.append({
             "name": name.strip(),
             "price": price_val,
+            "img": "",
             "original_price": original_val,
             "discount_rate": round((original_val - price_val) / original_val * 100, 2) if original_val else None
         })
@@ -768,8 +771,6 @@ def fallback():
                 return "마리샵 페이지를 가져오는데 실패했습니다."
         
             parse_data = parse_shop_items(html)  # dict 형태
-
-            print(parse_data)
         
             # ---------- 텍스트 정제 ----------
             response_text = "◕ᴗ◕🌸\n현재 마리샵 판매 정보를 알려드릴게요.\n\n"
@@ -3428,6 +3429,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
