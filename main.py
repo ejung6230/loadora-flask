@@ -691,11 +691,11 @@ def timeout_handler(seconds):
             try:
                 return future.result(timeout=seconds)
             except TimeoutError:
-                response_text = "⚠️ 처리 시간이 너무 길어 응답하지 못했습니다. 잠시 후 다시 시도해주세요."
+                warning_text = "⚠️ 처리 시간이 너무 길어 응답하지 못했습니다. 잠시 후 다시 시도해주세요."
                 return jsonify({
                     "version": "2.0",
                     "template": {
-                        "outputs": [{"simpleText": {"text": response_text}}],
+                        "outputs": [{"simpleText": {"text": warning_text}}],
                         "quickReplies": []
                     }
                 })
@@ -703,7 +703,7 @@ def timeout_handler(seconds):
     return decorator
 
 @app.route("/fallback", methods=["POST"])
-@timeout_handler(4.5)
+@timeout_handler(4.8)
 def fallback():
     from datetime import datetime, timezone, timedelta
     from collections import defaultdict
@@ -3396,6 +3396,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
