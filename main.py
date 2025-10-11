@@ -1988,6 +1988,8 @@ def fallback():
         # ---------- 9. 보석 거래소 조회 관련 패턴 ----------
         jewelry_match = re.match(r"^(\.보석|보석|\.ㅄ|ㅄ|\.ㅂㅅ|ㅂㅅ)\s*(.*)$", user_input)
         if jewelry_match:
+            start_time = time.time()  # ← 시작 시간 측정
+            
             raw_input = jewelry_match.group(2).strip()
             num_match = re.search(r"(\d+)", raw_input)
             max_count = int(num_match.group(1)) if num_match else None
@@ -2003,11 +2005,10 @@ def fallback():
                 for lv, nm in product(item_levels, names)
             ]
         
-            # ===== 수정된 부분 시작 =====
             # 멀티스레딩으로 병렬 처리 (속도 향상)
             results = [None] * len(requests_list)
             
-            with ThreadPoolExecutor(max_workers=20) as thread_executor:
+            with ThreadPoolExecutor(max_workers=10) as thread_executor:
                 future_to_idx = {
                     thread_executor.submit(fetch_jewelry_engraving, name, 1, tier): i
                     for i, (name, tier) in enumerate(requests_list)
@@ -2019,7 +2020,6 @@ def fallback():
                         results[idx] = future.result()
                     except Exception as e:
                         results[idx] = e
-            # ===== 수정된 부분 끝 =====
         
             lines = []
             idx = 0
@@ -2051,8 +2051,14 @@ def fallback():
                     lines.append(f"{lv}레벨 : " + " / ".join(line_parts))
                 lines.append("")
         
+            elapsed_time = time.time() - start_time  # ← 종료 시간 측정
+            
             response_text = "\n".join(lines)
+            response_text += f"\n⏱️ 처리 시간: {elapsed_time:.2f}초"  # ← 처리 시간 추가
+            
+            print(f"보석 조회 처리 시간: {elapsed_time:.2f}초")  # ← 로그 출력
             print("response_text: ", response_text)
+            
             if len(response_text) < 400:
                 use_share_button = True
 
@@ -3403,6 +3409,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
