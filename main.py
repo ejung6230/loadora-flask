@@ -856,60 +856,130 @@ def fallback():
                 return "마리샵 페이지를 가져오는데 실패했습니다."
         
             parse_data = parse_shop_items(html)  # dict 형태
-
-            print('parse_data: ', parse_data)
+            items = []
         
-            # ---------- 텍스트 정제 ----------
-            response_text = "◕ᴗ◕🌸\n현재 마리샵 판매 정보를 알려드릴게요.\n\n"
-
+            # ---------- 현재 판매 아이템 처리 ----------
             curr = parse_data.get("current_items", {})
-            response_text += f"❙ {curr.get('description', '')}\n"
-            
+            curr_list = []
+        
             for item in curr.get("items", []):
                 raw_name = item["name"]
-            
-                # 정규식으로 [숫자개] 패턴 분리
+                img_url = item["img"]
+        
                 match = re.search(r"\[(\d+)개\]", raw_name)
                 if match:
                     count_value = match.group(1)
-                    name = re.sub(r"\[\d+개\]", "", raw_name).strip()  # [] 부분 제거
+                    name = re.sub(r"\[\d+개\]", "", raw_name).strip()
                     count = f"[{count_value}개]"
                 else:
                     name = raw_name.strip()
                     count = f"[{item['count']}개]" if "count" in item else ""
-                
+        
                 price = str(item["price"]).ljust(3)
-            
-                # 할인률이 존재할 때 소수점 1자리까지 표시
                 discount_rate = item.get("discount_rate")
                 discount = f" ({discount_rate:.1f}% 할인)" if discount_rate is not None else ""
-            
-                response_text += f"- {price}💎 {discount} : {name} {count} \n"
         
-            # 이전 아이템
+                curr_list.append({
+                    "title": f"{name} {count}",
+                    "description": f"{price:,}💎 {discount}",
+                    "imageUrl": img_url,
+                    "action": "message",
+                    "messageText": "",
+                    "link": {"web": ""}
+                })
+        
+            # ---------- 이전 판매 아이템 처리 ----------
+            prev_list_cards = []
+        
             for prev in parse_data.get("previous_items", []):
-                response_text += f"\n❙ {prev.get('description', '')}\n"
+                prev_items_data = []
+        
                 for item in prev.get("items", []):
                     raw_name = item["name"]
-                            
-                    # 정규식으로 [숫자개] 패턴 분리
+                    img_url = item["img"]
+        
                     match = re.search(r"\[(\d+)개\]", raw_name)
                     if match:
                         count_value = match.group(1)
-                        name = re.sub(r"\[\d+개\]", "", raw_name).strip()  # [] 부분 제거
+                        name = re.sub(r"\[\d+개\]", "", raw_name).strip()
                         count = f"[{count_value}개]"
                     else:
                         name = raw_name.strip()
                         count = f"[{item['count']}개]" if "count" in item else ""
-                
+        
                     price = str(item["price"]).ljust(3)
-                    
-                    # 할인률이 존재할 때 소수점 1자리까지 표시
                     discount_rate = item.get("discount_rate")
                     discount = f" ({discount_rate:.1f}% 할인)" if discount_rate is not None else ""
-                    
-                    response_text += f"- {price}💎 {discount} : {name} {count} \n"
-
+        
+                    prev_items_data.append({
+                        "title": f"{name} {count}",
+                        "description": f"{price:,}💎 {discount}",
+                        "imageUrl": img_url,
+                        "action": "message",
+                        "messageText": "",
+                        "link": {"web": ""}
+                    })
+        
+                # 3개씩 묶어서 카드 생성
+                cards_per_page = 3
+                for i in range(0, len(prev_items_data), cards_per_page):
+                    chunk = prev_items_data[i:i + cards_per_page]
+                    if not chunk:
+                        continue
+        
+                    prev_list_cards.append({
+                        "header": {
+                            "title": prev.get("description", ""),
+                            "link": {"web": ""}
+                        },
+                        "items": chunk,
+                        "buttons": [
+                            {"label": "공유하기", "action": "share", "highlight": False}
+                        ],
+                        "lock": False,
+                        "forwardable": True
+                    })
+        
+            # ---------- 현재 + 이전 아이템 캐러셀 통합 ----------
+            # 현재 아이템 캐러셀
+            curr_list_cards = []
+            cards_per_page = 3
+            for i in range(0, len(curr_list), cards_per_page):
+                chunk = curr_list[i:i + cards_per_page]
+                if not chunk:
+                    continue
+        
+                curr_list_cards.append({
+                    "header": {
+                        "title": f"현재 판매 상품 ({curr.get('time_until_new_item', '')})",
+                        "link": {"web": ""}
+                    },
+                    "items": chunk,
+                    "buttons": [
+                        {"label": "공유하기", "action": "share", "highlight": False}
+                    ],
+                    "lock": False,
+                    "forwardable": True
+                })
+        
+            # 모든 카드 합치기
+            all_list_cards = curr_list_cards + prev_list_cards
+        
+            carousel = {
+                "carousel": {
+                    "type": "listCard",
+                    "items": all_list_cards
+                }
+            }
+        
+            # ---------- 최종 메시지 구성 ----------
+            items.append({
+                "simpleText": {
+                    "text": f"◕ᴗ◕🌸\n현재 마리샵 판매 정보를 알려드릴게요.\n"
+                            f"{curr.get('time_until_new_item', '')}\n\n"
+                }
+            })
+            items.append(carousel)
         
         # ---------- 1. 공지 관련 패턴 ----------
         match_notice = re.match(r"^(\.공지|공지|\.ㄱㅈ|ㄱㅈ)$", user_input)
@@ -3587,6 +3657,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
