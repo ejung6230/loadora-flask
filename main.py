@@ -867,7 +867,7 @@ def fallback():
                 img_url = item["img"]
 
                 if img_url.startswith("//"):
-                img_url = "https:" + img_url
+                    img_url = "https:" + img_url
         
                 # [숫자개] 분리
                 match = re.search(r"\[(\d+)개\]", raw_name)
@@ -3662,6 +3662,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
