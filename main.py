@@ -309,12 +309,30 @@ def parse_shop_items(html):
         re.DOTALL
     )
 
+    item_pattern = re.compile(
+        r'<img\s+src="([^"]+)"[^>]*>.*?<span class="item-name">(.+?)</span>.*?class="list__price".*?<em>(\d+)</em>(?:\s*<del>(\d+)</del>)?',
+        re.DOTALL
+    )
+
     def clean_html_tags(text):
         text = re.sub(r'<[^>]+>', '', text)
         text = re.sub(r'\s+', ' ', text)
         return text.strip()
 
-    time_until_new_item = ""
+    # --- FlipClock에서 남은 시간 추출 ---
+    def parse_flipclock_timer(html):
+        soup = BeautifulSoup(html, "html.parser")
+
+        def get_digits(selector):
+            return ''.join([li['data-digit'] for li in soup.select(selector)])
+
+        hours = get_digits('span.flip-clock-divider.hours ~ ul li.flip-clock-active').zfill(2)
+        minutes = get_digits('span.flip-clock-divider.minutes ~ ul li.flip-clock-active').zfill(2)
+        seconds = get_digits('span.flip-clock-divider.seconds ~ ul li.flip-clock-active').zfill(2)
+
+        return f"{hours}:{minutes}:{seconds}"
+
+    time_until_new_item = parse_flipclock_timer(html)
     
     print(html)
 
@@ -360,6 +378,7 @@ def parse_shop_items(html):
             "description": description,
             "main_name": main_name or description,
             "end_time": end_time.isoformat() if end_time else None,
+            "time_until_new_item": "",
             "items": items
         })
 
@@ -3561,6 +3580,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
