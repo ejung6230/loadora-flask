@@ -2065,7 +2065,7 @@ def fallback():
 
             # 티어별 보석 이름
             item_tiers = {4: ["겁화", "작열"], 3: ["멸화", "홍염"]}
-            item_levels = [10, 9, 8, 7]
+            item_levels = [10, 9, 8, 7, 6, 5]
 
             cards_per_page = 4
             list_cards = []
@@ -3545,6 +3545,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
