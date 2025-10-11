@@ -256,11 +256,12 @@ def get_sasage():
         "data": data
     })
 
-
 def parse_shop_items(html):
     """HTML을 받아 현재/이전 판매 상품 정보를 파싱"""
-    
+
+    # 이름, 가격, 이미지 함께 추출
     item_pattern = re.compile(
+        r'<div class="list__thumb">\s*<img[^>]+src="([^"]+)"[^>]*>\s*</div>.*?'
         r'<span class="item-name">(.+?)</span>.*?class="list__price".*?<em>(\d+)</em>(?:\s*<del>(\d+)</del>)?',
         re.DOTALL
     )
@@ -270,28 +271,31 @@ def parse_shop_items(html):
         text = re.sub(r'\s+', ' ', text)
         return text.strip()
 
-    print("html 보기 : ", html)
-
     # --- 현재 판매 상품 ---
-    current_section = html.split('<h3 class="shop-sub-title">이전 판매 상품</h3>')[0]
+    parts = html.split('<h3 class="shop-sub-title">이전 판매 상품</h3>')
+    current_section = parts[0]
+    previous_section = parts[1] if len(parts) > 1 else ""
+
     current_desc_match = re.search(r'<p class="shop-dsc">\s*(.*?)\s*</p>', current_section, re.DOTALL)
     current_desc = clean_html_tags(current_desc_match.group(1)) if current_desc_match else ""
 
     current_items = []
-    for name, price, original_price in item_pattern.findall(current_section):
+    for img_src, name, price, original_price in item_pattern.findall(current_section):
+        img_full = img_src.strip()
+        if img_full.startswith("//"):
+            img_full = "https:" + img_full  # 프로토콜 없는 URL 보완
         price_val = int(price.strip())
         original_val = int(original_price.strip()) if original_price and original_price.strip().isdigit() else None
 
         current_items.append({
             "name": name.strip(),
             "price": price_val,
-            "img": "",
+            "img": img_full,
             "original_price": original_val,
             "discount_rate": round((original_val - price_val) / original_val * 100, 2) if original_val else None
         })
 
     # --- 이전 판매 상품 ---
-    previous_section = html.split('<h3 class="shop-sub-title">이전 판매 상품</h3>')[1]
     block_pattern = re.compile(
         r'<p class="shop-dsc">\s*(.*?)\s*</p>(.*?)(?=<p class="shop-dsc">|$)',
         re.DOTALL
@@ -301,13 +305,17 @@ def parse_shop_items(html):
     for desc_html, items_html in block_pattern.findall(previous_section):
         description = clean_html_tags(desc_html)
         items = []
-        for name, price, original_price in item_pattern.findall(items_html):
+        for img_src, name, price, original_price in item_pattern.findall(items_html):
+            img_full = img_src.strip()
+            if img_full.startswith("//"):
+                img_full = "https:" + img_full
             price_val = int(price.strip())
             original_val = int(original_price.strip()) if original_price and original_price.strip().isdigit() else None
 
             items.append({
                 "name": name.strip(),
                 "price": price_val,
+                "img": img_full,
                 "original_price": original_val,
                 "discount_rate": round((original_val - price_val) / original_val * 100, 2) if original_val else None
             })
@@ -3440,6 +3448,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
