@@ -224,7 +224,10 @@ def get_shop():
         "status_code": status_code,
         "content": content
     })
-    
+
+@app.route('/img')
+def serve_mokoko():
+    return send_file('/모코코큐티_투명배경.png', mimetype='image/png')
 
 @app.route("/health", methods=["GET"])
 def health():
@@ -3720,6 +3723,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
