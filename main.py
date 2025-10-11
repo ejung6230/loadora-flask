@@ -2133,15 +2133,23 @@ def fallback():
                                 "img": img_url,
                                 "msg": f".보석 {lv}{nm}"
                             })
-            
+
             # 4개씩 끊어서 listCard 생성
             for i in range(0, len(menu_list), cards_per_page):
                 chunk = menu_list[i:i + cards_per_page]
                 if not chunk:
                     continue
-
+            
                 list_items = []
+                current_tier = None
+            
                 for menu in chunk:
+                    # 예: menu["title"]에 '작열' 또는 '멸화' 등이 들어있으므로, 티어 추출
+                    for tier, names in item_tiers.items():
+                        if any(nm in menu["title"] for nm in names):
+                            current_tier = tier
+                            break
+            
                     list_items.append({
                         "title": menu["title"],
                         "description": menu["desc"],
@@ -2150,20 +2158,18 @@ def fallback():
                         "messageText": menu["msg"],
                         "link": {"web": ""}
                     })
-
-                range_text = f"({min(item_levels)}~{max(item_levels)}레벨)"
-                {range_text}
-
-                
+            
+                # 헤더에 티어 표시
+                tier_text = f"{current_tier}티어" if current_tier else ""
                 list_cards.append({
                     "header": {
-                        "title": "보석 ()",
+                        "title": f"보석 ({tier_text})",
                         "link": {"web": ""}
                     },
                     "items": list_items,
                     "buttons": [
                         {"label": "공유하기", "action": "share", "highlight": False}
-                    ]
+                    ],
                     "lock": False,
                     "forwardable": True
                 })
@@ -3539,6 +3545,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
