@@ -377,7 +377,7 @@ def parse_shop_items(html):
             "description": description,
             "main_name": main_name or description,
             "end_time": end_time.isoformat() if end_time else None,
-            "time_until_new_item": "",
+            "time_until_new_item": time_until_new_item,
             "items": items
         })
 
@@ -386,7 +386,7 @@ def parse_shop_items(html):
             "description": current_desc,
             "main_name": "현재 판매 상품",
             "end_time": None,
-            "time_until_new_item": "",
+            "time_until_new_item": time_until_new_item,
             "items": current_items
         },
         "previous_items": previous_blocks
@@ -3579,6 +3579,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
