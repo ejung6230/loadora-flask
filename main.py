@@ -2065,7 +2065,7 @@ def fallback():
 
             # 티어별 보석 이름
             item_tiers = {4: ["겁화", "작열"], 3: ["멸화", "홍염"]}
-            item_levels = [10, 9, 8, 7, 6]
+            item_levels = [10, 9, 8, 7]
 
             cards_per_page = 4
             list_cards = []
@@ -2078,7 +2078,7 @@ def fallback():
             results = [None] * len(requests_list)
 
             # 병렬 처리
-            with ThreadPoolExecutor(max_workers=20) as thread_executor:
+            with ThreadPoolExecutor(max_workers=16) as thread_executor:
                 future_to_idx = {
                     thread_executor.submit(fetch_jewelry_engraving, name, 1, tier): i
                     for i, (name, tier) in enumerate(requests_list)
@@ -3545,6 +3545,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
