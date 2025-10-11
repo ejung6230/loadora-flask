@@ -322,10 +322,14 @@ def parse_shop_items(html):
     HTML을 받아 현재/이전 판매 상품 정보를 파싱
     FlipClock에서 새 상품 입고까지 시간 추출 포함
     """
-    # 기존 정규식 그대로
+    # 정규식
     item_pattern = re.compile(
-        r'<img\s+src="([^"]+)"[^>]*>.*?<span class="item-name">(.+?)</span>.*?class="list__price".*?<em>(\d+)</em>(?:\s*<del>(\d+)</del>)?',
-        re.DOTALL
+        r'<div\s+class="list__thumb".*?>\s*'
+        r'<img\s+src="([^"]+)"[^>]*>.*?'                    # img src
+        r'<span\s+class="item-name">(.+?)</span>.*?'       # 아이템 이름
+        r'class="list__price".*?<em>(\d+)</em>'            # 현재 가격
+        r'(?:\s*<del>(\d+)</del>)?',                       # 이전 가격 (선택적)
+        re.DOTALL | re.IGNORECASE
     )
 
     def clean_html_tags(text):
@@ -3713,6 +3717,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
