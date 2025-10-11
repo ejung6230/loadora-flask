@@ -1985,7 +1985,6 @@ def fallback():
                 # 매칭 성공 → 해당 직업 시너지 정보
                 response_text = f"◕ᴗ◕🌸\n'{matched_job}' 직업의 시너지 정보를 알려드릴게요\n\n✤ {matched_class}\n{matched_job}: {job_data[matched_class][matched_job]['synergy_info']}"
 
-
         # ---------- 9. 보석 거래소 조회 관련 패턴 ----------
         jewelry_match = re.match(r"^(\.보석|보석|\.ㅄ|ㅄ|\.ㅂㅅ|ㅂㅅ)\s*(.*)$", user_input)
         if jewelry_match:
@@ -1997,17 +1996,23 @@ def fallback():
             item_tiers = {4: ["작열", "겁화"], 3: ["멸화", "홍염"]}
             item_levels = [10,9,8,7,6,5]
         
+            # requests_list 그대로 사용
             requests_list = [
                 (f"{lv}레벨 {nm}의 보석", tier)
                 for tier, names in item_tiers.items()
                 for lv, nm in product(item_levels, names)
             ]
         
-            async def fetch_all():
-                tasks = [asyncio.to_thread(fetch_jewelry_engraving, name, 1, tier) for name, tier in requests_list]
-                return await asyncio.gather(*tasks, return_exceptions=True)
-        
-            results = asyncio.run(fetch_all())
+            # -----------------------------
+            # asyncio 제거 → 동기 호출
+            # -----------------------------
+            results = []
+            for name, tier in requests_list:
+                try:
+                    data = fetch_jewelry_engraving(name, 1, tier)  # 동기 호출
+                    results.append(data)
+                except Exception as e:
+                    results.append(e)
         
             lines = []
             idx = 0
@@ -2023,23 +2028,26 @@ def fallback():
                             line_parts.append(f"{nm} 데이터 없음")
                             continue
         
-                        items_with_price = [item for item in data["Items"]
-                                            if (item.get("AuctionInfo") or {}).get("BuyPrice") is not None]
-                        cheapest = min(items_with_price, key=lambda x: x["AuctionInfo"]["BuyPrice"]) if items_with_price else None
+                        # BuyPrice가 None이 아닌 첫 번째 아이템 선택
+                        first_valid = next(
+                            (x for x in data["Items"]
+                             if (x.get("AuctionInfo") or {}).get("BuyPrice") is not None),
+                            None
+                        )
         
-                        if not cheapest:
+                        if first_valid:
+                            price = first_valid["AuctionInfo"]["BuyPrice"]
+                            line_parts.append(f"{nm} {price:,}💰")
+                        else:
                             line_parts.append(f"{nm} 데이터 없음")
-                            continue
-        
-                        price = cheapest["AuctionInfo"]["BuyPrice"]
-                        line_parts.append(f"{nm} {price:,}💰")
         
                     lines.append(f"{lv}레벨 : " + " / ".join(line_parts))
                 lines.append("")
         
             response_text = "\n".join(lines)
-            use_share_button = len(response_text) < 400
-            print(response_text)
+            if len(response_text) < 400:
+                use_share_button = True
+
         
         # ---------- 9. 유각 거래소 조회 관련 패턴 ----------
         relic_match = re.match(r"^(\.유각|유각|\.ㅇㄱ|ㅇㄱ|\.유물각인서|유물각인서|\.ㅇㅁㄱㅇㅅ|ㅇㅁㄱㅇㅅ)\s*(.*)$", user_input)
@@ -3385,6 +3393,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
