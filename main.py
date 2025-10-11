@@ -266,6 +266,8 @@ def parse_shop_items(html):
         re.DOTALL
     )
 
+    print('html: ', html)
+
     def clean_html_tags(text):
         text = re.sub(r'<[^>]+>', '', text)
         text = re.sub(r'\s+', ' ', text)
@@ -3495,6 +3497,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
