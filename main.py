@@ -2003,16 +2003,23 @@ def fallback():
                 for lv, nm in product(item_levels, names)
             ]
         
-            # -----------------------------
-            # asyncio 제거 → 동기 호출
-            # -----------------------------
-            results = []
-            for name, tier in requests_list:
-                try:
-                    data = fetch_jewelry_engraving(name, 1, tier)  # 동기 호출
-                    results.append(data)
-                except Exception as e:
-                    results.append(e)
+            # ===== 수정된 부분 시작 =====
+            # 멀티스레딩으로 병렬 처리 (속도 향상)
+            results = [None] * len(requests_list)
+            
+            with ThreadPoolExecutor(max_workers=10) as thread_executor:
+                future_to_idx = {
+                    thread_executor.submit(fetch_jewelry_engraving, name, 1, tier): i
+                    for i, (name, tier) in enumerate(requests_list)
+                }
+                
+                for future in as_completed(future_to_idx):
+                    idx = future_to_idx[future]
+                    try:
+                        results[idx] = future.result()
+                    except Exception as e:
+                        results[idx] = e
+            # ===== 수정된 부분 끝 =====
         
             lines = []
             idx = 0
@@ -3396,6 +3403,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
