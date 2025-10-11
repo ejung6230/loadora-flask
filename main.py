@@ -324,7 +324,7 @@ def parse_shop_items(html):
     """
 
     item_pattern = re.compile(
-        r'<img\s+src="([^"]+)"[^>]*>.*?'
+        r'<div class="list__thumb"[^>]*>.*?<img\s+src="([^"]+)"[^>]*>.*?'
         r'<span class="item-name">(.+?)</span>.*?'
         r'class="list__price".*?<em>(\d+)</em>'
         r'(?:\s*<del>(\d+)</del>)?',
@@ -3721,6 +3721,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
