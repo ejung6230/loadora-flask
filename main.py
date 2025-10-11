@@ -1365,7 +1365,6 @@ def fallback():
             
             # ---------- 오늘 일정 필터링 ----------
             def filter_today_times(it):
-                print('it 값이 뭘까요: ', it)
             
                 if not it or not isinstance(it, dict):
                     return []
@@ -2024,7 +2023,7 @@ def fallback():
             base_name = re.sub(r"\d+", "", raw_input).strip()
 
             # 티어별 보석 이름
-            item_tiers = {4: ["작열", "겁화"], 3: ["멸화", "홍염"]}
+            item_tiers = {4: ["겁화", "작열"], 3: ["멸화", "홍염"]}
             item_levels = [10, 9, 8, 7]
 
             cards_per_page = 4
@@ -2082,18 +2081,18 @@ def fallback():
                         if filtered:
                             lowest = min(filtered, key=lambda x: x["AuctionInfo"]["BuyPrice"])
                             price = lowest["AuctionInfo"]["BuyPrice"]
-                            name = lowest.get("Name", f"{lv} {nm}")
+                            name = lowest.get("Name", f"")
                             img_url = lowest.get("Icon", "")
                             if img_url.startswith("//"):
                                 img_url = "https:" + img_url
 
                             menu_list.append({
-                                "title": name,          # 예: "10레벨 작열"
+                                "title": name,          # 예: "10레벨 작열의 보석"
                                 "desc": f"{price:,}💰",          # 예: "9,050💰"
                                 "img": img_url,
-                                "msg": f"보석 {lv} {nm}"
+                                "msg": f".보석 {lv}{nm}"
                             })
-
+            
             # 4개씩 끊어서 listCard 생성
             for i in range(0, len(menu_list), cards_per_page):
                 chunk = menu_list[i:i + cards_per_page]
@@ -2145,7 +2144,7 @@ def fallback():
 
             items.append({
                 "simpleText": {
-                    "text": f"◕ᴗ◕🌸\n보석 가격을 알려드릴게요.\n특정 보석을 조회하려면 명령어를 입력하세요.\nex).보석 10멸"
+                    "text": f"◕ᴗ◕🌸\n보석 최저가를 알려드릴게요.\n특정 보석을 조회하려면 명령어를 입력하세요.\nex).보석 10멸"
                 }
             })
             items.append(carousel)
@@ -2188,7 +2187,7 @@ def fallback():
                 page_no += 1
         
             data_cnt = len(all_items)
-            lines = [f"◕ᴗ◕🌸\n유물 각인서 가격을 알려드릴게요 ({data_cnt}개)\n"]
+            lines = [f"◕ᴗ◕🌸\n유물 각인서 최저가를 알려드릴게요 ({data_cnt}개)\n"]
         
             if all_items:
                 up_count = down_count = 0
@@ -2640,7 +2639,6 @@ PVP: {pvp_grade_name}
             }
         else:
             if use_share_button:
-                print("response_text 여기 출력되어야지-1!!")
                 # ✅ 응답이 있으면 공유 버튼 있는 textCard
                 response = {
                     "version": "2.0",
@@ -2660,9 +2658,7 @@ PVP: {pvp_grade_name}
                         "quickReplies": []
                     }
                 }
-                print("response-1!!: ", response)
             else:
-                print("response_text 여기 출력되어야지-2!!")
                 # ✅ 응답이 있으면 simpleText
                 response = {
                     "version": "2.0",
@@ -3500,6 +3496,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
