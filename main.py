@@ -2358,15 +2358,15 @@ def fallback():
                 if not all_items:
                     response_text = f"'{item_name}'에 해당하는 거래소 아이템을 찾지 못했어요 😢"
                 else:
-                    # 상위 5개만 출력 예시
-                    preview_items = all_items[:5]
+                    # 상위 16개만 출력 예시
+                    preview_items = all_items[:16]
                     result_lines = [
                         f"📦 {item['아이템명']} ({item['등급']})\n"
                         f"💰 현재가: {item['현재가']:,} / 최근거래가: {item['최근거래가']:,} / 거래량: {item['거래량']:,}\n"
                         f"🗂 카테고리: {item['카테고리']}\n"
                         for item in preview_items
                     ]
-                    response_text = "🔍 거래소 조회 결과 (상위 5개)\n\n" + "\n".join(result_lines)
+                    response_text = "🔍 거래소 조회 결과 (상위 16개)\n\n" + "\n".join(result_lines)
 
         
         
@@ -3720,6 +3720,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
