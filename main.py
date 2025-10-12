@@ -2319,36 +2319,55 @@ def fallback():
         markets_match = re.match(r"^(\.거래소|거래소|\.ㄱㄽ|ㄱㄽ|\.ㄱㄹㅅ|ㄱㄹㅅ)\s*(.*)$", user_input)
         if markets_match:
             item_name = markets_match.group(2).strip()  # 예: "거래소목재" -> "목재"
-        
-            all_items = []
-            page_no = 1
-            category_code = 10100
 
-            option_data = fetch_markets_option()
-            response_text = "거래소 조회 완료"
-
-            print(option_data)
-
-            # 번호	대분류 이름	코드
-            # 1	    장비 상자	10100
-            # 2	    아바타    	20000
-            # 3	    각인서    	40000
-            # 4	    강화 재료	50000
-            # 5	    전투 용품	60000
-            # 6    	요리    	70000
-            # 7    	생활    	90000
-            # 8    	모험의 서	100000
-            # 9    	항해    	110000
-            # 10    펫	        140000
-            # 11    탈것    	160000
-            # 12	기타    	170000
-            # 13	보석 상자	220000
+            if not item_name:
+                response_text = "◕_◕💧\n검색할 아이템명을 입력해주세요.\nex) .거래소 아이템명"
+            else:
+                    
+                option_data = fetch_markets_option()  # 거래소 옵션(카테고리) 불러오기
+                category_data = option_data.get("Categories", [])
             
-            # while True:
-            #     data = fetch_all_market_items(category_code=category_code, item_name=item_name, page_no=page_no)
-            #     data_items = data.get("Items", [])
-            #     if not data_items:
-            #         break
+                all_items = []
+                page_no = 1
+            
+                for category in category_data:
+                    category_code = category["Code"]
+                    category_name = category["CodeName"]
+            
+                    # 아이템 검색
+                    data = fetch_all_market_items(
+                        category_code=category_code,
+                        item_name=item_name,
+                        page_no=page_no
+                    )
+                    data_items = data.get("Items", [])
+            
+                    # 결과가 있을 경우 all_items에 추가
+                    if data_items:
+                        for item in data_items:
+                            all_items.append({
+                                "카테고리": category_name,
+                                "아이템명": item.get("Name"),
+                                "등급": item.get("Grade"),
+                                "현재가": item.get("CurrentMinPrice"),
+                                "최근거래가": item.get("RecentPrice"),
+                                "거래량": item.get("TradeCount")
+                            })
+            
+                # 결과가 없을 때
+                if not all_items:
+                    response_text = f"'{item_name}'에 해당하는 거래소 아이템을 찾지 못했어요 😢"
+                else:
+                    # 상위 5개만 출력 예시
+                    preview_items = all_items[:5]
+                    result_lines = [
+                        f"📦 {item['아이템명']} ({item['등급']})\n"
+                        f"💰 현재가: {item['현재가']:,} / 최근거래가: {item['최근거래가']:,} / 거래량: {item['거래량']:,}\n"
+                        f"🗂 카테고리: {item['카테고리']}\n"
+                        for item in preview_items
+                    ]
+                    response_text = "🔍 거래소 조회 결과 (상위 5개)\n\n" + "\n".join(result_lines)
+
         
         
         # ---------- 9. 유각 거래소 조회 관련 패턴 ----------
@@ -3701,6 +3720,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
