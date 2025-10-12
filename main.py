@@ -2426,7 +2426,7 @@ def fallback():
                 page_no += 1
         
             data_cnt = len(all_items)
-            lines = [f"◕ᴗ◕🌸\n유물 각인서 최저가를 알려드릴게요 ({data_cnt}개)\n💡특정 유각을 조회하려면 명령어를 입력하세요 ex) .유각 아드"]
+            lines = [f"◕ᴗ◕🌸\n유물 각인서 최저가를 알려드릴게요 ({data_cnt}개)\n💡특정 유각을 조회하려면 명령어를 입력하세요 ex) .유각 아드\n\n"]
         
             if all_items:
                 up_count = down_count = 0
@@ -3741,6 +3741,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
