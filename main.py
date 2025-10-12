@@ -2324,29 +2324,30 @@ def fallback():
             if not item_name:
                 response_text = "◕_◕💧\n검색할 아이템명을 입력해주세요.\nex) .거래소 아이템명"
             else:
-                    
+                start_time = time.time()
                 option_data = fetch_markets_option()  # 거래소 옵션(카테고리) 불러오기
                 category_data = option_data.get("Categories", [])
             
                 all_items = []
                 page_no = 1
-            
-                for category in category_data:
+
+                # 병렬 처리 적용
+                from concurrent.futures import ThreadPoolExecutor, as_completed
+
+                # 각 카테고리별 요청 정의
+                def fetch_category_items(category):
                     category_code = category["Code"]
                     category_name = category["CodeName"]
-            
-                    # 아이템 검색
-                    data = fetch_all_market_items(
-                        category_code=category_code,
-                        item_name=item_name,
-                        page_no=page_no
-                    )
-                    data_items = data.get("Items", [])
-            
-                    # 결과가 있을 경우 all_items에 추가
-                    if data_items:
+                    try:
+                        data = fetch_all_market_items(
+                            category_code=category_code,
+                            item_name=item_name,
+                            page_no=page_no
+                        )
+                        data_items = data.get("Items", [])
+                        results = []
                         for item in data_items:
-                            all_items.append({
+                            results.append({
                                 "카테고리": category_name,
                                 "아이템명": item.get("Name"),
                                 "등급": item.get("Grade"),
@@ -2354,7 +2355,22 @@ def fallback():
                                 "최근거래가": item.get("RecentPrice"),
                                 "거래량": item.get("TradeCount")
                             })
-            
+                        return results
+                    except Exception as e:
+                        print(f"[WARN] {category_name} 조회 실패:", e)
+                        return []
+
+                # ThreadPoolExecutor 사용
+                with ThreadPoolExecutor(max_workers=16) as executor:
+                    futures = [executor.submit(fetch_category_items, category) for category in category_data]
+                    for future in as_completed(futures):
+                        try:
+                            result = future.result()
+                            if result:
+                                all_items.extend(result)
+                        except Exception as e:
+                            print("[ERROR] 병렬 처리 중 오류:", e)
+
                 # 결과가 없을 때
                 if not all_items:
                     response_text = f"'{item_name}'에 해당하는 거래소 아이템을 찾지 못했어요 😢"
@@ -2367,7 +2383,11 @@ def fallback():
                         f"🗂 카테고리: {item['카테고리']}\n"
                         for item in preview_items
                     ]
-                    response_text = "🔍 거래소 조회 결과 (상위 16개)\n\n" + "\n".join(result_lines)
+                    elapsed = time.time() - start_time
+                    response_text = (
+                        f"🔍 거래소 조회 결과 (상위 16개)\n"
+                        f"⏱ 조회 시간: {elapsed:.2f}초\n\n" + "\n".join(result_lines)
+                    )
 
         
         
@@ -3721,6 +3741,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
