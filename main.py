@@ -2331,6 +2331,15 @@ def fallback():
                 all_items = []
                 page_no = 1
 
+                # ✅ None 안전 포맷 함수
+                def format_price(val):
+                    if val is None:
+                        return "-"
+                    try:
+                        return f"{val:,}"
+                    except Exception:
+                        return str(val)
+
                 # 병렬 처리 적용
                 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -2389,6 +2398,7 @@ def fallback():
                         f"🔍 거래소 조회 결과 (상위 16개)\n"
                         f"⏱ 조회 시간: {elapsed:.2f}초\n\n" + "\n".join(result_lines)
                     )
+
 
         
         
@@ -3742,6 +3752,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
