@@ -2309,35 +2309,31 @@ def fallback():
 
             items.append({
                 "simpleText": {
-                    "text": f"◕ᴗ◕🌸\n보석 최저가를 알려드릴게요. (최대 16개 표시 가능)\n💡특정 보석을 조회하려면 명령어를 입력하세요 ex) .보석 10멸"
+                    "text": f"◕ᴗ◕🌸\n보석 최저가를 알려드릴게요.\n💡특정 보석을 조회하려면 명령어를 입력하세요 ex) .보석 10멸"
                 }
             })
             items.append(carousel)
 
             print(f"보석 조회 처리 완료 ({len(menu_list)}개 항목, {time.time()-start_time:.2f}초 소요)")
 
+
         # ---------- 9. 거래소 조회 관련 패턴 ----------
         markets_match = re.match(r"^(\.거래소|거래소|\.ㄱㄽ|ㄱㄽ|\.ㄱㄹㅅ|ㄱㄹㅅ)\s*(.*)$", user_input)
         if markets_match:
-            item_name = markets_match.group(2).strip()  # 검색할 아이템명
-        
+            from concurrent.futures import ThreadPoolExecutor, as_completed
+            item_name = markets_match.group(2).strip()  # 예: "거래소목재" -> "목재"
+
             if not item_name:
                 response_text = "◕_◕💧\n검색할 아이템명을 입력해주세요.\nex) .거래소 아이템명"
             else:
                 start_time = time.time()
-        
-                option_data = fetch_markets_option()
+                option_data = fetch_markets_option()  # 거래소 옵션(카테고리) 불러오기
                 category_data = option_data.get("Categories", [])
-        
-                # 검색어와 관련 있는 카테고리 우선 필터링
-                target_categories = [cat for cat in category_data if item_name.lower() in cat['CodeName'].lower()]
-                if not target_categories:
-                    target_categories = category_data
-        
+            
                 all_items = []
                 page_no = 1
-                lock = Lock()  # 스레드 안전을 위한 Lock
-        
+
+                # ✅ None 안전 포맷 함수
                 def format_price(val):
                     if val is None:
                         return "-"
@@ -2345,7 +2341,11 @@ def fallback():
                         return f"{val:,}"
                     except Exception:
                         return str(val)
-        
+
+                # 병렬 처리 적용
+                from concurrent.futures import ThreadPoolExecutor, as_completed
+
+                # 각 카테고리별 요청 정의
                 def fetch_category_items(category):
                     category_code = category["Code"]
                     category_name = category["CodeName"]
@@ -2358,9 +2358,6 @@ def fallback():
                         data_items = data.get("Items", [])
                         results = []
                         for item in data_items:
-                            with lock:
-                                if len(all_items) >= 16:  # 이미 16개 이상이면 더 이상 추가하지 않음
-                                    return results
                             results.append({
                                 "카테고리": category_name,
                                 "아이템명": item.get("Name"),
@@ -2373,34 +2370,31 @@ def fallback():
                     except Exception as e:
                         print(f"[WARN] {category_name} 조회 실패:", e)
                         return []
-        
-                max_workers = min(16, len(target_categories))
-                with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                    futures = [executor.submit(fetch_category_items, cat) for cat in target_categories]
+
+                # ThreadPoolExecutor 사용
+                with ThreadPoolExecutor(max_workers=16) as executor:
+                    futures = [executor.submit(fetch_category_items, category) for category in category_data]
                     for future in as_completed(futures):
                         try:
                             result = future.result()
-                            with lock:
-                                if result and len(all_items) < 16:
-                                    remaining_slots = 16 - len(all_items)
-                                    all_items.extend(result[:remaining_slots])
+                            if result:
+                                all_items.extend(result)
                         except Exception as e:
                             print("[ERROR] 병렬 처리 중 오류:", e)
-        
+
+                # 결과가 없을 때
                 if not all_items:
                     response_text = f"'{item_name}'에 해당하는 거래소 아이템을 찾지 못했어요 😢"
                 else:
-                    # 가격 기준 오름차순 정렬 후 최대 16개
-                    all_items.sort(key=lambda x: x['현재가'] if x['현재가'] else float('inf'))
+                    # 상위 16개만 출력 예시
                     preview_items = all_items[:16]
-        
+                    print('all_items:', all_items)
                     result_lines = [
                         f"📦 {item['아이템명']} ({item['등급']})\n"
                         f"💰 현재가: {format_price(item['현재가'])} / 최근거래가: {format_price(item['최근거래가'])} / 거래량: {format_price(item['거래량'])}\n"
                         f"🗂 카테고리: {item['카테고리']}\n"
                         for item in preview_items
                     ]
-        
                     elapsed = time.time() - start_time
                     response_text = (
                         f"🔍 거래소 조회 결과 (상위 16개)\n"
@@ -3760,8 +3754,6 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
 
 
 
