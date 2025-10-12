@@ -2377,9 +2377,10 @@ def fallback():
                 else:
                     # 상위 16개만 출력 예시
                     preview_items = all_items[:16]
+                    print('all_items:', all_items)
                     result_lines = [
                         f"📦 {item['아이템명']} ({item['등급']})\n"
-                        f"💰 현재가: {item['현재가']:,} / 최근거래가: {item['최근거래가']:,} / 거래량: {item['거래량']:,}\n"
+                        f"💰 현재가: {format_price(item['현재가'])} / 최근거래가: {format_price(item['최근거래가'])} / 거래량: {format_price(item['거래량'])}\n"
                         f"🗂 카테고리: {item['카테고리']}\n"
                         for item in preview_items
                     ]
@@ -3741,6 +3742,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
