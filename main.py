@@ -1893,6 +1893,7 @@ def fallback():
             
             # 명령어 목록 (가나다 순)
             menu_list = [
+                {"title": ".거래소", "desc": "거래소 아이템 검색", "msg": ".거래소", "img": 모코코_png},
                 {"title": ".공지", "desc": "공식 홈페이지 공지 조회", "msg": ".공지", "img": 모코코_png},
                 {"title": ".떠상", "desc": "떠돌이 상인 정보 조회", "msg": ".떠상", "img": 모코코_png},
                 {"title": ".마리샵", "desc": "마리샵 아이템 조회", "msg": ".마리샵", "img": 모코코_png},
@@ -3720,6 +3721,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
