@@ -2315,6 +2315,41 @@ def fallback():
             print(f"보석 조회 처리 완료 ({len(menu_list)}개 항목, {time.time()-start_time:.2f}초 소요)")
 
 
+        # ---------- 9. 거래소 조회 관련 패턴 ----------
+        markets_match = re.match(r"^(\.거래소|거래소|\.ㄱㄽ|ㄱㄽ|\.ㄱㄹㅅ|ㄱㄹㅅ)\s*(.*)$", user_input)
+        if markets_match:
+            item_name = markets_match.group(2).strip()  # 예: "거래소목재" -> "목재"
+        
+            all_items = []
+            page_no = 1
+            category_code = 10100
+
+            option_data = fetch_markets_option()
+            response_text = "거래소 조회 완료"
+
+            print(option_data)
+
+            # 번호	대분류 이름	코드
+            # 1	    장비 상자	10100
+            # 2	    아바타    	20000
+            # 3	    각인서    	40000
+            # 4	    강화 재료	50000
+            # 5	    전투 용품	60000
+            # 6    	요리    	70000
+            # 7    	생활    	90000
+            # 8    	모험의 서	100000
+            # 9    	항해    	110000
+            # 10    펫	        140000
+            # 11    탈것    	160000
+            # 12	기타    	170000
+            # 13	보석 상자	220000
+            
+            # while True:
+            #     data = fetch_all_market_items(category_code=category_code, item_name=item_name, page_no=page_no)
+            #     data_items = data.get("Items", [])
+            #     if not data_items:
+            #         break
+        
         
         # ---------- 9. 유각 거래소 조회 관련 패턴 ----------
         relic_match = re.match(r"^(\.유각|유각|\.ㅇㄱ|ㅇㄱ|\.유물각인서|유물각인서|\.ㅇㅁㄱㅇㅅ|ㅇㅁㄱㅇㅅ)\s*(.*)$", user_input)
@@ -3666,6 +3701,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
