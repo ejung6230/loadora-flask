@@ -2170,7 +2170,6 @@ def fallback():
         # ---------- 9. 보석 거래소 조회 관련 패턴 ----------
         jewelry_match = re.match(r"^(\.보석|보석|\.ㅄ|ㅄ|\.ㅂㅅ|ㅂㅅ)\s*(.*)$", user_input)
         if jewelry_match:
-            from concurrent.futures import ThreadPoolExecutor, as_completed
             start_time = time.time()
             items = []
 
@@ -2320,7 +2319,6 @@ def fallback():
         # ---------- 9. 거래소 조회 관련 패턴 ----------
         markets_match = re.match(r"^(\.거래소|거래소|\.ㄱㄽ|ㄱㄽ|\.ㄱㄹㅅ|ㄱㄹㅅ)\s*(.*)$", user_input)
         if markets_match:
-            from concurrent.futures import ThreadPoolExecutor, as_completed
             item_name = markets_match.group(2).strip()  # 예: "거래소목재" -> "목재"
 
             if not item_name:
@@ -2342,8 +2340,6 @@ def fallback():
                     except Exception:
                         return str(val)
 
-                # 병렬 처리 적용
-                from concurrent.futures import ThreadPoolExecutor, as_completed
 
                 # 각 카테고리별 요청 정의
                 def fetch_category_items(category):
@@ -3754,6 +3750,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
