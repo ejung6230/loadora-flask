@@ -66,6 +66,9 @@ KST = timezone(timedelta(hours=9))
 NOW_KST = datetime.now(KST).replace(tzinfo=None)
 TODAY = NOW_KST.date()
 
+# 테스트
+logger.info("출력: %s", "서버가 실행되었습니다.")
+
 # 하루 범위: 오늘 06:00 ~ 다음날 05:59
 # 06:00~23:59 조회 → 오늘 일정 기준
 # 00:00~05:59 조회 → 전날 일정 기준
@@ -4023,12 +4026,13 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
 
     threading.Thread(target=initialize_categories, daemon=True).start()
-    logger.info("[INIT] 거래소 카테고리 초기화 스레드 시작")
+    print("[INIT] 거래소 카테고리 초기화 스레드 시작")
 
-    logger.info("[SERVER] Flask 서버가 실행되었습니다 ✅")
+    print("[SERVER] Flask 서버가 실행되었습니다 ✅")
     app.run(host="0.0.0.0", port=port)
 
-    logger.info("[SERVER] 서버가 종료되었습니다 ❌")
+    print("[SERVER] 서버가 종료되었습니다 ❌")
+
 
 
 
