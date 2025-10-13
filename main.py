@@ -5,12 +5,12 @@ from functools import wraps
 from concurrent.futures import ThreadPoolExecutor, TimeoutError, as_completed
 import requests
 from datetime import datetime, timezone, timedelta
+from collections import defaultdict
 import os
 import json
 import time
 import re
 import logging
-from collections import defaultdict
 from wcwidth import wcswidth
 import cairosvg
 from io import BytesIO
@@ -762,8 +762,6 @@ def timeout_handler(seconds):
 @app.route("/fallback", methods=["POST"])
 @timeout_handler(4.8)
 def fallback():
-    from datetime import datetime, timezone, timedelta
-    from collections import defaultdict
 
     # 현재 한국 시간 (naive)
     KST = timezone(timedelta(hours=9))
@@ -3587,7 +3585,6 @@ def format_reports_by_region(current_data, is_on_sale):
     - type 1 아이템은 이름 그대로
     - 서버별 아이템 없으면 "없음"
     """
-    from collections import defaultdict
     
     # itemId -> grade, type, name
     item_grade = {item["id"]: item["grade"] for r in LIST_MAP for item in r["items"]}
@@ -3750,6 +3747,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
