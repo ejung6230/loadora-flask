@@ -197,8 +197,6 @@ def serve_mokoko():
 def health():
     return "OK", 200  # 항상 200 OK를 반환
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)  # Render에서 지정한 포트 사용
 
 # --- 사사게 API 호출 함수 ---
 def fetch_sasage_html(keyword):
@@ -3943,4 +3941,5 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
