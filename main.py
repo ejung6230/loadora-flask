@@ -786,7 +786,7 @@ def fetch_all_categories_items(category_data):
         # 이미 캐시에 있으면 스킵
         with lock:
             if any(c["CategoryCode"] == code for c in category_cache):
-                return code, 0  # 이미 존재
+                return code, name, []  # 항상 3개 값 반환
 
         # 페이지 순회 및 429 처리
         items = []
@@ -3956,6 +3956,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
