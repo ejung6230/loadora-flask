@@ -919,8 +919,10 @@ def search_item(item_name, retry_if_empty=True):
         if category_data is None:
             print("[INIT] category_data가 None → 자동 초기화")
             initialize_categories()
-            
-        fetch_and_cache_once(category_data)
+    
+        if not category_data:
+            print("[WARN] category_data가 비어있음, 캐시 생성 중단")
+            return
         return search_item(item_name, retry_if_empty=False)
 
     return results
@@ -943,8 +945,11 @@ def search_category_codes(item_name: str, retry_if_empty=True):
         if category_data is None:
             print("[INIT] category_data가 None → 자동 초기화")
             initialize_categories()
-
-        fetch_and_cache_once(category_data)
+    
+        if not category_data:
+            print("[WARN] category_data가 비어있음, 캐시 생성 중단")
+            return
+        
         return search_category_codes(item_name, retry_if_empty=False)
 
     return list(codes)
@@ -4024,6 +4029,7 @@ if __name__ == "__main__":
     app.run(host="0.0.0.0", port=port)
 
     logger.info("[SERVER] 서버가 종료되었습니다 ❌")
+
 
 
 
