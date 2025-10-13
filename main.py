@@ -4,13 +4,14 @@ from flask_cors import CORS
 from functools import wraps
 from concurrent.futures import ThreadPoolExecutor, TimeoutError, as_completed
 import requests
+from requests.adapters import HTTPAdapter
 from datetime import datetime, timezone, timedelta
 from collections import defaultdict
 from threading import Lock
 import os
 import json
-import time
 import re
+import time
 import logging
 from wcwidth import wcswidth
 import cairosvg
@@ -20,7 +21,7 @@ from PIL import Image
 import asyncio
 import aiohttp
 from itertools import product
-from requests.adapters import HTTPAdapter
+
 
 
 # 로깅 설정
@@ -3765,6 +3766,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
