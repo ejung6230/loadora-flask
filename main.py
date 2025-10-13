@@ -676,24 +676,32 @@ def fetch_all_market_items(category_code: int, item_name: str = "", item_grade: 
 
 def fetch_markets_items(payload: dict):
     """
-    Lost Ark 경매장 아이템 조회
+    Lost Ark 거래소 아이템 조회
     :param payload: 검색 조건 (dict)
     :return: API 응답 (json)
     """
     url = "https://developer-lostark.game.onstove.com/markets/items"
-    
+
     try:
-        response = requests.post(url, headers=HEADERS, json=payload, timeout=3.5)
-        response.raise_for_status()  # HTTP 오류 발생 시 예외 발생
-        return response.json()
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == 503:
-            raise Exception("서비스 점검 중입니다. 잠시 후 다시 시도해주세요.") from e
-        else:
-            raise Exception(f"마켓 아이템 정보를 불러올 수 없습니다. (오류 코드: {e.response.status_code})") from e
+        # 전역 세션 사용
+        response = markets_session.post(url, headers=HEADERS, json=payload, timeout=3.5)
+
+        # 상태 코드 체크
+        if response.status_code == 503:
+            raise Exception("서비스 점검 중입니다. 잠시 후 다시 시도해주세요.")
+        elif not response.ok:
+            raise Exception(f"마켓 아이템 정보를 불러올 수 없습니다. (오류 코드: {response.status_code})")
+
+        # JSON 파싱 안전하게 처리
+        try:
+            return response.json()
+        except ValueError:
+            raise Exception("서버에서 올바른 JSON 응답을 받지 못했습니다.")
+
     except requests.exceptions.RequestException as e:
         # 연결 시간 초과, DNS 오류 등
         raise Exception(f"서버와 통신 중 오류가 발생했습니다. ({e})") from e
+
 
 
 
@@ -3781,6 +3789,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
