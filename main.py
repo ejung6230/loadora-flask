@@ -870,16 +870,6 @@ def fetch_all_categories_items(category_data):
     print(f"[INFO] 전체 카테고리 조회 완료 ({len(category_data)}개 카테고리, 스킵 {skipped_count}개, 저장 {saved_count}개, {time.time()-start_time:.2f}초 소요)")
 
 
-
-
-# ---------- 예시 사용 ----------
-option_data = fetch_markets_option()
-category_data = option_data.get("Categories", [])
-
-# 모든 카테고리 + 페이지 아이템 캐시
-fetch_all_categories_items(category_data)
-
-
 # ---------- 캐시 검색 예시 ----------
 def fetch_and_cache_once(category_data):
     """
@@ -929,13 +919,25 @@ def search_category_codes(item_name: str, retry_if_empty=True):
 
     return list(codes)
 
-# ---------- 사용 예시 ----------
-search_result = search_item("목재")
-print(search_result)
 
-category_codes = search_category_codes("목재")
-print(category_codes)
+def initialize_categories():
+    """
+    서버 실행 후 백그라운드에서 카테고리 데이터를 로드합니다.
+    """
 
+    
+    option_data = fetch_markets_option()
+    category_data = option_data.get("Categories", [])
+    fetch_all_categories_items(category_data)
+
+    search_text = "목재"
+
+    # 초기화 완료 후 테스트 출력
+    search_result = search_item(search_text)
+    print(f"[DEBUG] 거래소 검색 테스트 '{search_text}':", search_result)
+
+    category_codes = search_category_codes(search_text)
+    print(f"[DEBUG] 카테고리 코드 '{search_text}':", category_codes)
 
 # ---------- 원정대 API 요청 함수 ----------
 def fetch_expedition(character_name: str, timeout: float = 5) -> dict:
@@ -4004,7 +4006,14 @@ def korlark_proxy():
 # ------------------ 실행 ------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
+    print("[SERVER] Flask 서버 시작 중...")
+
+    print("[INIT] 거래소 카테고리 코드 초기화 시작")
+    threading.Thread(target=initialize_categories, daemon=True).start()
+    print("[INIT] 전체 카테고리 초기화 완료 ✅")
+    
     app.run(host="0.0.0.0", port=port)
+    print("[SERVER] Flask 서버 시작 완료 ✅")
 
 
 
