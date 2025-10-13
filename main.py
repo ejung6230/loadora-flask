@@ -731,12 +731,12 @@ def fetch_markets_items(payload: dict):
 # ---------- 캐시 파일 ----------
 CACHE_FILE = os.path.join(os.path.dirname(__file__), "all_category_items.json")
 
-# 파일 존재 여부 확인 후 삭제
-if os.path.exists(CACHE_FILE):
-    os.remove(CACHE_FILE)
-    print(f"[INFO] 캐시 파일 '{CACHE_FILE}' 삭제 완료")
-else:
-    print(f"[WARN] 캐시 파일 '{CACHE_FILE}'이 존재하지 않음")
+# # 파일 존재 여부 확인 후 삭제 - 오류 발생 시 초기화하는 용도
+# if os.path.exists(CACHE_FILE):
+#     os.remove(CACHE_FILE)
+#     print(f"[INFO] 캐시 파일 '{CACHE_FILE}' 삭제 완료")
+# else:
+#     print(f"[WARN] 캐시 파일 '{CACHE_FILE}'이 존재하지 않음")
 
 # 기존 캐시 로드
 if os.path.exists(CACHE_FILE):
@@ -3984,6 +3984,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
