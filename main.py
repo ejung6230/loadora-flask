@@ -2629,17 +2629,19 @@ def fallback():
                     print('data : ', data)
                     return [
                         {
-                            "카테고리코드": i.get("CategoryCode"),  
-                            "카테고리이름": i.get("CategoryName"),
-                            "아이템명": i.get("Name"),
-                            "등급": i.get("Grade"),
-                            "현재가": i.get("CurrentMinPrice"),
-                            "최근거래가": i.get("RecentPrice"),
-                            "거래량": i.get("TradeCount"),  # 중복 제거
+                            "Code": code,  
+                            "Id": i.get("Id"),  
+                            "Name": i.get("Name"),  
+                            "Grade": i.get("Grade"), 
+                            "Icon": i.get("Icon"), 
+                            "BundleCount": i.get("BundleCount"), 
+                            "TradeRemainCount": i.get("TradeRemainCount"), 
+                            "YDayAvgPrice": i.get("YDayAvgPrice"), 
+                            "RecentPrice": i.get("RecentPrice"), 
+                            "CurrentMinPrice": i.get("CurrentMinPrice"), 
                         }
                         for i in data.get("Items", [])
-                    ]
-        
+                    ]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     'CurrentMinPrice': 80}]
                 # ✅ 병렬 실행 (최대 20스레드)
                 with ThreadPoolExecutor(max_workers=max(1, min(len(category_codes), 20))) as executor:
                     futures = {executor.submit(fetch_category_items, c): c for c in category_codes}
@@ -2652,8 +2654,8 @@ def fallback():
                             if result:
                                 with lock:
                                     for item in result:
-                                        if item["아이템명"] not in collected_names:
-                                            collected_names.add(item["아이템명"])
+                                        if item["Name"] not in collected_names:
+                                            collected_names.add(item["Name"])
                                             all_items.append(item)
                                             if len(all_items) >= 16:
                                                 stop_event.set()  # ✅ 안전한 중단
@@ -2666,9 +2668,8 @@ def fallback():
                     response_text = f"'{item_name}'에 해당하는 거래소 아이템을 찾지 못했어요 😢"
                 else:
                     lines = [
-                        f"📦 {i['아이템명']} ({i['등급']})\n"
-                        f"💰 현재가: {fmt(i['현재가'])} / 최근거래가: {fmt(i['최근거래가'])} / 거래량: {fmt(i['거래량'])}\n"
-                        f"🗂 카테고리: {i['카테고리이름']} ({i['카테고리코드']})\n"
+                        f"📦 {i['Name']} ({i['Grade']})\n"
+                        f"💰 현재가: {fmt(i['CurrentMinPrice'])} / 최근거래가: {fmt(i['RecentPrice'])} / 거래량: {fmt(i['TradeCount'])}\n"
                         for i in all_items
                     ]
                     elapsed = time.time() - start_time
@@ -4052,6 +4053,7 @@ if __name__ == "__main__":
     initialize_categories_wrapper()
     logger.info("[SERVER] Flask 서버가 실행되었습니다 ✅ (로컬 테스트)")
     app.run(host="0.0.0.0", port=port)
+
 
 
 
