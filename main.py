@@ -784,8 +784,8 @@ def fetch_all_items_for_category(category_code):
                 break  # 마지막 페이지 도달
 
             page_no += 1
-
-        except Exception as e:
+            # 여기여기
+        except Exception as e: 
             print(f"[WARN] 카테고리 {category_code} 페이지 {page_no} 조회 실패:", e)
             break
 
@@ -827,14 +827,22 @@ def fetch_all_categories_items(category_data):
                     break
                 page_no += 1
 
+            except requests.exceptions.HTTPError as e:
+                if e.response is not None and e.response.status_code == 429:
+                    print(f"[WARN] 카테고리 {code} 페이지 {page_no}: 요청 제한(429), 60초 대기 후 재시도", flush=True)
+                    time.sleep(60)
+                    continue
+                else:
+                    print(f"[WARN] 카테고리 {code} 페이지 {page_no} 조회 실패(HTTP): {e}", flush=True)
+                    break
             except Exception as e:
                 msg = str(e)
                 if "429" in msg:
-                    print(f"[WARN] 카테고리 {code} 페이지 {page_no}: 요청 제한(429), 60초 대기 후 재시도")
+                    print(f"[WARN] 카테고리 {code} 페이지 {page_no}: 요청 제한(429), 60초 대기 후 재시도", flush=True)
                     time.sleep(60)
                     continue  # 같은 페이지 재시도
                 else:
-                    print(f"[WARN] 카테고리 {code} 페이지 {page_no} 조회 실패: {e}")
+                    print(f"[WARN] 카테고리 {code} 페이지 {page_no} 조회 실패: {e}", flush=True)
                     break
 
         return code, name, items
@@ -4044,6 +4052,7 @@ if __name__ == "__main__":
     initialize_categories_wrapper()
     logger.info("[SERVER] Flask 서버가 실행되었습니다 ✅ (로컬 테스트)")
     app.run(host="0.0.0.0", port=port)
+
 
 
 
