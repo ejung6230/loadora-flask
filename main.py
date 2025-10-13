@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor, TimeoutError, as_completed
 import requests
 from datetime import datetime, timezone, timedelta
 from collections import defaultdict
+from threading import Lock
 import os
 import json
 import time
@@ -2325,7 +2326,8 @@ def fallback():
                 start_time = time.time()
                 option_data = fetch_markets_option()  # 거래소 옵션(카테고리) 불러오기
                 category_data = option_data.get("Categories", [])
-            
+
+                lock = Lock()
                 all_items = []
                 page_no = 1
 
@@ -2372,7 +2374,11 @@ def fallback():
                         try:
                             result = future.result()
                             if result:
-                                all_items.extend(result)
+                                with lock:
+                                    all_items.extend(result)
+                                    if len(all_items) >= 16:  # 이미 충분히 16개까지 찾았으면 종료
+                                        [f.cancel() for f in futures if not f.done()]
+                                        break
                         except Exception as e:
                             print("[ERROR] 병렬 처리 중 오류:", e)
 
@@ -3747,6 +3753,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
