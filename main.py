@@ -874,13 +874,14 @@ def fetch_all_categories_items(category_data):
 # ---------- 전역 변수 ----------
 option_data = None
 category_data = None
+startup_done = False
 
 # ---------- 카테고리 초기화 ----------
 def initialize_categories():
     """
     카테고리 데이터를 초기화합니다.
     """
-    global option_data, category_data
+    global option_data, category_data, startup_done
 
     print("[INIT] 거래소 카테고리 코드 초기화 시작")
     try:
@@ -896,7 +897,8 @@ def initialize_categories():
         search_text = "목재"
         print(f"[DEBUG] '{search_text}' 검색 테스트:", search_item(search_text))
         print(f"[DEBUG] '{search_text}' 카테고리 코드 테스트:", search_category_codes(search_text))
-
+        startup_done = True
+        
         print("[INIT] 전체 카테고리 초기화 완료 ✅")
 
     except Exception as e:
@@ -918,21 +920,21 @@ def search_item(item_name, retry_if_empty=True):
     # 검색 결과 없으면 캐시 재생성 후 1회 재검색
     if not results and retry_if_empty:
         print(f"[INFO] '{item_name}' 검색 결과 없음 → 캐시 재생성 시도")
-
-        if category_data is None:
-            print("[INIT] category_data가 None → 자동 초기화")
-            initialize_categories()
-    
-        if not category_data:
-            print("[WARN] category_data가 비어있음, 캐시 생성 중단")
+        
+        if not startup_done:
+            print("[WARN] 이미 캐시 생성 중입니다. 잠시 후 다시 시도하세요.")
             return
+        
+        print("[INIT] category_data가 None → 자동 초기화")
+        initialize_categories()
+
         return search_item(item_name, retry_if_empty=False)
 
     return results
 
 # ---------- 카테고리 코드 검색 ----------
 def search_category_codes(item_name: str, retry_if_empty=True):
-    global option_data, category_data
+    global option_data, category_data, startup_done
 
     codes = set()
     for c in category_cache:
@@ -945,13 +947,12 @@ def search_category_codes(item_name: str, retry_if_empty=True):
     if not codes and retry_if_empty:
         print(f"[INFO] '{item_name}' 카테고리 코드 검색 결과 없음 → 캐시 재생성 시도")
 
-        if category_data is None:
-            print("[INIT] category_data가 None → 자동 초기화")
-            initialize_categories()
-    
-        if not category_data:
-            print("[WARN] category_data가 비어있음, 캐시 생성 중단")
+        if not startup_done:
+            print("[WARN] 이미 캐시 생성 중입니다. 잠시 후 다시 시도하세요.")
             return
+
+        print("[INIT] category_data가 None → 자동 초기화")
+        initialize_categories()
         
         return search_category_codes(item_name, retry_if_empty=False)
 
@@ -4029,15 +4030,12 @@ def initialize_categories_wrapper():
     print("[INIT] 거래소 카테고리 초기화 스레드 시작")
 
 # ---------- Gunicorn 환경: 서버 시작 시 (한 번만 실행) ----------
-startup_done = False
-
 @app.before_request
 def startup_tasks():
     global startup_done
     if not startup_done:
         initialize_categories_wrapper()
         print("[SERVER] Flask 서버가 실행되었습니다 ✅")
-        startup_done = True
 
 
 # ---------- 로컬 테스트용 ----------
@@ -4046,6 +4044,7 @@ if __name__ == "__main__":
     initialize_categories_wrapper()
     logger.info("[SERVER] Flask 서버가 실행되었습니다 ✅ (로컬 테스트)")
     app.run(host="0.0.0.0", port=port)
+
 
 
 
