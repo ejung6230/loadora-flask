@@ -2328,19 +2328,23 @@ def fallback():
                 option_data = fetch_markets_option()  # 거래소 카테고리
                 category_data = option_data.get("Categories", [])
         
+                from threading import Lock, Event
+                from concurrent.futures import ThreadPoolExecutor, as_completed
+                import requests, time
+        
                 lock = Lock()
                 all_items = []
                 collected_names = set()
-                should_stop = False
+                stop_event = Event()  # ✅ 안전한 종료 신호
         
-                # ✅ 공용 세션 (TCP 재사용으로 요청 속도 개선)
+                # ✅ 공용 세션 (TCP 재사용)
                 session = requests.Session()
         
-                # ✅ 안전한 포맷 함수
+                # ✅ 포맷 함수
                 def fmt(val):
                     return "-" if val is None else f"{val:,}"
         
-                # ✅ 빠른 거래소 조회 (재시도 없음, timeout 1초)
+                # ✅ 빠른 거래소 조회 (재시도 없음)
                 def fetch_all_market_items_safe(category_code, item_name):
                     try:
                         url = "https://developer-lostark.game.onstove.com/markets/items"
@@ -2359,7 +2363,7 @@ def fallback():
         
                 # ✅ 각 카테고리별 아이템 조회
                 def fetch_category_items(category):
-                    if should_stop:
+                    if stop_event.is_set():
                         return []
                     code, name = category["Code"], category["CodeName"]
                     data = fetch_all_market_items_safe(code, item_name)
@@ -2375,12 +2379,12 @@ def fallback():
                         for i in data.get("Items", [])
                     ]
         
-                # ✅ 병렬 실행 (스레드 20개까지 확장)
+                # ✅ 병렬 실행 (최대 20스레드)
                 with ThreadPoolExecutor(max_workers=min(len(category_data), 20)) as executor:
                     futures = {executor.submit(fetch_category_items, c): c for c in category_data}
         
                     for future in as_completed(futures):
-                        if should_stop:
+                        if stop_event.is_set():
                             break
                         try:
                             result = future.result()
@@ -2391,11 +2395,12 @@ def fallback():
                                             collected_names.add(item["아이템명"])
                                             all_items.append(item)
                                             if len(all_items) >= 16:
-                                                should_stop = True
-                                                executor.shutdown(cancel_futures=True)
+                                                stop_event.set()  # ✅ 안전한 중단
                                                 break
                         except Exception as e:
                             print("[ERROR] 병렬 처리 오류:", e)
+        
+                session.close()  # ✅ 세션 종료
         
                 # ✅ 결과 구성
                 if not all_items:
@@ -2412,6 +2417,9 @@ def fallback():
                         f"🔍 거래소 조회 결과 (상위 {len(all_items)}개)\n"
                         f"⏱ 조회 시간: {elapsed:.2f}초\n\n" + "\n".join(lines)
                     )
+        
+                print(f"거래소 조회 처리 완료 ({len(all_items)}개 항목, {time.time()-start_time:.2f}초 소요)")
+
 
 
 
@@ -3766,6 +3774,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
