@@ -20,9 +20,7 @@ from urllib.parse import unquote, quote
 from PIL import Image
 import asyncio
 import aiohttp
-from itertools import product
-
-
+from itertools import product, cycle
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -37,18 +35,34 @@ CORS(app)  # 모든 도메인 허용
 # 동시에 처리할 스레드 수
 executor = ThreadPoolExecutor(max_workers=4)
 
-# 🔑 발급받은 JWT 토큰
-JWT_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyIsImtpZCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyJ9.eyJpc3MiOiJodHRwczovL2x1ZHkuZ2FtZS5vbnN0b3ZlLmNvbSIsImF1ZCI6Imh0dHBzOi8vbHVkeS5nYW1lLm9uc3RvdmUuY29tL3Jlc291cmNlcyIsImNsaWVudF9pZCI6IjEwMDAwMDAwMDA1ODU3OTMifQ.pGbLttyxM_QTAJxMGW2XeMYQ1TSfArJiyLv-TK4yxZJDes4nhnMfAlyJ6nSmVMHT6q2P_YqGkavwhCkfYAylI94FR74G47yeQuWLu3abw76wzBGN9pVRtCLu6OJ4RcIexr0rpQLARZhIiuNUrr3LLN_sbV7cNUQfQGVr0v9x77cbxVI5hPgSgAWAIcMX4Z7a6wj4QSnl7qi9HBZG1CH8PQ7ftGuBgFG7Htbh2ABj3xyza44vrwPN5VL-S3SUQtnJ1azOTfXvjCTJjPZv8rOmCllK9dMNoPFRjj7bsjeooYHfhK1rF9yiCJb9tdVcTa2puxs3YKQlZpN9UvaVhqquQg"
-
 GEMINI_API_KEY = "AIzaSyBsxfr_8Mw-7fwr_PqZAcv3LyGuI0ybv08"
 GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
 
 MARI_SHOP_URL = "https://m-lostark.game.onstove.com/Shop"
 
-HEADERS = {
-    "accept": "application/json",
-    "authorization": f"bearer {JWT_TOKEN}"
-}
+# 🔑 발급받은 JWT 토큰
+JWT_TOKEN_1 = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyIsImtpZCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyJ9.eyJpc3MiOiJodHRwczovL2x1ZHkuZ2FtZS5vbnN0b3ZlLmNvbSIsImF1ZCI6Imh0dHBzOi8vbHVkeS5nYW1lLm9uc3RvdmUuY29tL3Jlc291cmNlcyIsImNsaWVudF9pZCI6IjEwMDAwMDAwMDA1ODU3OTMifQ.pGbLttyxM_QTAJxMGW2XeMYQ1TSfArJiyLv-TK4yxZJDes4nhnMfAlyJ6nSmVMHT6q2P_YqGkavwhCkfYAylI94FR74G47yeQuWLu3abw76wzBGN9pVRtCLu6OJ4RcIexr0rpQLARZhIiuNUrr3LLN_sbV7cNUQfQGVr0v9x77cbxVI5hPgSgAWAIcMX4Z7a6wj4QSnl7qi9HBZG1CH8PQ7ftGuBgFG7Htbh2ABj3xyza44vrwPN5VL-S3SUQtnJ1azOTfXvjCTJjPZv8rOmCllK9dMNoPFRjj7bsjeooYHfhK1rF9yiCJb9tdVcTa2puxs3YKQlZpN9UvaVhqquQg"
+JWT_TOKEN_2 = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyIsImtpZCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyJ9.eyJpc3MiOiJodHRwczovL2x1ZHkuZ2FtZS5vbnN0b3ZlLmNvbSIsImF1ZCI6Imh0dHBzOi8vbHVkeS5nYW1lLm9uc3RvdmUuY29tL3Jlc291cmNlcyIsImNsaWVudF9pZCI6IjEwMDAwMDAwMDA1ODczNTMifQ.JngMxzZxoLh5MtBWUidoUEl9OEIZwN53efI_DCL5U4s1X3I0VY8EERzqvwSr4Z-Lc65h2k0fyg12ckiz0WTppK5RAoP8xEkx28R3s8T5pO1JEPqYt3TnDoLGh7oFTwj0Ge9SbKQL6YQnFO9s8GdyYtuuwV7gg7jTkm0XiVuPJTwVXITv1ylvw5qFgKtQZgGKWSlX6SVQ6TGopac2mvKUsqRlw8Qb3dvDWVcq9vZgwG9s4_gHZWo8k9jYIcwzUFxOjLZx-gesFhTYXqR8dpM6fz0CJCTTfyufRDtngxWgZAeFWsdfpAlgSU14Z1T_XofKk1vA2z8zs7_as-Qhz4IrlA"
+JWT_TOKEN_3 = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyIsImtpZCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyJ9.eyJpc3MiOiJodHRwczovL2x1ZHkuZ2FtZS5vbnN0b3ZlLmNvbSIsImF1ZCI6Imh0dHBzOi8vbHVkeS5nYW1lLm9uc3RvdmUuY29tL3Jlc291cmNlcyIsImNsaWVudF9pZCI6IjEwMDAwMDAwMDA1ODczNTQifQ.MDrVN0dyAbnghOjdTw3qwzfIxmZXUKkXmwumS9KbArA1BA0rXf9ye2Nx8SdjwbOX3Ycv1OFCpaaU8Z_XnDiL2zUA-MIGDi7SjmuqQKp_3zVdkG-xBk6-dbku1DcRJr6i1OHFKqbY_Rj8iZBdxEGsdLWK0_eTcydlMl8k99RkYzS0iFL8aLRwLxoYIoDpu4ILzk4KzXiGIVq3empm5NBducAueki_96Tt51GNRyyA3dQ9vUpecIQpz1GL9sX2-_PMfpRy3BvBsxMOvrLgU2SDAefOWdifNwcYgvUoEX5AJfMWe-7Z1cXTAnePDWjcY0Tky-tNqQ9oLfvt7ustoGseYA"
+JWT_TOKEN_4 = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyIsImtpZCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyJ9.eyJpc3MiOiJodHRwczovL2x1ZHkuZ2FtZS5vbnN0b3ZlLmNvbSIsImF1ZCI6Imh0dHBzOi8vbHVkeS5nYW1lLm9uc3RvdmUuY29tL3Jlc291cmNlcyIsImNsaWVudF9pZCI6IjEwMDAwMDAwMDA1ODczNTUifQ.NtctFTOWfLLP-etsthZ0qiZ4aHWeBPc9aFWfUvSUGMUIySpwq5iYKLWQzW0iIiKqYA5l6y1FXNeVxrYYtomt1K7m8Qd7fIdLHcqhJjj2vqna7DLpdWyxkVCxBOMGhOZ4_PIDxV2Oxdb59IcE6zcoLA2BEuFbTau-Vx4B0caGunC7QYKYyNssb0dhoJGC6VeWQ5VNnHtGcbR8qyWjATaFoL52rirAIQ7KBohO2sMYI_pXzwAgOS5XKbBsgJeom5BxAaNrweCXaSh4RnwrkBMiUlw7QulajT6I42RdrNjJuGLXMsfaPxjjrDNqHEcY2HYuKgju3J0B0cQM96V5fqWPKg"
+JWT_TOKEN_5 = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyIsImtpZCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyJ9.eyJpc3MiOiJodHRwczovL2x1ZHkuZ2FtZS5vbnN0b3ZlLmNvbSIsImF1ZCI6Imh0dHBzOi8vbHVkeS5nYW1lLm9uc3RvdmUuY29tL3Jlc291cmNlcyIsImNsaWVudF9pZCI6IjEwMDAwMDAwMDA1ODczNTYifQ.OULGnzFVv97-XhMy7mu1hK24JXxcmswkFoW5oRiTbgtrJZ40AB2FvBKQY5Wn93-x0URTi7y93VNt-xU7_rxW_6VOsh8Qb0TvgJNVOCM_lkhugTc1agVoIMCGUFglSF5A_zBwkVFKwaqg5ZZFGsZm1Qcva0DaRr2-E5SBpzERVGrxCjAfnpL-gWdzYm38HZ6cY0FJF0hIIy-EOy7VPq7k8el-Ai1P6QXmUm4DJu_FG1e3ZGc60sJosPBo-sMdVXN0bRhVPGDdYI18ncxB1RRIJRrs_XM--1FIs0TND4JY-wZHONCKWtOH7CFcH52aQTnIJwnfWVB5gtxOul8f3lVBTQ"
+
+JWT_TOKENS = [
+    JWT_TOKEN_1,
+    JWT_TOKEN_2,
+    JWT_TOKEN_3,
+    JWT_TOKEN_4,
+    JWT_TOKEN_5
+]
+
+jwt_cycle = cycle(JWT_TOKENS)
+
+def get_headers():
+    token = next(jwt_cycle)
+    return {
+        "accept": "application/json",
+        "authorization": f"bearer {token}"
+    }
 
 # 현재 한국 시간 (naive)
 KST = timezone(timedelta(hours=9))
@@ -417,7 +431,7 @@ def get_ranking():
 def fetch_calendar():
     url = "https://developer-lostark.game.onstove.com/gamecontents/calendar"
     try:
-        response = requests.get(url, headers=HEADERS, timeout=3.5)
+        response = requests.get(url, headers=get_headers(), timeout=3.5)
         response.raise_for_status()  # HTTP 오류 발생 시 예외 발생
         return response.json()
     except requests.exceptions.HTTPError as e:
@@ -458,7 +472,7 @@ def get_auctions_option():
 def fetch_auctions_option():
     url = "https://developer-lostark.game.onstove.com/auctions/options"
     try:
-        response = requests.get(url, headers=HEADERS, timeout=3.5)
+        response = requests.get(url, headers=get_headers(), timeout=3.5)
         response.raise_for_status()  # HTTP 오류 발생 시 예외 발생
         return response.json()
     except requests.exceptions.HTTPError as e:
@@ -523,7 +537,7 @@ def fetch_auctions_items(payload: dict):
     try:
 
         # requests.post 대신 auctions_session.post 사용 + 타임아웃
-        response = auctions_session.post(url, headers=HEADERS, json=payload, timeout=3.5)
+        response = auctions_session.post(url, headers=get_headers(), json=payload, timeout=3.5)
         return response.json()
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 503:
@@ -621,7 +635,7 @@ def get_markets_option():
 def fetch_markets_option():
     url = "https://developer-lostark.game.onstove.com/markets/options"
     try:
-        response = requests.get(url, headers=HEADERS, timeout=3.5)
+        response = requests.get(url, headers=get_headers(), timeout=3.5)
         response.raise_for_status()  # HTTP 오류 발생 시 예외 발생
         return response.json()
     except requests.exceptions.HTTPError as e:
@@ -696,7 +710,7 @@ def fetch_markets_items(payload: dict):
 
     try:
         # 전역 세션 사용
-        response = markets_session.post(url, headers=HEADERS, json=payload, timeout=3.5)
+        response = markets_session.post(url, headers=get_headers(), json=payload, timeout=3.5)
 
         # 상태 코드 체크
         if response.status_code == 503:
@@ -841,7 +855,7 @@ def fetch_expedition(character_name: str, timeout: float = 5) -> dict:
     url = f"https://developer-lostark.game.onstove.com/characters/{character_name}/siblings"
     
     try:
-        resp = requests.get(url, headers=HEADERS, timeout=timeout)
+        resp = requests.get(url, headers=get_headers(), timeout=timeout)
         resp.raise_for_status()
         return resp.json()
     except requests.exceptions.HTTPError as e:
@@ -1150,7 +1164,7 @@ def fallback():
         
             for notice_type in notice_types:
                 try:
-                    resp = requests.get(url, headers=HEADERS, params={"type": notice_type}, timeout=5)
+                    resp = requests.get(url, headers=get_headers(), params={"type": notice_type}, timeout=5)
                     resp.raise_for_status()
                     notices = resp.json()
                     for n in notices:
@@ -1926,7 +1940,7 @@ def fallback():
             url = "https://developer-lostark.game.onstove.com/news/events"
         
             try:
-                resp = requests.get(url, headers=HEADERS, timeout=5)
+                resp = requests.get(url, headers=get_headers(), timeout=5)
                 resp.raise_for_status()  # HTTP 오류 시 예외 발생
         
                 events = resp.json()
@@ -3127,7 +3141,7 @@ def fetch_armory(character_name, endpoint):
     if path:
         url += f"/{path}"
 
-    resp = requests.get(url, headers=HEADERS)
+    resp = requests.get(url, headers=get_headers())
     resp.raise_for_status()
     return resp.json()
 
@@ -3899,6 +3913,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
