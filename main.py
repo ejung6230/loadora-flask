@@ -2318,28 +2318,23 @@ def fallback():
         # ---------- 9. 거래소 조회 관련 패턴 ----------
         markets_match = re.match(r"^(\.거래소|거래소|\.ㄱㄽ|ㄱㄽ|\.ㄱㄹㅅ|ㄱㄹㅅ)\s*(.*)$", user_input)
         if markets_match:
-            item_name = markets_match.group(2).strip()  # 예: "거래소목재" -> "목재"
+            item_name = markets_match.group(2).strip()
         
             if not item_name:
                 response_text = "◕_◕💧\n검색할 아이템명을 입력해주세요.\nex) .거래소 아이템명"
             else:
                 start_time = time.time()
-                option_data = fetch_markets_option()  # 거래소 옵션(카테고리) 불러오기
+                option_data = fetch_markets_option()  # 거래소 카테고리
                 category_data = option_data.get("Categories", [])
         
                 lock = Lock()
                 all_items = []
-                should_stop = False  # ✅ 조기 중단 플래그
-                page_no = 1
+                collected_names = set()
+                should_stop = False
         
-                # ✅ None 안전 포맷 함수
-                def format_price(val):
-                    if val is None:
-                        return "-"
-                    try:
-                        return f"{val:,}"
-                    except Exception:
-                        return str(val)
+                # ✅ 안전한 포맷 함수
+                def fmt(val):
+                    return "-" if val is None else f"{val:,}"
         
                 # ✅ 단순한 거래소 조회 (재시도 없음)
                 def fetch_all_market_items_safe(category_code, item_name):
@@ -2351,36 +2346,25 @@ def fallback():
         
                 # ✅ 각 카테고리별 아이템 조회
                 def fetch_category_items(category):
-                    nonlocal should_stop
                     if should_stop:
                         return []
+                    code, name = category["Code"], category["CodeName"]
+                    data = fetch_all_market_items_safe(code, item_name)
+                    return [
+                        {
+                            "카테고리": name,
+                            "아이템명": i.get("Name"),
+                            "등급": i.get("Grade"),
+                            "현재가": i.get("CurrentMinPrice"),
+                            "최근거래가": i.get("RecentPrice"),
+                            "거래량": i.get("TradeCount")
+                        }
+                        for i in data.get("Items", [])
+                    ]
         
-                    category_code = category["Code"]
-                    category_name = category["CodeName"]
-        
-                    try:
-                        data = fetch_all_market_items_safe(category_code, item_name)
-                        data_items = data.get("Items", [])
-                        results = []
-        
-                        for item in data_items:
-                            results.append({
-                                "카테고리": category_name,
-                                "아이템명": item.get("Name"),
-                                "등급": item.get("Grade"),
-                                "현재가": item.get("CurrentMinPrice"),
-                                "최근거래가": item.get("RecentPrice"),
-                                "거래량": item.get("TradeCount")
-                            })
-        
-                        return results
-                    except Exception as e:
-                        print(f"[WARN] {category_name} 조회 실패:", e)
-                        return []
-        
-                # ✅ 병렬 조회 실행
-                with ThreadPoolExecutor(max_workers=min(len(category_data), 16)) as executor:
-                    futures = [executor.submit(fetch_category_items, category) for category in category_data]
+                # ✅ 병렬 실행 (전체 카테고리 대상)
+                with ThreadPoolExecutor(max_workers=min(len(category_data), 12)) as executor:
+                    futures = {executor.submit(fetch_category_items, c): c for c in category_data}
         
                     for future in as_completed(futures):
                         if should_stop:
@@ -2389,35 +2373,31 @@ def fallback():
                             result = future.result()
                             if result:
                                 with lock:
-                                    remain = 16 - len(all_items)
-                                    if remain > 0:
-                                        all_items.extend(result[:remain])
-                                    if len(all_items) >= 16:
-                                        should_stop = True
-                                        break
+                                    for item in result:
+                                        if item["아이템명"] not in collected_names:
+                                            collected_names.add(item["아이템명"])
+                                            all_items.append(item)
+                                            if len(all_items) >= 16:
+                                                should_stop = True
+                                                executor.shutdown(cancel_futures=True)
+                                                break
                         except Exception as e:
-                            print("[ERROR] 병렬 처리 중 오류:", e)
+                            print("[ERROR] 병렬 처리 오류:", e)
         
-                # ✅ 중복 제거 (같은 아이템명 여러 번 나오는 경우 방지)
-                unique_items = {}
-                for item in all_items:
-                    unique_items[item["아이템명"]] = item
-                all_items = list(unique_items.values())[:16]
-        
-                # ✅ 결과 출력
+                # ✅ 결과 구성
                 if not all_items:
                     response_text = f"'{item_name}'에 해당하는 거래소 아이템을 찾지 못했어요 😢"
                 else:
-                    result_lines = [
-                        f"📦 {item['아이템명']} ({item['등급']})\n"
-                        f"💰 현재가: {format_price(item['현재가'])} / 최근거래가: {format_price(item['최근거래가'])} / 거래량: {format_price(item['거래량'])}\n"
-                        f"🗂 카테고리: {item['카테고리']}\n"
-                        for item in all_items
+                    lines = [
+                        f"📦 {i['아이템명']} ({i['등급']})\n"
+                        f"💰 현재가: {fmt(i['현재가'])} / 최근거래가: {fmt(i['최근거래가'])} / 거래량: {fmt(i['거래량'])}\n"
+                        f"🗂 카테고리: {i['카테고리']}\n"
+                        for i in all_items
                     ]
                     elapsed = time.time() - start_time
                     response_text = (
-                        f"🔍 거래소 조회 결과 (상위 16개)\n"
-                        f"⏱ 조회 시간: {elapsed:.2f}초\n\n" + "\n".join(result_lines)
+                        f"🔍 거래소 조회 결과 (상위 {len(all_items)}개)\n"
+                        f"⏱ 조회 시간: {elapsed:.2f}초\n\n" + "\n".join(lines)
                     )
 
 
@@ -3773,6 +3753,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
