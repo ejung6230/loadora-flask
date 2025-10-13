@@ -2366,7 +2366,7 @@ def fallback():
                         return []
 
                 # ThreadPoolExecutor 사용
-                with ThreadPoolExecutor(max_workers=len(target_categories)) as executor:
+                with ThreadPoolExecutor(max_workers=len(category_data)) as executor:
                     futures = [executor.submit(fetch_category_items, category) for category in category_data]
                     for future in as_completed(futures):
                         try:
@@ -3747,6 +3747,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
