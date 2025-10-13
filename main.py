@@ -841,8 +841,8 @@ def fetch_all_categories_items(category_data):
 
     start_time = time.time()
     results = []
-
-    with ThreadPoolExecutor(max_workers=max(1, min(len(category_codes), 20))) as executor:
+    
+    with ThreadPoolExecutor(max_workers=max(1, min(len(category_data), 20))) as executor:
         futures = [executor.submit(process_category, c) for c in category_data]
         for future in as_completed(futures):
             try:
@@ -4046,6 +4046,7 @@ if __name__ == "__main__":
     initialize_categories_wrapper()
     logger.info("[SERVER] Flask 서버가 실행되었습니다 ✅ (로컬 테스트)")
     app.run(host="0.0.0.0", port=port)
+
 
 
 
