@@ -512,112 +512,6 @@ def search_auctions_categories(item_name):
                 result_codes.add(c["CategoryCode"])
     return list(result_codes)
 
-
-# ---------- 캐시 파일 ----------
-CACHE_FILE = "all_category_items.json"
-
-# 기존 캐시 로드
-if os.path.exists(CACHE_FILE):
-    with open(CACHE_FILE, "r", encoding="utf-8") as f:
-        category_cache = json.load(f)
-else:
-    category_cache = []
-
-lock = Lock()
-
-# ---------- 모든 페이지 아이템 조회 ----------
-def fetch_all_items_for_category(category_code):
-    """
-    특정 카테고리 코드의 모든 페이지 아이템 조회
-    Id + Name만 반환
-    """
-    all_items = []
-    page_no = 1
-    page_size = 100  # 가능하면 한 페이지에 많은 수 조회
-    while True:
-        try:
-            data = fetch_all_market_items(category_code, page_no=page_no, page_size=page_size)
-            items = data.get("Items", [])
-            if not items:
-                break
-            for i in items:
-                all_items.append({"Id": i["Id"], "Name": i["Name"]})
-            total_count = data.get("TotalCount", 0)
-            if page_no * page_size >= total_count:
-                break
-            page_no += 1
-        except Exception as e:
-            print(f"[WARN] 카테고리 {category_code} 페이지 {page_no} 조회 실패:", e)
-            break
-    return all_items
-
-# ---------- 모든 카테고리 아이템 조회 및 캐시 저장 ----------
-def fetch_all_categories_items(category_data):
-    """
-    category_data: option_data.get("Categories", []) 형식
-    모든 카테고리 + 모든 페이지 아이템 조회 후 캐시에 저장
-    """
-    def process_category(category):
-        code = category["Code"]
-        name = category["CodeName"]
-
-        # 이미 캐시에 있으면 스킵
-        with lock:
-            if any(c["CategoryCode"] == code for c in category_cache):
-                return code, 0  # 이미 존재
-
-        # 페이지 순회하여 모든 아이템 조회
-        items = fetch_all_items_for_category(code)
-
-        # 캐시에 저장
-        with lock:
-            category_cache.append({
-                "CategoryCode": code,
-                "CategoryName": name,
-                "Items": items
-            })
-            with open(CACHE_FILE, "w", encoding="utf-8") as f:
-                json.dump(category_cache, f, ensure_ascii=False, indent=2)
-
-        return code, len(items)
-
-    start_time = time.time()
-    with ThreadPoolExecutor(max_workers=min(len(category_data), 10)) as executor:
-        futures = [executor.submit(process_category, c) for c in category_data]
-        for future in as_completed(futures):
-            try:
-                code, count = future.result()
-                print(f"[INFO] 카테고리 {code} 아이템 {count}개 저장 완료")
-            except Exception as e:
-                print("[ERROR] 병렬 처리 오류:", e)
-
-    print(f"[INFO] 전체 카테고리 아이템 캐시 완료 ({len(category_data)}개 카테고리, {time.time()-start_time:.2f}초 소요)")
-
-# ---------- 예시 사용 ----------
-option_data = fetch_markets_option()
-category_data = option_data.get("Categories", [])
-
-# 모든 카테고리 + 페이지 아이템 캐시
-fetch_all_categories_items(category_data)
-
-
-# ---------- 캐시 검색 예시 ----------
-def search_item(item_name):
-    results = []
-    for c in category_cache:
-        for i in c["Items"]:
-            if item_name in i["Name"]:
-                results.append({
-                    "CategoryCode": c["CategoryCode"],
-                    "CategoryName": c["CategoryName"],
-                    "Id": i["Id"],
-                    "Name": i["Name"]
-                })
-    return results
-
-search_result = search_item("혼돈")
-print(search_result)
-
 def fetch_auctions_items(payload: dict):
     """
     Lost Ark 경매장 아이템 조회
@@ -752,6 +646,112 @@ def get_markets_items():
             "message": str(e)
         }), 500
 
+# ---------- 캐시 파일 ----------
+CACHE_FILE = "all_category_items.json"
+
+# 기존 캐시 로드
+if os.path.exists(CACHE_FILE):
+    with open(CACHE_FILE, "r", encoding="utf-8") as f:
+        category_cache = json.load(f)
+else:
+    category_cache = []
+
+lock = Lock()
+
+# ---------- 모든 페이지 아이템 조회 ----------
+def fetch_all_items_for_category(category_code):
+    """
+    특정 카테고리 코드의 모든 페이지 아이템 조회
+    Id + Name만 반환
+    """
+    all_items = []
+    page_no = 1
+    page_size = 100  # 가능하면 한 페이지에 많은 수 조회
+    while True:
+        try:
+            data = fetch_all_market_items(category_code, page_no=page_no, page_size=page_size)
+            items = data.get("Items", [])
+            if not items:
+                break
+            for i in items:
+                all_items.append({"Id": i["Id"], "Name": i["Name"]})
+            total_count = data.get("TotalCount", 0)
+            if page_no * page_size >= total_count:
+                break
+            page_no += 1
+        except Exception as e:
+            print(f"[WARN] 카테고리 {category_code} 페이지 {page_no} 조회 실패:", e)
+            break
+    return all_items
+
+# ---------- 모든 카테고리 아이템 조회 및 캐시 저장 ----------
+def fetch_all_categories_items(category_data):
+    """
+    category_data: option_data.get("Categories", []) 형식
+    모든 카테고리 + 모든 페이지 아이템 조회 후 캐시에 저장
+    """
+    def process_category(category):
+        code = category["Code"]
+        name = category["CodeName"]
+
+        # 이미 캐시에 있으면 스킵
+        with lock:
+            if any(c["CategoryCode"] == code for c in category_cache):
+                return code, 0  # 이미 존재
+
+        # 페이지 순회하여 모든 아이템 조회
+        items = fetch_all_items_for_category(code)
+
+        # 캐시에 저장
+        with lock:
+            category_cache.append({
+                "CategoryCode": code,
+                "CategoryName": name,
+                "Items": items
+            })
+            with open(CACHE_FILE, "w", encoding="utf-8") as f:
+                json.dump(category_cache, f, ensure_ascii=False, indent=2)
+
+        return code, len(items)
+
+    start_time = time.time()
+    with ThreadPoolExecutor(max_workers=min(len(category_data), 10)) as executor:
+        futures = [executor.submit(process_category, c) for c in category_data]
+        for future in as_completed(futures):
+            try:
+                code, count = future.result()
+                print(f"[INFO] 카테고리 {code} 아이템 {count}개 저장 완료")
+            except Exception as e:
+                print("[ERROR] 병렬 처리 오류:", e)
+
+    print(f"[INFO] 전체 카테고리 아이템 캐시 완료 ({len(category_data)}개 카테고리, {time.time()-start_time:.2f}초 소요)")
+
+# ---------- 예시 사용 ----------
+option_data = fetch_markets_option()
+category_data = option_data.get("Categories", [])
+
+# 모든 카테고리 + 페이지 아이템 캐시
+fetch_all_categories_items(category_data)
+
+
+# ---------- 캐시 검색 예시 ----------
+def search_item(item_name):
+    results = []
+    for c in category_cache:
+        for i in c["Items"]:
+            if item_name in i["Name"]:
+                results.append({
+                    "CategoryCode": c["CategoryCode"],
+                    "CategoryName": c["CategoryName"],
+                    "Id": i["Id"],
+                    "Name": i["Name"]
+                })
+    return results
+
+search_result = search_item("혼돈")
+print(search_result)
+
+        
 def fetch_all_market_items(category_code: int, item_name: str = "", item_grade: str = "", page_no: int = 0, character_class: str = "", item_tier: int = 0):
     """
     거래소 마켓 아이템 조회 (통합 함수)
@@ -3890,6 +3890,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
