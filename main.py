@@ -485,11 +485,19 @@ def get_auctions_items():
 
 # 보석 조회 전역 세션 생성
 jewelry_session = requests.Session()
-
 # 연결 풀 크기 확대
 adapter = HTTPAdapter(pool_connections=100, pool_maxsize=100)
 jewelry_session.mount("https://", adapter)
 jewelry_session.mount("http://", adapter)
+
+# 거래소 조회 전역 세션 생성
+markets_session = requests.Session()
+# 거래소 세션도 동일한 풀 크기 설정 (속도 향상)
+markets_adapter = HTTPAdapter(pool_connections=100, pool_maxsize=100)
+markets_session.mount("https://", markets_adapter)
+markets_session.mount("http://", markets_adapter)
+
+
 
 def fetch_auctions_items(payload: dict):
     """
@@ -2330,21 +2338,21 @@ def fallback():
         
                 from threading import Lock, Event
                 from concurrent.futures import ThreadPoolExecutor, as_completed
-                import requests, time
+                import time
         
                 lock = Lock()
                 all_items = []
                 collected_names = set()
                 stop_event = Event()  # ✅ 안전한 종료 신호
         
-                # ✅ 공용 세션 (TCP 재사용)
-                session = requests.Session()
+                # ✅ 전역 세션 사용 (이미 선언됨)
+                global markets_session
         
                 # ✅ 포맷 함수
                 def fmt(val):
                     return "-" if val is None else f"{val:,}"
         
-                # ✅ 빠른 거래소 조회 (재시도 없음)
+                # ✅ 빠른 거래소 조회 (재시도 없음, timeout 1초)
                 def fetch_all_market_items_safe(category_code, item_name):
                     try:
                         url = "https://developer-lostark.game.onstove.com/markets/items"
@@ -2353,7 +2361,7 @@ def fallback():
                             "Content-Type": "application/json",
                         }
                         payload = {"CategoryCode": category_code, "ItemName": item_name}
-                        res = session.post(url, headers=headers, json=payload, timeout=1.0)
+                        res = markets_session.post(url, headers=headers, json=payload, timeout=1.0)
                         if res.status_code == 200:
                             return res.json()
                         return {"Items": []}
@@ -2400,8 +2408,6 @@ def fallback():
                         except Exception as e:
                             print("[ERROR] 병렬 처리 오류:", e)
         
-                session.close()  # ✅ 세션 종료
-        
                 # ✅ 결과 구성
                 if not all_items:
                     response_text = f"'{item_name}'에 해당하는 거래소 아이템을 찾지 못했어요 😢"
@@ -2419,6 +2425,7 @@ def fallback():
                     )
         
                 print(f"거래소 조회 처리 완료 ({len(all_items)}개 항목, {time.time()-start_time:.2f}초 소요)")
+
 
 
 
@@ -3774,6 +3781,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
