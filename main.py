@@ -916,11 +916,16 @@ def search_category_codes(item_name: str, retry_if_empty=True):
 
     return list(codes)
 
+# 전역 변수 선언
+option_data = None
+category_data = None
 
 def initialize_categories():
     """
     서버 실행 후 백그라운드에서 카테고리 데이터를 로드합니다.
     """
+    global option_data, category_data
+
     print("[INIT] 거래소 카테고리 코드 초기화 시작")
     
     option_data = fetch_markets_option()
@@ -4012,6 +4017,7 @@ if __name__ == "__main__":
     app.run(host="0.0.0.0", port=port)
 
     logger.info("[SERVER] 서버가 종료되었습니다 ❌")
+
 
 
 
