@@ -4021,27 +4021,23 @@ def korlark_proxy():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# ------------------ 실행 ------------------
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
 
+
+# ---------- 초기화 함수 ----------
+def initialize_categories_wrapper():
     threading.Thread(target=initialize_categories, daemon=True).start()
     print("[INIT] 거래소 카테고리 초기화 스레드 시작")
 
+# ---------- Gunicorn 환경: 서버 시작 시 ----------
+@app.before_first_request
+def startup_tasks():
+    initialize_categories_wrapper()
+    print("[SERVER] Flask 서버가 실행되었습니다 ✅")
+
+# ---------- 로컬 테스트용 ----------
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    initialize_categories_wrapper()
     print("[SERVER] Flask 서버가 실행되었습니다 ✅")
     app.run(host="0.0.0.0", port=port)
-
-    print("[SERVER] 서버가 종료되었습니다 ❌")
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
