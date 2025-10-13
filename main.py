@@ -26,9 +26,6 @@ from itertools import product, cycle
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# 정보 출력
-logger.info("출력: %s", "서버가 실행되었습니다.")
-
 app = Flask(__name__)
 CORS(app)  # 모든 도메인 허용
 
@@ -924,20 +921,21 @@ def initialize_categories():
     """
     서버 실행 후 백그라운드에서 카테고리 데이터를 로드합니다.
     """
-
+    print("[INIT] 거래소 카테고리 코드 초기화 시작")
     
     option_data = fetch_markets_option()
     category_data = option_data.get("Categories", [])
     fetch_all_categories_items(category_data)
 
     search_text = "목재"
-
     # 초기화 완료 후 테스트 출력
     search_result = search_item(search_text)
     print(f"[DEBUG] 거래소 검색 테스트 '{search_text}':", search_result)
 
     category_codes = search_category_codes(search_text)
     print(f"[DEBUG] 카테고리 코드 '{search_text}':", category_codes)
+
+    print("[INIT] 전체 카테고리 초기화 완료 ✅")
 
 # ---------- 원정대 API 요청 함수 ----------
 def fetch_expedition(character_name: str, timeout: float = 5) -> dict:
@@ -4006,18 +4004,14 @@ def korlark_proxy():
 # ------------------ 실행 ------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    print("[SERVER] Flask 서버 시작 중...")
 
-    print("[INIT] 거래소 카테고리 코드 초기화 시작")
     threading.Thread(target=initialize_categories, daemon=True).start()
-    print("[INIT] 전체 카테고리 초기화 완료 ✅")
-    
+    logger.info("[INIT] 거래소 카테고리 초기화 스레드 시작")
+
+    logger.info("[SERVER] Flask 서버가 실행되었습니다 ✅")
     app.run(host="0.0.0.0", port=port)
-    print("[SERVER] Flask 서버 시작 완료 ✅")
 
-
-
-
+    logger.info("[SERVER] 서버가 종료되었습니다 ❌")
 
 
 
