@@ -862,7 +862,20 @@ fetch_all_categories_items(category_data)
 
 
 # ---------- 캐시 검색 예시 ----------
-def search_item(item_name):
+def fetch_and_cache_once(category_data):
+    """
+    캐시 삭제 후 모든 카테고리 + 페이지 아이템 조회
+    """
+    # 기존 캐시 삭제
+    if os.path.exists(CACHE_FILE):
+        os.remove(CACHE_FILE)
+        print(f"[INFO] 캐시 파일 '{CACHE_FILE}' 삭제 완료")
+
+    global category_cache
+    category_cache = []
+    fetch_all_categories_items(category_data)
+
+def search_item(item_name, retry_if_empty=True):
     results = []
     for c in category_cache:
         for i in c["Items"]:
@@ -873,27 +886,35 @@ def search_item(item_name):
                     "Id": i["Id"],
                     "Name": i["Name"]
                 })
+
+    # 검색 결과가 없고 retry_if_empty가 True이면 최초 1회 캐시 재생성 후 재검색
+    if not results and retry_if_empty:
+        print(f"[INFO] '{item_name}' 검색 결과 없음 → 캐시 재생성 시도")
+        fetch_and_cache_once(category_data)
+        return search_item(item_name, retry_if_empty=False)
+
     return results
 
-search_result = search_item("혼돈")
-print(search_result)
-
-def search_category_codes(item_name: str):
-    """
-    검색어에 해당하는 아이템이 포함된 모든 카테고리 코드만 반환
-    :param item_name: 검색할 아이템 이름
-    :return: 중복 제거된 카테고리 코드 리스트
-    """
-    codes = set()  # 중복 방지
+def search_category_codes(item_name: str, retry_if_empty=True):
+    codes = set()
     for c in category_cache:
         for i in c["Items"]:
             if item_name in i["Name"]:
                 codes.add(c["CategoryCode"])
-                break  # 해당 카테고리에서 하나 찾으면 더 이상 탐색 필요 없음
+                break
+
+    if not codes and retry_if_empty:
+        print(f"[INFO] '{item_name}' 카테고리 코드 검색 결과 없음 → 캐시 재생성 시도")
+        fetch_and_cache_once(category_data)
+        return search_category_codes(item_name, retry_if_empty=False)
+
     return list(codes)
 
-# 사용 예시
-category_codes = search_category_codes("혼돈")
+# ---------- 사용 예시 ----------
+search_result = search_item("목재")
+print(search_result)
+
+category_codes = search_category_codes("목재")
 print(category_codes)
 
 
@@ -3963,6 +3984,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
