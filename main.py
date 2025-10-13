@@ -7,7 +7,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from datetime import datetime, timezone, timedelta
 from collections import defaultdict
-import threading
+from threading import Thread, Lock, Event
 import os
 import json
 import re
@@ -4046,6 +4046,7 @@ if __name__ == "__main__":
     initialize_categories_wrapper()
     logger.info("[SERVER] Flask 서버가 실행되었습니다 ✅ (로컬 테스트)")
     app.run(host="0.0.0.0", port=port)
+
 
 
 
