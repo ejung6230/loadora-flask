@@ -2332,14 +2332,26 @@ def fallback():
                 collected_names = set()
                 should_stop = False
         
+                # ✅ 공용 세션 (TCP 재사용으로 요청 속도 개선)
+                session = requests.Session()
+        
                 # ✅ 안전한 포맷 함수
                 def fmt(val):
                     return "-" if val is None else f"{val:,}"
         
-                # ✅ 단순한 거래소 조회 (재시도 없음)
+                # ✅ 빠른 거래소 조회 (재시도 없음, timeout 1초)
                 def fetch_all_market_items_safe(category_code, item_name):
                     try:
-                        return fetch_all_market_items(category_code=category_code, item_name=item_name)
+                        url = "https://developer-lostark.game.onstove.com/markets/items"
+                        headers = {
+                            "Authorization": f"Bearer {YOUR_API_KEY}",
+                            "Content-Type": "application/json",
+                        }
+                        payload = {"CategoryCode": category_code, "ItemName": item_name}
+                        res = session.post(url, headers=headers, json=payload, timeout=1.0)
+                        if res.status_code == 200:
+                            return res.json()
+                        return {"Items": []}
                     except Exception as e:
                         print(f"[WARN] 거래소 요청 실패 (code={category_code}):", e)
                         return {"Items": []}
@@ -2357,13 +2369,13 @@ def fallback():
                             "등급": i.get("Grade"),
                             "현재가": i.get("CurrentMinPrice"),
                             "최근거래가": i.get("RecentPrice"),
-                            "거래량": i.get("TradeCount")
+                            "거래량": i.get("TradeCount"),
                         }
                         for i in data.get("Items", [])
                     ]
         
-                # ✅ 병렬 실행 (전체 카테고리 대상)
-                with ThreadPoolExecutor(max_workers=min(len(category_data), 12)) as executor:
+                # ✅ 병렬 실행 (스레드 20개까지 확장)
+                with ThreadPoolExecutor(max_workers=min(len(category_data), 20)) as executor:
                     futures = {executor.submit(fetch_category_items, c): c for c in category_data}
         
                     for future in as_completed(futures):
@@ -3753,6 +3765,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
