@@ -2357,23 +2357,6 @@ def fallback():
                 def fmt(val):
                     return "-" if val is None else f"{val:,}"
         
-                # ✅ 빠른 거래소 조회 (재시도 없음, timeout 1초)
-                def fetch_all_market_items_safe(category_code, item_name):
-                    try:
-                        url = "https://developer-lostark.game.onstove.com/markets/items"
-                        headers = {
-                            "Authorization": f"Bearer {YOUR_API_KEY}",
-                            "Content-Type": "application/json",
-                        }
-                        payload = {"CategoryCode": category_code, "ItemName": item_name}
-                        res = markets_session.post(url, headers=headers, json=payload, timeout=1.0)
-                        if res.status_code == 200:
-                            return res.json()
-                        return {"Items": []}
-                    except Exception as e:
-                        print(f"[WARN] 거래소 요청 실패 (code={category_code}):", e)
-                        return {"Items": []}
-        
                 # ✅ 각 카테고리별 아이템 조회
                 def fetch_category_items(category):
                     if stop_event.is_set():
@@ -3786,6 +3769,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
