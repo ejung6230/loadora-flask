@@ -791,14 +791,20 @@ def fetch_all_items_for_category(category_code):
 def fetch_all_categories_items(category_data):
     """
     모든 카테고리 + 모든 페이지 아이템 조회 후 캐시에 저장
+    이미 캐시에 있는 카테고리는 스킵
     """
+    skipped_count = 0  # 스킵한 카테고리 수
+    saved_count = 0    # 새로 저장한 카테고리 수
+
     def process_category(category):
+        nonlocal skipped_count
         code = category["Code"]
         name = category["CodeName"]
 
         # 이미 캐시에 있으면 스킵
         with lock:
             if any(c["CategoryCode"] == code for c in category_cache):
+                skipped_count += 1
                 return code, name, []  # 항상 3개 값 반환
 
         # 페이지 순회 및 429 처리
@@ -837,11 +843,13 @@ def fetch_all_categories_items(category_data):
         for future in as_completed(futures):
             try:
                 code, name, items = future.result()
-                results.append({
-                    "CategoryCode": code,
-                    "CategoryName": name,
-                    "Items": items
-                })
+                if items:  # 새로 조회한 아이템만 캐시에 저장
+                    saved_count += 1
+                    results.append({
+                        "CategoryCode": code,
+                        "CategoryName": name,
+                        "Items": items
+                    })
                 print(f"[INFO] 카테고리 {code} 아이템 {len(items)}개 조회 완료")
             except Exception as e:
                 print("[ERROR] 병렬 처리 오류:", e)
@@ -851,11 +859,12 @@ def fetch_all_categories_items(category_data):
     try:
         with open(CACHE_FILE, "w", encoding="utf-8") as f:
             json.dump(category_cache, f, ensure_ascii=False, indent=2)
-        print(f"[SUCCESS] 캐시 파일 '{CACHE_FILE}' 저장 완료 ({len(results)}개 카테고리)")
+        print(f"[SUCCESS] 캐시 파일 '{CACHE_FILE}' 저장 완료 ({len(results)}개 카테고리 새로 저장)")
     except Exception as e:
         print(f"[ERROR] 캐시 파일 저장 실패: {e}")
 
-    print(f"[INFO] 전체 카테고리 조회 완료 ({len(category_data)}개 카테고리, {time.time()-start_time:.2f}초 소요)")
+    print(f"[INFO] 전체 카테고리 조회 완료 ({len(category_data)}개 카테고리, 스킵 {skipped_count}개, 저장 {saved_count}개, {time.time()-start_time:.2f}초 소요)")
+
 
 
 
@@ -3990,6 +3999,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
