@@ -739,11 +739,17 @@ CACHE_FILE = os.path.join(os.path.dirname(__file__), "all_category_items.json")
 #     print(f"[WARN] 캐시 파일 '{CACHE_FILE}'이 존재하지 않음")
 
 # 기존 캐시 로드
+category_cache = []  # 항상 기본값은 리스트
 if os.path.exists(CACHE_FILE):
-    with open(CACHE_FILE, "r", encoding="utf-8") as f:
-        category_cache = json.load(f)
-else:
-    category_cache = []
+    try:
+        with open(CACHE_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            if isinstance(data, list):
+                category_cache = data
+            else:
+                print(f"[WARN] 캐시 파일 내용이 리스트가 아님, 초기화")
+    except Exception as e:
+        print(f"[WARN] 캐시 파일 로드 실패: {e}, 초기화")
 
 lock = Lock()
 
@@ -3984,6 +3990,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
