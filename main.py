@@ -646,6 +646,47 @@ def get_markets_items():
             "message": str(e)
         }), 500
 
+def fetch_all_market_items(category_code: int, item_name: str = "", item_grade: str = "", page_no: int = 0, character_class: str = "", item_tier: int = 0):
+    """
+    거래소 마켓 아이템 조회 (통합 함수)
+    
+    :param category_code: 카테고리 코드 (예: 40000 = 각인서, 50000 = 강화 재료 등)
+    :param item_name: 검색할 아이템 이름 (기본값 "")
+    :param item_grade: 아이템 등급 (예: "유물", "전설" 등, 기본값 "")
+    :param page_no: 조회할 페이지 번호 (기본값 0)
+    :return: API 응답 데이터 (dict)
+
+    번호	대분류 이름	코드
+    1	    장비 상자	10100
+    2	    아바타    	20000
+    3	    각인서    	40000
+    4	    강화 재료	50000
+    5	    전투 용품	60000
+    6    	요리    	70000
+    7    	생활    	90000
+    8    	모험의 서	100000
+    9    	항해    	110000
+    10    	펫	        140000
+    11    	탈것    	160000
+    12	    기타    	170000
+    13	    보석 상자	220000
+
+    """
+    payload = {
+        "Sort": "CURRENT_MIN_PRICE",   # [GRADE, YDAY_AVG_PRICE, RECENT_PRICE, CURRENT_MIN_PRICE]
+        "CategoryCode": category_code,
+        "CharacterClass": character_class,
+        "ItemTier": item_tier,
+        "ItemGrade": item_grade,
+        "ItemName": item_name,
+        "PageNo": page_no,
+        "SortCondition": "DESC"        # [ASC, DESC]
+    }
+
+    return fetch_markets_items(payload)
+
+
+
 # ---------- 캐시 파일 ----------
 CACHE_FILE = "all_category_items.json"
 
@@ -750,46 +791,6 @@ def search_item(item_name):
 
 search_result = search_item("혼돈")
 print(search_result)
-
-        
-def fetch_all_market_items(category_code: int, item_name: str = "", item_grade: str = "", page_no: int = 0, character_class: str = "", item_tier: int = 0):
-    """
-    거래소 마켓 아이템 조회 (통합 함수)
-    
-    :param category_code: 카테고리 코드 (예: 40000 = 각인서, 50000 = 강화 재료 등)
-    :param item_name: 검색할 아이템 이름 (기본값 "")
-    :param item_grade: 아이템 등급 (예: "유물", "전설" 등, 기본값 "")
-    :param page_no: 조회할 페이지 번호 (기본값 0)
-    :return: API 응답 데이터 (dict)
-
-    번호	대분류 이름	코드
-    1	    장비 상자	10100
-    2	    아바타    	20000
-    3	    각인서    	40000
-    4	    강화 재료	50000
-    5	    전투 용품	60000
-    6    	요리    	70000
-    7    	생활    	90000
-    8    	모험의 서	100000
-    9    	항해    	110000
-    10    	펫	        140000
-    11    	탈것    	160000
-    12	    기타    	170000
-    13	    보석 상자	220000
-
-    """
-    payload = {
-        "Sort": "CURRENT_MIN_PRICE",   # [GRADE, YDAY_AVG_PRICE, RECENT_PRICE, CURRENT_MIN_PRICE]
-        "CategoryCode": category_code,
-        "CharacterClass": character_class,
-        "ItemTier": item_tier,
-        "ItemGrade": item_grade,
-        "ItemName": item_name,
-        "PageNo": page_no,
-        "SortCondition": "DESC"        # [ASC, DESC]
-    }
-
-    return fetch_markets_items(payload)
 
 
 
@@ -3890,6 +3891,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
