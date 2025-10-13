@@ -2597,6 +2597,7 @@ def fallback():
                     if stop_event.is_set():
                         return []
                     data = fetch_all_market_items(code, item_name)
+                    print('data : ', data)
                     return [
                         {
                             "카테고리코드": i.get("CategoryCode"),  
