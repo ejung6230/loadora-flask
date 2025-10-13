@@ -779,7 +779,6 @@ def fetch_all_items_for_category(category_code):
 # ---------- 모든 카테고리 아이템 조회 및 캐시 저장 ----------
 def fetch_all_categories_items(category_data):
     """
-    category_data: option_data.get("Categories", []) 형식
     모든 카테고리 + 모든 페이지 아이템 조회 후 캐시에 저장
     """
     def process_category(category):
@@ -791,32 +790,38 @@ def fetch_all_categories_items(category_data):
             if any(c["CategoryCode"] == code for c in category_cache):
                 return code, 0  # 이미 존재
 
-        # 페이지 순회하여 모든 아이템 조회
         items = fetch_all_items_for_category(code)
 
-        # 캐시에 저장
-        with lock:
-            category_cache.append({
-                "CategoryCode": code,
-                "CategoryName": name,
-                "Items": items
-            })
-            with open(CACHE_FILE, "w", encoding="utf-8") as f:
-                json.dump(category_cache, f, ensure_ascii=False, indent=2)
-
-        return code, len(items)
+        return code, name, items
 
     start_time = time.time()
+    results = []
+
     with ThreadPoolExecutor(max_workers=min(len(category_data), 10)) as executor:
         futures = [executor.submit(process_category, c) for c in category_data]
         for future in as_completed(futures):
             try:
-                code, count = future.result()
-                print(f"[INFO] 카테고리 {code} 아이템 {count}개 저장 완료")
+                code, name, items = future.result()
+                results.append({
+                    "CategoryCode": code,
+                    "CategoryName": name,
+                    "Items": items
+                })
+                print(f"[INFO] 카테고리 {code} 아이템 {len(items)}개 조회 완료")
             except Exception as e:
                 print("[ERROR] 병렬 처리 오류:", e)
 
-    print(f"[INFO] 전체 카테고리 아이템 캐시 완료 ({len(category_data)}개 카테고리, {time.time()-start_time:.2f}초 소요)")
+    # 모든 카테고리 조회 후 한 번만 파일 저장
+    category_cache.extend(results)
+    try:
+        with open(CACHE_FILE, "w", encoding="utf-8") as f:
+            json.dump(category_cache, f, ensure_ascii=False, indent=2)
+        print(f"[SUCCESS] 캐시 파일 '{CACHE_FILE}' 저장 완료 ({len(results)}개 카테고리)")
+    except Exception as e:
+        print(f"[ERROR] 캐시 파일 저장 실패: {e}")
+
+    print(f"[INFO] 전체 카테고리 조회 완료 ({len(category_data)}개 카테고리, {time.time()-start_time:.2f}초 소요)")
+
 
 # ---------- 예시 사용 ----------
 option_data = fetch_markets_option()
@@ -3913,6 +3918,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
