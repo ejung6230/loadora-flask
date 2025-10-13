@@ -483,16 +483,16 @@ def get_auctions_items():
             "message": str(e)
         }), 500
 
-# 보석 조회 전역 세션 생성
-jewelry_session = requests.Session()
-# 연결 풀 크기 확대
+# 경매장 조회 전역 세션 생성
+auctions_session = requests.Session()
+# 경매장 연결 풀 크기 확대 (속도 향상)
 adapter = HTTPAdapter(pool_connections=100, pool_maxsize=100)
-jewelry_session.mount("https://", adapter)
-jewelry_session.mount("http://", adapter)
+auctions_session.mount("https://", adapter)
+auctions_session.mount("http://", adapter)
 
 # 거래소 조회 전역 세션 생성
 markets_session = requests.Session()
-# 거래소 세션도 동일한 풀 크기 설정 (속도 향상)
+# 거래소 연결 풀 크기 확대 (속도 향상)
 markets_adapter = HTTPAdapter(pool_connections=100, pool_maxsize=100)
 markets_session.mount("https://", markets_adapter)
 markets_session.mount("http://", markets_adapter)
@@ -509,8 +509,8 @@ def fetch_auctions_items(payload: dict):
     
     try:
 
-        # requests.post 대신 jewelry_session.post 사용 + 타임아웃
-        response = jewelry_session.post(url, headers=HEADERS, json=payload, timeout=3.5)
+        # requests.post 대신 auctions_session.post 사용 + 타임아웃
+        response = auctions_session.post(url, headers=HEADERS, json=payload, timeout=3.5)
         return response.json()
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 503:
@@ -3789,6 +3789,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
