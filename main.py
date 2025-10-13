@@ -7,7 +7,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from datetime import datetime, timezone, timedelta
 from collections import defaultdict
-from threading import Lock
+from threading import Lock, Event
 import os
 import json
 import re
@@ -2343,10 +2343,7 @@ def fallback():
                 start_time = time.time()
                 option_data = fetch_markets_option()  # 거래소 카테고리
                 category_data = option_data.get("Categories", [])
-        
-                from threading import Lock, Event
-                from concurrent.futures import ThreadPoolExecutor, as_completed
-                import time
+    
         
                 lock = Lock()
                 all_items = []
@@ -3789,6 +3786,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
