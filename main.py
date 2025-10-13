@@ -871,8 +871,23 @@ def search_item(item_name):
 search_result = search_item("혼돈")
 print(search_result)
 
+def search_category_codes(item_name: str):
+    """
+    검색어에 해당하는 아이템이 포함된 모든 카테고리 코드만 반환
+    :param item_name: 검색할 아이템 이름
+    :return: 중복 제거된 카테고리 코드 리스트
+    """
+    codes = set()  # 중복 방지
+    for c in category_cache:
+        for i in c["Items"]:
+            if item_name in i["Name"]:
+                codes.add(c["CategoryCode"])
+                break  # 해당 카테고리에서 하나 찾으면 더 이상 탐색 필요 없음
+    return list(codes)
 
-
+# 사용 예시
+category_codes = search_category_codes("혼돈")
+print(category_codes)
 
 
 # ---------- 원정대 API 요청 함수 ----------
@@ -3941,5 +3956,6 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
