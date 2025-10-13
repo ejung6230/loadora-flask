@@ -707,22 +707,30 @@ def fetch_all_items_for_category(category_code):
     """
     all_items = []
     page_no = 1
-    page_size = 100  # 가능하면 한 페이지에 많은 수 조회
+
     while True:
         try:
-            data = fetch_all_market_items(category_code, page_no=page_no, page_size=page_size)
+            # category_code + page_no로 API 호출
+            data = fetch_all_market_items(category_code, page_no=page_no)
             items = data.get("Items", [])
-            if not items:
+            if not items:  # 더 이상 아이템이 없으면 종료
                 break
+
+            # Id + Name만 저장
             for i in items:
                 all_items.append({"Id": i["Id"], "Name": i["Name"]})
+
+            # 전체 페이지 수 확인
             total_count = data.get("TotalCount", 0)
-            if page_no * page_size >= total_count:
-                break
+            if page_no * len(items) >= total_count:
+                break  # 마지막 페이지 도달
+
             page_no += 1
+
         except Exception as e:
             print(f"[WARN] 카테고리 {category_code} 페이지 {page_no} 조회 실패:", e)
             break
+
     return all_items
 
 # ---------- 모든 카테고리 아이템 조회 및 캐시 저장 ----------
@@ -3891,6 +3899,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
