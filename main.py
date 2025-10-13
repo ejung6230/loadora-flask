@@ -2362,7 +2362,7 @@ def fallback():
                     if stop_event.is_set():
                         return []
                     code, name = category["Code"], category["CodeName"]
-                    data = fetch_all_market_items_safe(code, item_name)
+                    data = fetch_all_market_items(code, item_name)
                     return [
                         {
                             "카테고리": name,
@@ -3769,6 +3769,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
