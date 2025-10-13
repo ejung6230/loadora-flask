@@ -2343,7 +2343,9 @@ def fallback():
                 start_time = time.time()
                 option_data = fetch_markets_option()  # 거래소 카테고리
                 category_data = option_data.get("Categories", [])
-    
+
+
+                print("category_data : ", category_data)
         
                 lock = Lock()
                 all_items = []
@@ -3769,6 +3771,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
