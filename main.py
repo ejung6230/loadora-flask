@@ -874,7 +874,7 @@ def fetch_all_categories_items(category_data):
 # ---------- 전역 변수 ----------
 option_data = None
 category_data = None
-startup_done = False
+startup_done = False # 0: 초기상태, 1: 초기화 중, 2: 초기화 완료
 
 # ---------- 카테고리 초기화 ----------
 def initialize_categories():
@@ -4044,6 +4044,7 @@ if __name__ == "__main__":
     initialize_categories_wrapper()
     logger.info("[SERVER] Flask 서버가 실행되었습니다 ✅ (로컬 테스트)")
     app.run(host="0.0.0.0", port=port)
+
 
 
 
