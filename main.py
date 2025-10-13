@@ -688,7 +688,7 @@ def fetch_all_market_items(category_code: int, item_name: str = "", item_grade: 
 
 
 # ---------- 캐시 파일 ----------
-CACHE_FILE = "all_category_items.json"
+CACHE_FILE = os.path.join(os.path.dirname(__file__), "all_category_items.json")
 
 # 기존 캐시 로드
 if os.path.exists(CACHE_FILE):
@@ -3899,6 +3899,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
