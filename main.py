@@ -868,24 +868,43 @@ def fetch_all_categories_items(category_data):
 
 
 # ---------- 캐시 검색 예시 ----------
-def fetch_and_cache_once(category_data):
-    """
-    캐시 삭제 후 모든 카테고리 + 페이지 아이템 조회
-    """
-    # 기존 캐시 삭제
-    if os.path.exists(CACHE_FILE):
-        os.remove(CACHE_FILE)
-        print(f"[INFO] 캐시 파일 '{CACHE_FILE}' 삭제 완료")
+# ---------- 전역 변수 ----------
+option_data = None
+category_data = None
 
-    global category_cache
-    category_cache = []
-    fetch_all_categories_items(category_data)
+# ---------- 카테고리 초기화 ----------
+def initialize_categories():
+    """
+    서버 부팅 시 카테고리 데이터를 초기화합니다.
+    """
+    global option_data, category_data
 
+    print("[INIT] 거래소 카테고리 코드 초기화 시작")
+    try:
+        option_data = fetch_markets_option()
+        category_data = option_data.get("Categories", [])
+        if not category_data:
+            print("[WARN] 카테고리 데이터 없음")
+            return
+
+        fetch_all_categories_items(category_data)
+
+        # 초기화 완료 후 테스트
+        search_text = "목재"
+        print(f"[DEBUG] '{search_text}' 검색 테스트:", search_item(search_text))
+        print(f"[DEBUG] '{search_text}' 카테고리 코드 테스트:", search_category_codes(search_text))
+
+        print("[INIT] 전체 카테고리 초기화 완료 ✅")
+
+    except Exception as e:
+        print(f"[ERROR] initialize_categories 실패: {e}")
+
+# ---------- 아이템 검색 ----------
 def search_item(item_name, retry_if_empty=True):
     results = []
     for c in category_cache:
-        for i in c["Items"]:
-            if item_name in i["Name"]:
+        for i in c.get("Items", []):
+            if item_name in i.get("Name", ""):
                 results.append({
                     "CategoryCode": c["CategoryCode"],
                     "CategoryName": c["CategoryName"],
@@ -893,54 +912,42 @@ def search_item(item_name, retry_if_empty=True):
                     "Name": i["Name"]
                 })
 
-    # 검색 결과가 없고 retry_if_empty가 True이면 최초 1회 캐시 재생성 후 재검색
+    # 검색 결과 없으면 캐시 재생성 후 1회 재검색
     if not results and retry_if_empty:
         print(f"[INFO] '{item_name}' 검색 결과 없음 → 캐시 재생성 시도")
+
+        if category_data is None:
+            print("[INIT] category_data가 None → 자동 초기화")
+            initialize_categories()
+            
         fetch_and_cache_once(category_data)
         return search_item(item_name, retry_if_empty=False)
 
     return results
 
+# ---------- 카테고리 코드 검색 ----------
 def search_category_codes(item_name: str, retry_if_empty=True):
+    global option_data, category_data
+
     codes = set()
     for c in category_cache:
-        for i in c["Items"]:
-            if item_name in i["Name"]:
+        for i in c.get("Items", []):
+            if item_name in i.get("Name", ""):
                 codes.add(c["CategoryCode"])
                 break
 
+    # 검색 결과 없으면 캐시 재생성 후 1회 재검색
     if not codes and retry_if_empty:
         print(f"[INFO] '{item_name}' 카테고리 코드 검색 결과 없음 → 캐시 재생성 시도")
+
+        if category_data is None:
+            print("[INIT] category_data가 None → 자동 초기화")
+            initialize_categories()
+
         fetch_and_cache_once(category_data)
         return search_category_codes(item_name, retry_if_empty=False)
 
     return list(codes)
-
-# 전역 변수 선언
-option_data = None
-category_data = None
-
-def initialize_categories():
-    """
-    서버 실행 후 백그라운드에서 카테고리 데이터를 로드합니다.
-    """
-    global option_data, category_data
-
-    print("[INIT] 거래소 카테고리 코드 초기화 시작")
-    
-    option_data = fetch_markets_option()
-    category_data = option_data.get("Categories", [])
-    fetch_all_categories_items(category_data)
-
-    search_text = "목재"
-    # 초기화 완료 후 테스트 출력
-    search_result = search_item(search_text)
-    print(f"[DEBUG] 거래소 검색 테스트 '{search_text}':", search_result)
-
-    category_codes = search_category_codes(search_text)
-    print(f"[DEBUG] 카테고리 코드 '{search_text}':", category_codes)
-
-    print("[INIT] 전체 카테고리 초기화 완료 ✅")
 
 # ---------- 원정대 API 요청 함수 ----------
 def fetch_expedition(character_name: str, timeout: float = 5) -> dict:
@@ -4017,6 +4024,7 @@ if __name__ == "__main__":
     app.run(host="0.0.0.0", port=port)
 
     logger.info("[SERVER] 서버가 종료되었습니다 ❌")
+
 
 
 
