@@ -2569,11 +2569,12 @@ def fallback():
                 response_text = "◕_◕💧\n검색할 아이템명을 입력해주세요.\nex) .거래소 아이템명"
             else:
                 start_time = time.time()
-                option_data = fetch_markets_option()  # 거래소 카테고리
-                category_data = option_data.get("Categories", [])
 
 
-                print("category_data : ", category_data)
+                # ---------- 사용 예시 ----------
+                category_codes = search_category_codes(item_name)
+                print("category_codes : ", category_codes)
+                # category_codes는 [90000]
         
                 lock = Lock()
                 all_items = []
@@ -2588,26 +2589,26 @@ def fallback():
                     return "-" if val is None else f"{val:,}"
         
                 # ✅ 각 카테고리별 아이템 조회
-                def fetch_category_items(category):
+                def fetch_category_items(code):
                     if stop_event.is_set():
                         return []
-                    code, name = category["Code"], category["CodeName"]
                     data = fetch_all_market_items(code, item_name)
                     return [
                         {
-                            "카테고리": name,
+                            "카테고리코드": i.get("CategoryCode"),  
+                            "카테고리이름": i.get("CategoryName"),
                             "아이템명": i.get("Name"),
                             "등급": i.get("Grade"),
                             "현재가": i.get("CurrentMinPrice"),
                             "최근거래가": i.get("RecentPrice"),
-                            "거래량": i.get("TradeCount"),
+                            "거래량": i.get("TradeCount"),  # 중복 제거
                         }
                         for i in data.get("Items", [])
                     ]
         
                 # ✅ 병렬 실행 (최대 20스레드)
-                with ThreadPoolExecutor(max_workers=min(len(category_data), 20)) as executor:
-                    futures = {executor.submit(fetch_category_items, c): c for c in category_data}
+                with ThreadPoolExecutor(max_workers=min(len(category_codes), 20)) as executor:
+                    futures = {executor.submit(fetch_category_items, c): c for c in category_codes}
         
                     for future in as_completed(futures):
                         if stop_event.is_set():
@@ -2633,7 +2634,7 @@ def fallback():
                     lines = [
                         f"📦 {i['아이템명']} ({i['등급']})\n"
                         f"💰 현재가: {fmt(i['현재가'])} / 최근거래가: {fmt(i['최근거래가'])} / 거래량: {fmt(i['거래량'])}\n"
-                        f"🗂 카테고리: {i['카테고리']}\n"
+                        f"🗂 카테고리: {i['카테고리이름']} ({i['카테고리코드']})\n"
                         for i in all_items
                     ]
                     elapsed = time.time() - start_time
@@ -3999,6 +4000,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
