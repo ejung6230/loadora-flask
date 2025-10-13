@@ -878,7 +878,7 @@ category_data = None
 # ---------- 카테고리 초기화 ----------
 def initialize_categories():
     """
-    서버 부팅 시 카테고리 데이터를 초기화합니다.
+    카테고리 데이터를 초기화합니다.
     """
     global option_data, category_data
 
@@ -4028,16 +4028,23 @@ def initialize_categories_wrapper():
     threading.Thread(target=initialize_categories, daemon=True).start()
     print("[INIT] 거래소 카테고리 초기화 스레드 시작")
 
-# ---------- Gunicorn 환경: 서버 시작 시 ----------
-@app.before_first_request
+# ---------- Gunicorn 환경: 서버 시작 시 (한 번만 실행) ----------
+startup_done = False
+
+@app.before_request
 def startup_tasks():
-    initialize_categories_wrapper()
-    print("[SERVER] Flask 서버가 실행되었습니다 ✅")
+    global startup_done
+    if not startup_done:
+        initialize_categories_wrapper()
+        print("[SERVER] Flask 서버가 실행되었습니다 ✅")
+        startup_done = True
+
 
 # ---------- 로컬 테스트용 ----------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     initialize_categories_wrapper()
-    print("[SERVER] Flask 서버가 실행되었습니다 ✅")
+    logger.info("[SERVER] Flask 서버가 실행되었습니다 ✅ (로컬 테스트)")
     app.run(host="0.0.0.0", port=port)
-    
+
+
