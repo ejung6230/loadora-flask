@@ -790,7 +790,31 @@ def fetch_all_categories_items(category_data):
             if any(c["CategoryCode"] == code for c in category_cache):
                 return code, 0  # 이미 존재
 
-        items = fetch_all_items_for_category(code)
+        # 페이지 순회 및 429 처리
+        items = []
+        page_no = 1
+        while True:
+            try:
+                data = fetch_all_market_items(code, page_no=page_no)
+                page_items = data.get("Items", [])
+                if not page_items:
+                    break
+                items.extend([{"Id": i["Id"], "Name": i["Name"]} for i in page_items])
+                
+                total_count = data.get("TotalCount", 0)
+                if page_no * len(page_items) >= total_count:
+                    break
+                page_no += 1
+
+            except Exception as e:
+                msg = str(e)
+                if "429" in msg:
+                    print(f"[WARN] 카테고리 {code} 페이지 {page_no}: 요청 제한(429), 60초 대기 후 재시도")
+                    time.sleep(60)
+                    continue  # 같은 페이지 재시도
+                else:
+                    print(f"[WARN] 카테고리 {code} 페이지 {page_no} 조회 실패: {e}")
+                    break
 
         return code, name, items
 
@@ -821,6 +845,7 @@ def fetch_all_categories_items(category_data):
         print(f"[ERROR] 캐시 파일 저장 실패: {e}")
 
     print(f"[INFO] 전체 카테고리 조회 완료 ({len(category_data)}개 카테고리, {time.time()-start_time:.2f}초 소요)")
+
 
 
 # ---------- 예시 사용 ----------
@@ -3918,3 +3943,4 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
