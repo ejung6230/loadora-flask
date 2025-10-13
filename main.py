@@ -743,7 +743,11 @@ category_cache = []  # 항상 기본값은 리스트
 if os.path.exists(CACHE_FILE):
     try:
         with open(CACHE_FILE, "r", encoding="utf-8") as f:
+            raw_content = f.read()
+            print("[DEBUG] 캐시 파일 원본 내용:\n", raw_content)  # ✅ 파일 내용 확인
+            f.seek(0)  # 다시 처음으로
             data = json.load(f)
+            print("[DEBUG] json.load 결과:", data, type(data))  # ✅ 자료형 확인
             if isinstance(data, list):
                 category_cache = data
             else:
@@ -4000,6 +4004,7 @@ def korlark_proxy():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
