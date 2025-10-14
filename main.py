@@ -2693,20 +2693,31 @@ def fallback():
                                                 break
                             except Exception as e:
                                 print("[ERROR] 병렬 처리 오류:", e)
-        
+    
                     # ---------- 결과 구성 ----------
                     if not all_items:
                         response_text = f"'{item_name}'에 해당하는 거래소 아이템을 찾지 못했어요 😢"
                     else:
                         # 간단한 카드 리스트 구성
-                        menu_list = [
-                            {
+                        menu_list = []
+                        for i in all_items:
+                            current = i.get('CurrentMinPrice', 0)
+                            avg = i.get('YDayAvgPrice', 0)
+                            
+                            # 전일 대비 변화 계산
+                            if avg:
+                                change_percent = (current - avg) / avg * 100
+                                arrow = "🔺" if change_percent > 0 else "📉" if change_percent < 0 else "➖"
+                                change_text = f"{change_percent:+.1f}%{arrow}"
+                            else:
+                                change_text = "N/A"
+                        
+                            menu_list.append({
                                 "title": i["Name"],
-                                "desc": f"{fmt(i['CurrentMinPrice'])}💰\n",
+                                "desc": f"{fmt(current)}💰 ({change_text})\n",
                                 "img": i.get("Icon", "")
-                            }
-                            for i in all_items
-                        ]
+                            })
+
         
                         # ---------- 캐러셀 카드 구성 ----------
                         list_cards = []
@@ -4133,6 +4144,7 @@ if __name__ == "__main__":
     initialize_categories_wrapper()
     logger.info("[SERVER] Flask 서버가 실행되었습니다 ✅ (로컬 테스트)")
     app.run(host="0.0.0.0", port=port)
+
 
 
 
