@@ -4124,7 +4124,7 @@ def initialize_categories_wrapper():
 
 
 # ---------- Gunicorn 환경: 서버 시작 시 (한 번만 실행) ----------
-@app.before_first_request
+@app.before_request
 def startup_tasks():
     initialize_categories_wrapper()
 
@@ -4135,5 +4135,6 @@ if __name__ == "__main__":
     initialize_categories_wrapper()
     logger.info("[SERVER] Flask 서버가 실행되었습니다 ✅ (로컬 테스트)")
     app.run(host="0.0.0.0", port=port)
+
 
 
