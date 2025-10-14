@@ -905,7 +905,6 @@ def initialize_categories():
         search_text = "목재"
         print(f"[DEBUG] '{search_text}' 검색 테스트:", search_item(search_text))
         print(f"[DEBUG] '{search_text}' 카테고리 코드 테스트:", search_category_codes(search_text))
-        startup_done = True
         
         print("[INIT] 전체 카테고리 초기화 완료 ✅")
 
@@ -4092,16 +4091,17 @@ def korlark_proxy():
 
 # ---------- 초기화 함수 ----------
 def initialize_categories_wrapper():
-    Thread(target=initialize_categories, daemon=True).start()
-    print("[INIT] 거래소 카테고리 초기화 스레드 시작")
+    global startup_done
+    if not startup_done:
+        Thread(target=initialize_categories, daemon=True).start()
+        print("[INIT] 거래소 카테고리 초기화 스레드 시작")
+        startup_done = True
 
 # ---------- Gunicorn 환경: 서버 시작 시 (한 번만 실행) ----------
 @app.before_request
 def startup_tasks():
-    global startup_done
-    if not startup_done:
-        initialize_categories_wrapper()
-        print("[SERVER] Flask 서버가 실행되었습니다 ✅")
+    initialize_categories_wrapper()
+    print("[SERVER] Flask 서버가 실행되었습니다 ✅")
 
 
 # ---------- 로컬 테스트용 ----------
@@ -4110,6 +4110,7 @@ if __name__ == "__main__":
     initialize_categories_wrapper()
     logger.info("[SERVER] Flask 서버가 실행되었습니다 ✅ (로컬 테스트)")
     app.run(host="0.0.0.0", port=port)
+
 
 
 
