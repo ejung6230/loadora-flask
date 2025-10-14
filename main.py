@@ -942,7 +942,7 @@ def search_item(item_name, retry_if_empty=True):
             print("[WARN] 현재 캐시를 생성 중입니다. 잠시 후 다시 시도하세요.")
             return 
 
-        # 초기화 완료 → 캐시 존재하므로 재시도하지 않음
+        # 초기화 완료 → 캐시 재업데이트 후 다시 시도
         #(startup_state == 2)
         else:
             print("[INFO] 캐시 재업데이트 후 다시 시도합니다.")
@@ -953,7 +953,7 @@ def search_item(item_name, retry_if_empty=True):
 
 # ---------- 카테고리 코드 검색 ----------
 def search_category_codes(item_name: str, retry_if_empty=True):
-    global option_data, category_data, startup_done
+    global option_data, category_data, startup_state
 
     codes = set()
     for c in category_cache:
@@ -966,14 +966,23 @@ def search_category_codes(item_name: str, retry_if_empty=True):
     if not codes and retry_if_empty:
         print(f"[INFO] '{item_name}' 카테고리 코드 검색 결과 없음 → 캐시 재생성 시도")
 
-        if not startup_done:
-            print("[WARN] 이미 캐시 생성 중입니다. 잠시 후 다시 시도하세요.")
+        # 초기 상태 → 초기화 시작
+        if startup_state == 0:
+            print("[INIT] 캐시가 존재하지 않음 → 초기화 시작 후 재시도")
+            initialize_categories()
+            return search_item(item_name, retry_if_empty=False)
+            
+        # 초기화 중 → 대기 권장
+        elif startup_state == 1:
+            print("[WARN] 현재 캐시를 생성 중입니다. 잠시 후 다시 시도하세요.")
             return
-
-        print("[INIT] category_data가 None → 자동 초기화")
-        initialize_categories()
         
-        return search_category_codes(item_name, retry_if_empty=False)
+        # 초기화 완료 → 캐시 재업데이트 후 다시 시도
+        #(startup_state == 2)
+        else:
+            print("[INFO] 캐시 재업데이트 후 다시 시도합니다.")
+            initialize_categories()
+            return search_item(item_name, retry_if_empty=False)
 
     return list(codes)
 
@@ -4101,19 +4110,16 @@ def korlark_proxy():
 
 
 
-
 # ---------- 초기화 함수 ----------
 def initialize_categories_wrapper():
-    global startup_done
+    global startup_state
     with startup_lock:
-        if startup_done:
+        if not startup_state == 0:
             return  # 이미 초기화됨 → 중복 방지
-
         print("[SERVER] Flask 서버가 실행되었습니다 ✅")
         Thread(target=initialize_categories, daemon=True).start()
         print("[INIT] 거래소 카테고리 초기화 스레드 시작")
-
-        startup_done = True
+        startup_state = 1
 
 
 # ---------- Gunicorn 환경: 서버 시작 시 (한 번만 실행) ----------
@@ -4128,3 +4134,4 @@ if __name__ == "__main__":
     initialize_categories_wrapper()
     logger.info("[SERVER] Flask 서버가 실행되었습니다 ✅ (로컬 테스트)")
     app.run(host="0.0.0.0", port=port)
+
