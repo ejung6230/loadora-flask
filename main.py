@@ -2599,93 +2599,149 @@ def fallback():
             item_name = markets_match.group(2).strip()
         
             if not item_name:
-                response_text = "◕_◕💧\n검색할 아이템명을 입력해주세요.\nex) .거래소 아이템명"
+                response_text = (
+                    "◕_◕💧\n"
+                    "검색할 아이템명을 입력해주세요.\n"
+                    "예시: `.거래소 아이템명`"
+                )
             else:
                 start_time = time.time()
-
-
-                # ---------- 사용 예시 ----------
+        
+                # ---------- 카테고리 코드 조회 ----------
                 category_codes = search_category_codes(item_name)
-                print("category_codes : ", category_codes)
-                # category_codes는 [90000]
+                print("category_codes:", category_codes)
         
-                lock = Lock()
-                all_items = []
-                collected_names = set()
-                stop_event = Event()  # ✅ 안전한 종료 신호
+                if not category_codes:
+                    response_text = f"'{item_name}'에 해당하는 거래소 카테고리를 찾을 수 없어요 😢"
+                else:
+                    # ---------- 초기 설정 ----------
+                    lock = Lock()
+                    all_items = []
+                    collected_names = set()
+                    stop_event = Event()  # 안전한 중단 제어용
+                    global markets_session  # 전역 세션 사용
         
-                # ✅ 전역 세션 사용 (이미 선언됨)
-                global markets_session
+                    # ---------- 유틸 함수 ----------
+                    def fmt(val):
+                        return "-" if val is None else f"{val:,}"
         
-                # ✅ 포맷 함수
-                def fmt(val):
-                    return "-" if val is None else f"{val:,}"
-        
-                # ✅ 각 카테고리별 아이템 조회
-                def fetch_category_items(code):
-                    if stop_event.is_set():
-                        return []
-                    data = fetch_all_market_items(code, item_name)
-                    print('data : ', data)
-                    return [
-                        {
-                            "Code": code,  
-                            "Id": i.get("Id"),  
-                            "Name": i.get("Name"),  
-                            "Grade": i.get("Grade"), 
-                            "Icon": i.get("Icon"), 
-                            "BundleCount": i.get("BundleCount"), 
-                            "TradeRemainCount": i.get("TradeRemainCount"), 
-                            "YDayAvgPrice": i.get("YDayAvgPrice"), 
-                            "RecentPrice": i.get("RecentPrice"), 
-                            "CurrentMinPrice": i.get("CurrentMinPrice"), 
-                        }
-                        for i in data.get("Items", [])
-                    ]
-                
-                # ✅ 병렬 실행 (최대 20스레드)
-                with ThreadPoolExecutor(max_workers=max(1, min(len(category_codes), 20))) as executor:
-                    futures = {executor.submit(fetch_category_items, c): c for c in category_codes}
-        
-                    for future in as_completed(futures):
+                    # ---------- 카테고리별 아이템 조회 ----------
+                    def fetch_category_items(code):
                         if stop_event.is_set():
-                            break
+                            return []
                         try:
-                            result = future.result()
-                            if result:
+                            data = fetch_all_market_items(code, item_name)
+                            print(f"[DEBUG] {code} 카테고리 조회 완료:", len(data.get("Items", [])))
+                            return [
+                                {
+                                    "Code": code,
+                                    "Id": i.get("Id"),
+                                    "Name": i.get("Name"),
+                                    "Grade": i.get("Grade"),
+                                    "Icon": i.get("Icon"),
+                                    "BundleCount": i.get("BundleCount"),
+                                    "TradeRemainCount": i.get("TradeRemainCount"),
+                                    "YDayAvgPrice": i.get("YDayAvgPrice"),
+                                    "RecentPrice": i.get("RecentPrice"),
+                                    "CurrentMinPrice": i.get("CurrentMinPrice"),
+                                }
+                                for i in data.get("Items", [])
+                            ]
+                        except Exception as e:
+                            print(f"[ERROR] fetch_category_items({code}) 실패:", e)
+                            return []
+        
+                    # ---------- 병렬 처리 ----------
+                    with ThreadPoolExecutor(max_workers=min(len(category_codes), 20)) as executor:
+                        futures = {executor.submit(fetch_category_items, c): c for c in category_codes}
+        
+                        for future in as_completed(futures):
+                            if stop_event.is_set():
+                                break
+                            try:
+                                result = future.result()
+                                if not result:
+                                    continue
+        
                                 with lock:
                                     for item in result:
                                         if item["Name"] not in collected_names:
                                             collected_names.add(item["Name"])
                                             all_items.append(item)
-                                            if len(all_items) >= 16:
-                                                stop_event.set()  # ✅ 안전한 중단
+                                            if len(all_items) >= 16:  # 최대 16개까지만
+                                                stop_event.set()
                                                 break
-                        except Exception as e:
-                            print("[ERROR] 병렬 처리 오류:", e)
+                            except Exception as e:
+                                print("[ERROR] 병렬 처리 오류:", e)
         
-                # ✅ 결과 구성
-                if not all_items:
-                    response_text = f"'{item_name}'에 해당하는 거래소 아이템을 찾지 못했어요 😢"
-                else:
-                    lines = [
-                        f"📦 {i['Name']} ({i['Grade']})\n"
-                        f"💰 현재가: {fmt(i['CurrentMinPrice'])} / 최근거래가: {fmt(i['RecentPrice'])} / 거래량: {fmt(i['TradeRemainCount'])}\n"
-                        for i in all_items
-                    ]
-                    elapsed = time.time() - start_time
-                    response_text = (
-                        f"🔍 거래소 조회 결과 (상위 {len(all_items)}개)\n"
-                        f"⏱ 조회 시간: {elapsed:.2f}초\n\n" + "\n".join(lines)
-                    )
+                    # ---------- 결과 구성 ----------
+                    if not all_items:
+                        response_text = f"'{item_name}'에 해당하는 거래소 아이템을 찾지 못했어요 😢"
+                    else:
+                        # 간단한 카드 리스트 구성
+                        menu_list = [
+                            {
+                                "title": i["Name"],
+                                "desc": f"{fmt(i['CurrentMinPrice'])}💰\n",
+                                "img": i.get("Icon", "")
+                            }
+                            for i in all_items
+                        ]
         
-                print(f"거래소 조회 처리 완료 ({len(all_items)}개 항목, {time.time()-start_time:.2f}초 소요)")
-
-
-
-
-
+                        # ---------- 캐러셀 카드 구성 ----------
+                        list_cards = []
+                        cards_per_page = 4
         
+                        for i in range(0, len(menu_list), cards_per_page):
+                            chunk = menu_list[i:i + cards_per_page]
+                            if not chunk:
+                                continue
+        
+                            list_items = [
+                                {
+                                    "title": m["title"],
+                                    "description": m["desc"],
+                                    "imageUrl": m["img"],
+                                    "link": {"web": ""}
+                                }
+                                for m in chunk
+                            ]
+        
+                            list_cards.append({
+                                "header": {"title": f"거래소 검색 결과", "link": {"web": ""}},
+                                "items": list_items,
+                                "buttons": [{"label": "공유하기", "action": "share", "highlight": False}],
+                                "lock": False,
+                                "forwardable": True
+                            })
+        
+                        # 예외 처리: 표시할 카드 없음
+                        if not list_cards:
+                            list_cards.append({
+                                "header": {"title": "검색 결과가 없습니다", "link": {"web": ""}},
+                                "items": [{"title": "현재 표시할 거래소 아이템이 없습니다.", "link": {"web": ""}}],
+                                "buttons": [],
+                                "lock": False,
+                                "forwardable": True
+                            })
+        
+                        # ---------- 캐러셀 출력 ----------
+                        carousel = {
+                            "carousel": {
+                                "type": "listCard",
+                                "items": list_cards
+                            }
+                        }
+        
+                        items.append({
+                            "simpleText": {
+                                "text": f"◕ᴗ◕🌸\n거래소 '{item_name}' 검색 결과를 알려드릴게요. (상위 {len(all_items)}개)"
+                            }
+                        })
+                        items.append(carousel)
+        
+                    print(f"거래소 조회 처리 완료 ({len(all_items)}개 항목, {time.time() - start_time:.2f}초 소요)")
+
         
         # ---------- 9. 유각 거래소 조회 관련 패턴 ----------
         relic_match = re.match(r"^(\.유각|유각|\.ㅇㄱ|ㅇㄱ|\.유물각인서|유물각인서|\.ㅇㅁㄱㅇㅅ|ㅇㅁㄱㅇㅅ)\s*(.*)$", user_input)
@@ -4054,6 +4110,7 @@ if __name__ == "__main__":
     initialize_categories_wrapper()
     logger.info("[SERVER] Flask 서버가 실행되었습니다 ✅ (로컬 테스트)")
     app.run(host="0.0.0.0", port=port)
+
 
 
 
