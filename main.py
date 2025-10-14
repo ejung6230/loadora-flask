@@ -2726,9 +2726,9 @@ def fallback():
                                 }
                                 for m in chunk
                             ]
-        
+                            
                             list_cards.append({
-                                "header": {"title": f"거래소 검색 결과", "link": {"web": ""}},
+                                "header": {"title": f"거래소 검색 결과({i//cards_per_page+1}/{(len(menu_list)-1)//cards_per_page+1})", "link": {"web": ""}},
                                 "items": list_items,
                                 "buttons": [{"label": "공유하기", "action": "share", "highlight": False}],
                                 "lock": False,
@@ -4133,6 +4133,7 @@ if __name__ == "__main__":
     initialize_categories_wrapper()
     logger.info("[SERVER] Flask 서버가 실행되었습니다 ✅ (로컬 테스트)")
     app.run(host="0.0.0.0", port=port)
+
 
 
 
