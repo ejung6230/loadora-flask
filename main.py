@@ -2670,7 +2670,7 @@ def fallback():
                 else:
                     lines = [
                         f"📦 {i['Name']} ({i['Grade']})\n"
-                        f"💰 현재가: {fmt(i['CurrentMinPrice'])} / 최근거래가: {fmt(i['RecentPrice'])} / 거래량: {fmt(i['TradeCount'])}\n"
+                        f"💰 현재가: {fmt(i['CurrentMinPrice'])} / 최근거래가: {fmt(i['RecentPrice'])} / 거래량: {fmt(i['TradeRemainCount'])}\n"
                         for i in all_items
                     ]
                     elapsed = time.time() - start_time
