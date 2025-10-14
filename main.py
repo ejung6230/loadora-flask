@@ -2630,8 +2630,12 @@ def fallback():
                 # ---------- 카테고리 코드 조회 ----------
                 category_codes = search_category_codes(item_name)
                 print("category_codes:", category_codes)
-        
-                if not category_codes:
+
+                if startup_state == 0:
+                    response_text = f"초기 데이터 생성을 시작합니다. 잠시 후에 다시 시도해주세요."
+                elif startup_state == 1:
+                    response_text = f"아직 서버가 초기 데이터를 생성 중이에요. 잠시 후에 다시 시도해주세요."
+                elif not category_codes:
                     response_text = f"'{item_name}'에 해당하는 거래소 카테고리를 찾을 수 없어요 😢"
                 else:
                     # ---------- 초기 설정 ----------
@@ -4144,6 +4148,7 @@ if __name__ == "__main__":
     initialize_categories_wrapper()
     logger.info("[SERVER] Flask 서버가 실행되었습니다 ✅ (로컬 테스트)")
     app.run(host="0.0.0.0", port=port)
+
 
 
 
