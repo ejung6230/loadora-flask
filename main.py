@@ -800,6 +800,7 @@ def fetch_all_categories_items(category_data):
     """
     skipped_count = 0  # 스킵한 카테고리 수
     saved_count = 0    # 새로 저장한 카테고리 수
+    print("[INIT] 거래소 카테고리 코드 초기화 시작")
 
     def process_category(category):
         nonlocal skipped_count
@@ -830,21 +831,19 @@ def fetch_all_categories_items(category_data):
 
             except requests.exceptions.HTTPError as e:
                 if e.response is not None and e.response.status_code == 429:
-                    print(f"[WARN] 카테고리 {code} 페이지 {page_no}: 요청 제한(429), 60초 대기 후 재시도", flush=True)
+                    print(f"[WARN] 카테고리 {code} 페이지 {page_no}: 요청 제한(429), 60초 대기 후 재시도")
                     time.sleep(60)
                     continue
-                else:
-                    print(f"[WARN] 카테고리 {code} 페이지 {page_no} 조회 실패(HTTP): {e}", flush=True)
-                    break
+                print(f"[WARN] 카테고리 {code} 페이지 {page_no} 조회 실패(HTTP): {e}")
+                break
             except Exception as e:
                 msg = str(e)
                 if "429" in msg:
-                    print(f"[WARN] 카테고리 {code} 페이지 {page_no}: 요청 제한(429), 60초 대기 후 재시도", flush=True)
+                    print(f"[WARN] 카테고리 {code} 페이지 {page_no}: 요청 제한(429), 60초 대기 후 재시도")
                     time.sleep(60)
                     continue  # 같은 페이지 재시도
-                else:
-                    print(f"[WARN] 카테고리 {code} 페이지 {page_no} 조회 실패: {e}", flush=True)
-                    break
+                print(f"[WARN] 카테고리 {code} 페이지 {page_no} 조회 실패: {e}")
+                break
 
         return code, name, items
 
@@ -4119,7 +4118,6 @@ def initialize_categories_wrapper():
             return  # 이미 초기화됨 → 중복 방지
         print("[SERVER] Flask 서버가 실행되었습니다 ✅")
         Thread(target=initialize_categories, daemon=True).start()
-        print("[INIT] 거래소 카테고리 초기화 스레드 시작")
         startup_state = 1
 
 
@@ -4135,6 +4133,7 @@ if __name__ == "__main__":
     initialize_categories_wrapper()
     logger.info("[SERVER] Flask 서버가 실행되었습니다 ✅ (로컬 테스트)")
     app.run(host="0.0.0.0", port=port)
+
 
 
 
