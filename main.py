@@ -882,16 +882,18 @@ def fetch_all_categories_items(category_data):
 # ---------- 전역 변수 ----------
 option_data = None
 category_data = None
-startup_done = False # 0: 초기상태, 1: 초기화 중, 2: 초기화 완료
+startup_state = 0 # 0: 초기상태 / 1: 초기화 중 / 2: 초기화 완료
+startup_lock = threading.Lock()
 
 # ---------- 카테고리 초기화 ----------
 def initialize_categories():
     """
     카테고리 데이터를 초기화합니다.
     """
-    global option_data, category_data, startup_done
+    global option_data, category_data, startup_state
 
     print("[INIT] 거래소 카테고리 코드 초기화 시작")
+    startup_state = 1
     try:
         option_data = fetch_markets_option()
         category_data = option_data.get("Categories", [])
@@ -907,6 +909,7 @@ def initialize_categories():
         print(f"[DEBUG] '{search_text}' 카테고리 코드 테스트:", search_category_codes(search_text))
         
         print("[INIT] 전체 카테고리 초기화 완료 ✅")
+        startup_state = 2
 
     except Exception as e:
         print(f"[ERROR] initialize_categories 실패: {e}")
@@ -926,17 +929,26 @@ def search_item(item_name, retry_if_empty=True):
 
     # 검색 결과 없으면 캐시 재생성 후 1회 재검색
     if not results and retry_if_empty:
-        print(f"[INFO] '{item_name}' 검색 결과 없음 → 캐시 재생성 시도")
-        
-        if not startup_done:
-            print("[WARN] 이미 캐시 생성 중입니다. 잠시 후 다시 시도하세요.")
-            return
-        
-        print("[INIT] category_data가 None → 자동 초기화")
-        initialize_categories()
+        print(f"[INFO] '{item_name}' 검색 결과 없음")
 
-        return search_item(item_name, retry_if_empty=False)
+        # 초기 상태 → 초기화 시작
+        if startup_state == 0:
+            print("[INIT] 캐시가 존재하지 않음 → 초기화 시작 후 재시도")
+            initialize_categories()
+            return search_item(item_name, retry_if_empty=False)
 
+        # 초기화 중 → 대기 권장
+        elif startup_state == 1:
+            print("[WARN] 현재 캐시를 생성 중입니다. 잠시 후 다시 시도하세요.")
+            return 
+
+        # 초기화 완료 → 캐시 존재하므로 재시도하지 않음
+        #(startup_state == 2)
+        else:
+            print("[INFO] 캐시 재업데이트 후 다시 시도합니다.")
+            initialize_categories()
+            return search_item(item_name, retry_if_empty=False)
+    
     return results
 
 # ---------- 카테고리 코드 검색 ----------
@@ -4089,19 +4101,25 @@ def korlark_proxy():
 
 
 
+
 # ---------- 초기화 함수 ----------
 def initialize_categories_wrapper():
     global startup_done
-    if not startup_done:
+    with startup_lock:
+        if startup_done:
+            return  # 이미 초기화됨 → 중복 방지
+
+        print("[SERVER] Flask 서버가 실행되었습니다 ✅")
         Thread(target=initialize_categories, daemon=True).start()
         print("[INIT] 거래소 카테고리 초기화 스레드 시작")
+
         startup_done = True
 
+
 # ---------- Gunicorn 환경: 서버 시작 시 (한 번만 실행) ----------
-@app.before_request
+@app.before_first_request
 def startup_tasks():
     initialize_categories_wrapper()
-    print("[SERVER] Flask 서버가 실행되었습니다 ✅")
 
 
 # ---------- 로컬 테스트용 ----------
@@ -4110,19 +4128,3 @@ if __name__ == "__main__":
     initialize_categories_wrapper()
     logger.info("[SERVER] Flask 서버가 실행되었습니다 ✅ (로컬 테스트)")
     app.run(host="0.0.0.0", port=port)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
