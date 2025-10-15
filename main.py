@@ -1115,7 +1115,8 @@ def fallback():
             status_code, html = fetch_shop_html()
             if status_code != 200:
                 return "마리샵 페이지를 가져오는데 실패했습니다."
-        
+
+            print('status_code : ', status_code)
             parse_data = parse_shop_items(html)  # dict 형태
             print('parse_data : ', parse_data)
         
@@ -4148,6 +4149,7 @@ if __name__ == "__main__":
     initialize_categories_wrapper()
     logger.info("[SERVER] Flask 서버가 실행되었습니다 ✅ (로컬 테스트)")
     app.run(host="0.0.0.0", port=port)
+
 
 
 
