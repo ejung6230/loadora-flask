@@ -1113,12 +1113,21 @@ def fallback():
         match_marishop = re.match(r"^(\.마리샵|마리샵|\.ㅁㄹㅅ|ㅁㄹㅅ|.ㅁㄽ|ㅁㄽ)$", user_input)
         if match_marishop:
             status_code, html = fetch_shop_html()
-            if status_code != 200:
-                return "마리샵 페이지를 가져오는데 실패했습니다."
-
-            print('status_code : ', status_code)
-            parse_data = parse_shop_items(html)  # dict 형태
-            print('parse_data : ', parse_data)
+        
+            # ① HTTP 상태 코드 확인
+            if status_code != 200 or not html:
+                return "⚠️ 마리샵 페이지를 가져오는데 실패했습니다. (네트워크 오류)"
+        
+            # ② 점검 페이지 감지
+            if any(keyword in html for keyword in ["서비스 점검", "점검 중", "로스트아크 - 서비스 점검"]):
+                return "⚙️ 현재 로스트아크 점검 중이에요. 잠시 후 다시 시도해주세요."
+        
+            # ③ HTML 정상 파싱 시도
+            try:
+                parse_data = parse_shop_items(html)  # dict 형태
+            except Exception as e:
+                print("❌ parse_shop_items() 에러:", e)
+                return "⚠️ 마리샵 데이터에서 오류가 발생했습니다. 서버가 점검 중인지 확인하세요."
         
             items = []
         
@@ -4149,6 +4158,7 @@ if __name__ == "__main__":
     initialize_categories_wrapper()
     logger.info("[SERVER] Flask 서버가 실행되었습니다 ✅ (로컬 테스트)")
     app.run(host="0.0.0.0", port=port)
+
 
 
 
